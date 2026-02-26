@@ -1,0 +1,77 @@
+.adminRoot {
+  min-height: 100vh;
+  display: flex;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+/* Main Content Layout */
+.mainContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+  background: var(--bg-secondary);
+}
+
+/* Sidebar states */
+.expanded {
+  margin-left: 256px;
+}
+
+.collapsed {
+  margin-left: 80px;
+}
+
+/* Mobile Header */
+.mobileHeader {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Menu Button */
+.menuBtn {
+  padding: 8px;
+  border-radius: 8px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.menuBtn:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--primary);
+}
+
+/* Header Title */
+.headerTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Page Content */
+.pageContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  background: var(--bg-secondary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .mobileHeader {
+    display: flex;
+  }
+
+  .expanded,
+  .collapsed {
+    margin-left: 0;
+  }
+}
