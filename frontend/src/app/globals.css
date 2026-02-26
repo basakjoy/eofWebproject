@@ -1,0 +1,312 @@
+@import "tailwindcss";
+@import "react-day-picker/dist/style.css";
+
+@theme {
+  --color-sidebar: var(--sidebar-background);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --radius-sidebar: 1rem;
+}
+
+
+:root {
+  --primary: #2563eb;
+  --primary-light: #60a5fa;
+  --primary-dark: #1e40af;
+  --secondary: #1a5631;
+  --secondary-light: #2a7c47;
+  --secondary-dark: #0f3d20;
+  --neutral: #000000;
+  --neutral-light: #333333;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+
+  /* Light mode (default) */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f5;
+  --bg-tertiary: #f0f0f0;
+  --text-primary: #000000;
+  --text-secondary: #666666;
+  --border-color: #e0e0e0;
+
+  /* Sidebar (light mode) */
+  --sidebar-background: #ffffff;
+  --sidebar-foreground: #1f2937;
+  --sidebar-primary: #2563eb;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f3f4f6;
+  --sidebar-accent-foreground: #1f2937;
+  --sidebar-border: #e5e7eb;
+  --sidebar-ring: #2563eb;
+}
+
+html.dark {
+  /* Dark mode */
+  --bg-primary: #02040a;
+  --bg-secondary: #070b14;
+  --bg-tertiary: #0d111b;
+  --text-primary: #ffffff;
+  --text-secondary: #94a3b8;
+  --border-color: #1e293b;
+
+  /* Sidebar (dark mode) */
+  --sidebar-background: #070b14;
+  --sidebar-foreground: #f1f5f9;
+  --sidebar-primary: #3b82f6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1e293b;
+  --sidebar-accent-foreground: #f1f5f9;
+  --sidebar-border: #1e293b;
+  --sidebar-ring: #3b82f6;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+  font-smooth: antialiased;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  cursor: auto;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+html.dark body {
+  background-image:
+    radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.05) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.05) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(59, 130, 246, 0.05) 0px, transparent 50%);
+  background-attachment: fixed;
+}
+
+
+/* Black pointer on interactive elements */
+a,
+button {
+  cursor: pointer;
+}
+
+/* Modern scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(13, 115, 237, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(13, 115, 237, 0.8);
+}
+
+/* Smooth animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(13, 115, 237, 0.5);
+  }
+
+  50% {
+    box-shadow: 0 0 40px rgba(26, 86, 49, 0.5);
+  }
+}
+
+@keyframes gradient-shift {
+
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.animate-slideInLeft {
+  animation: slideInLeft 0.6s ease-out forwards;
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.6s ease-out forwards;
+}
+
+.animate-slideInUp {
+  animation: slideInUp 0.6s ease-out forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+/* Gradient text utility */
+.gradient-text {
+  background: linear-gradient(135deg, #0D73ED 0%, #0A5CB8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glow effect */
+.glow {
+  box-shadow: 0 0 30px rgba(13, 115, 237, 0.1);
+}
+
+.shadow-glow {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* Backdrop glow effect */
+.backdrop-glow {
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  transition: all 0.3s ease-in-out;
+}
+
+.backdrop-glow:hover {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(13, 115, 237, 0.2);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* Card hover effect */
+.card-hover {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.card-hover:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Glass Card - Modern glassmorphism effect */
+.glass-card {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+html.dark .glass-card {
+  background: rgba(30, 30, 30, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(37, 99, 235, 0.3);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+html.dark .glass-card:hover {
+  background: rgba(40, 40, 40, 0.8);
+  border-color: rgba(37, 99, 235, 0.3);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* Stat Card - For displaying statistics */
+.stat-card {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+html.dark .stat-card {
+  background: rgba(30, 30, 30, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stat-card:hover {
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+html.dark .stat-card:hover {
+  background: rgba(40, 40, 40, 0.8);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Smooth transitions for all elements */
+* {
+  transition: color 0.3s ease-in-out, background-color 0.3s ease-in-out, border-color 0.3s ease-in-out;
+}
