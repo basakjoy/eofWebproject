@@ -338,9 +338,10 @@ export default function DashboardLayout({
               <input
                 type="text"
                 placeholder="Global Search..."
-                className="bg-secondary/30 border border-sidebar-border/50 rounded-xl px-4 py-2 text-xs font-medium w-64 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-muted-foreground/40"
+                className="bg-secondary/30 border border-sidebar-border/50 rounded-xl pl-10 pr-4 py-2 text-xs font-medium w-64 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-muted-foreground/40"
               />
             </div>
+
             <button className="p-2 rounded-xl bg-secondary/30 border border-sidebar-border/50 text-muted-foreground hover:text-primary transition-all duration-300">
               <Activity className="w-4.5 h-4.5" />
             </button>

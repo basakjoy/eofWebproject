@@ -11,6 +11,8 @@ import {
 } from "recharts";
 import { TrendingUp, Calendar, ChevronDown } from "lucide-react";
 import { Button } from "@/components/dashboard/ui/button";
+import React from 'react';
+
 
 type ChartData = {
   month: string;
@@ -70,8 +72,14 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
 };
 
 export default function RevenueChart() {
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <div>
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
@@ -115,60 +123,63 @@ export default function RevenueChart() {
 
       {/* Chart */}
       <div className="h-[400px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data}>
-            <defs>
-              <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(43, 96%, 56%)" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="hsl(43, 96%, 56%)" stopOpacity={0} />
-              </linearGradient>
+        {mounted && (
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={data}>
+              <defs>
+                <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(43, 96%, 56%)" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="hsl(43, 96%, 56%)" stopOpacity={0} />
+                </linearGradient>
 
-              <linearGradient id="colorInvestment" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(199, 89%, 48%)" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="hsl(199, 89%, 48%)" stopOpacity={0} />
-              </linearGradient>
-            </defs>
+                <linearGradient id="colorInvestment" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(199, 89%, 48%)" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="hsl(199, 89%, 48%)" stopOpacity={0} />
+                </linearGradient>
+              </defs>
 
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="hsl(222, 30%, 18%)"
-              vertical={false}
-            />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="hsl(222, 30%, 18%)"
+                vertical={false}
+              />
 
-            <XAxis
-              dataKey="month"
-              axisLine={false}
-              tickLine={false}
-              tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 12 }}
-            />
+              <XAxis
+                dataKey="month"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 12 }}
+              />
 
-            <YAxis
-              axisLine={false}
-              tickLine={false}
-              tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 12 }}
-              tickFormatter={(v) => `$${v / 1000}k`}
-            />
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 12 }}
+                tickFormatter={(v) => `$${v / 1000}k`}
+              />
 
-            <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<CustomTooltip />} />
 
-            <Area
-              type="monotone"
-              dataKey="revenue"
-              stroke="hsl(43, 96%, 56%)"
-              strokeWidth={2}
-              fill="url(#colorRevenue)"
-            />
+              <Area
+                type="monotone"
+                dataKey="revenue"
+                stroke="hsl(43, 96%, 56%)"
+                strokeWidth={2}
+                fill="url(#colorRevenue)"
+              />
 
-            <Area
-              type="monotone"
-              dataKey="investment"
-              stroke="hsl(199, 89%, 48%)"
-              strokeWidth={2}
-              fill="url(#colorInvestment)"
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+              <Area
+                type="monotone"
+                dataKey="investment"
+                stroke="hsl(199, 89%, 48%)"
+                strokeWidth={2}
+                fill="url(#colorInvestment)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        )}
       </div>
+
     </div>
   );
 }
