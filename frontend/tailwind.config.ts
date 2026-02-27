@@ -27,9 +27,18 @@ const config: Config = {
           ring: 'var(--sidebar-ring)',
         },
       },
+      keyframes: {
+        marquee: {
+          '0%': { transform: 'translateX(0%)' },
+          '100%': { transform: 'translateX(-100%)' },
+        },
+      },
+      animation: {
+        marquee: 'marquee 25s linear infinite',
+      },
     },
   },
-  plugins: [],
+  plugins: [require("tailwindcss-animate")],
 };
-export default config;
 
+export default config;
