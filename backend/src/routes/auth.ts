@@ -13,7 +13,7 @@ interface AuthRequest extends Request {
 // Register endpoint
 router.post('/register', async (req: Request, res: Response) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, userType = 'user' } = req.body;
 
     // Validation
     if (!name || !email || !password) {
@@ -27,6 +27,14 @@ router.post('/register', async (req: Request, res: Response) => {
       return res.status(400).json({
         success: false,
         message: 'Password must be at least 6 characters',
+      });
+    }
+
+    // Validate userType
+    if (!['user', 'investor'].includes(userType)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid user type. Must be "user" or "investor"',
       });
     }
 
@@ -48,12 +56,12 @@ router.post('/register', async (req: Request, res: Response) => {
     await runAsync(
       `INSERT INTO users (id, name, email, password, role, status) 
        VALUES (?, ?, ?, ?, ?, ?)`,
-      [userId, name, email, hashedPassword, 'user', 'active']
+      [userId, name, email, hashedPassword, userType, 'active']
     );
 
     // Create JWT token
     const token = jwt.sign(
-      { userId, email, role: 'user' },
+      { userId, email, role: userType },
       process.env.JWT_SECRET || 'secret',
       { expiresIn: '7d' }
     );
@@ -65,6 +73,7 @@ router.post('/register', async (req: Request, res: Response) => {
         userId,
         name,
         email,
+        role: userType,
         token,
       },
     });

@@ -1,5 +1,5 @@
 // User Types
-export type UserRole = 'normal' | 'premium' | 'investor' | 'admin';
+export type UserRole = 'user' | 'premium' | 'investor' | 'admin';
 
 export interface User {
   id: string;
@@ -22,6 +22,7 @@ export interface RegisterFormData {
   email: string;
   password: string;
   confirmPassword: string;
+  userType?: 'user' | 'investor';
 }
 
 // Forex Signal
