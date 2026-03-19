@@ -1,36 +1,28 @@
 'use client';
 
+import React, { useMemo, useState } from 'react';
 import Card from '@/components/common/Card';
 import Badge from '@/components/common/Badge';
-import Button from '@/components/common/Button';
-import { TrendingUp, TrendingDown, Heart, HeartOff, ChevronDown, ChevronUp, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
-import { ResponsiveContainer, LineChart, Line, Tooltip } from 'recharts';
-import { useEffect, useMemo, useState } from 'react';
+import { 
+  TrendingUp, TrendingDown, Heart, Copy, 
+  ChevronDown, ChevronUp, ArrowUpRight, 
+  ArrowDownLeft, Clock, ShieldCheck, 
+  AlertCircle, Share2
+} from 'lucide-react';
+import { ResponsiveContainer, AreaChart, Area, Tooltip, YAxis } from 'recharts';
 
 interface ForexSignalCardProps {
   pair: string;
-  type: 'BUY' | 'SELL' | 'TP' | 'SL';
+  type: 'BUY' | 'SELL';
   entry: number;
   target: number;
   stopLoss: number;
   analysis: string;
   timeframe: string;
   createdAt: string;
+  confidence?: number; // New Detail: 0-100
+  riskLevel?: 'Low' | 'Medium' | 'High'; // New Detail
 }
-
-// Map currency pairs to flag emojis
-const PAIR_FLAGS: Record<string, string> = {
-  'EURUSD': '🇪🇺🇺🇸',
-  'GBPUSD': '🇬🇧🇺🇸',
-  'USDJPY': '🇺🇸🇯🇵',
-  'AUDUSD': '🇦🇺🇺🇸',
-  'USDCAD': '🇺🇸🇨🇦',
-  'NZDUSD': '🇳🇿🇺🇸',
-  'USDCHF': '🇺🇸🇨🇭',
-  'EURGBP': '🇪🇺🇬🇧',
-  'EURJPY': '🇪🇺🇯🇵',
-  'GBPJPY': '🇬🇧🇯🇵',
-};
 
 export default function ForexSignalCard({
   pair,
@@ -41,156 +33,140 @@ export default function ForexSignalCard({
   analysis,
   timeframe,
   createdAt,
+  confidence = 85,
+  riskLevel = 'Medium'
 }: ForexSignalCardProps) {
+  const [isSaved, setIsSaved] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const isLong = type === 'BUY';
-  const potentialProfit = Math.abs(target - entry);
-  const riskRewardRatio = potentialProfit / Math.abs(entry - stopLoss);
-  const flags = PAIR_FLAGS[pair] || '💱';
 
-  const [saved, setSaved] = useState(false);
-  const [expanded, setExpanded] = useState(false);
-
-  // generate a small sparkline dataset
-  const sparkData = useMemo(() => {
-    const mid = (entry + target) / 2;
-    return [
-      { v: entry },
-      { v: (entry + mid) / 2 },
-      { v: mid },
-      { v: (mid + target) / 2 },
-      { v: target },
-    ];
-  }, [entry, target]);
-
-  const shortAnalysis = analysis.length > 120 ? analysis.slice(0, 120) + '...' : analysis;
+  // Calculations
+  const pips = Math.abs(target - entry);
+  const riskReward = (Math.abs(target - entry) / Math.abs(entry - stopLoss)).toFixed(2);
+  
+  // Dynamic color palette
+  const themeColor = isLong ? 'emerald' : 'rose';
+  const chartColor = isLong ? '#10b981' : '#f43f5e';
 
   return (
-    <Card
-      hover
-      animate
-      className={`border-l-4 overflow-hidden ${
-        isLong ? 'border-emerald-500 hover:border-emerald-400' : 'border-red-500 hover:border-red-400'
-      }`}
-    >
-      {/* Header with pair flags and signal badge */}
-      <div className="flex justify-between items-start mb-5">
-        <div className="flex items-center gap-3">
-          <div className="text-5xl">{flags}</div>
-          <div>
-            <h3 className="text-2xl font-bold text-gray-900">{pair}</h3>
-            <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">{timeframe}</p>
+    <Card className="group relative bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 overflow-hidden transition-all hover:shadow-2xl hover:shadow-emerald-500/10">
+      
+      {/* 1. Header: Pair & Status */}
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center gap-4">
+          <div className="flex -space-x-3">
+             <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-white dark:border-slate-900 flex items-center justify-center font-bold text-xs shadow-sm">
+               {pair.slice(0, 3)}
+             </div>
+             <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 border-2 border-white dark:border-slate-900 flex items-center justify-center font-bold text-xs shadow-sm">
+               {pair.slice(3, 6)}
+             </div>
           </div>
-        </div>
-
-        <div className="flex flex-col items-end gap-3">
-          <Badge
-            label={type}
-            variant={isLong ? 'gradient-buy' : 'gradient-sell'}
-            size="md"
-            icon={isLong ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownLeft className="w-4 h-4" />}
-          />
-          <button
-            aria-pressed={saved}
-            onClick={() => setSaved((s) => !s)}
-            className="group relative"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-rose-300 to-pink-300 rounded-full blur opacity-0 group-hover:opacity-75 transition duration-300"></div>
-            <div className="relative px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-full transition duration-300 group-hover:bg-rose-100 dark:group-hover:bg-rose-900">
-              {saved ? <Heart className="w-5 h-5 text-rose-500 fill-rose-500" /> : <HeartOff className="w-5 h-5 text-gray-600 dark:text-gray-300" />}
+          <div>
+            <h3 className="text-xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
+              {pair.slice(0, 3)} / {pair.slice(3, 6)}
+            </h3>
+            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+              <Clock className="w-3 h-3" /> {timeframe} • {new Date(createdAt).toLocaleDateString()}
             </div>
-          </button>
-        </div>
-      </div>
-
-      {/* Sparkline chart */}
-      <div className="mb-4 -mx-6 px-6 pb-4">
-        <div className="h-12 bg-gradient-to-r from-gray-50 to-transparent dark:from-gray-700 dark:to-transparent rounded-lg p-2">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={sparkData}>
-              <Tooltip />
-              <Line type="monotone" dataKey="v" stroke={isLong ? '#10b981' : '#ef4444'} strokeWidth={2} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Price levels - visual cards */}
-      <div className="grid grid-cols-3 gap-3 mb-5">
-        {/* Entry Level */}
-        <div className={`p-3 rounded-lg border-2 transition-all ${
-          isLong
-            ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-700'
-            : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700'
-        }`}>
-          <p className="text-xs uppercase font-semibold text-gray-600 dark:text-gray-400 mb-1">Entry</p>
-          <p className={`text-lg font-bold ${
-            isLong ? 'text-emerald-700 dark:text-emerald-300' : 'text-red-700 dark:text-red-300'
-          }`}>
-            {entry.toFixed(4)}
-          </p>
-        </div>
-
-        {/* Target Level */}
-        <div className="p-3 rounded-lg border-2 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700">
-          <p className="text-xs uppercase font-semibold text-gray-600 dark:text-gray-400 mb-1">Target</p>
-          <p className="text-lg font-bold text-blue-700 dark:text-blue-300">{target.toFixed(4)}</p>
-        </div>
-
-        {/* Stop Loss */}
-        <div className="p-3 rounded-lg border-2 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-700">
-          <p className="text-xs uppercase font-semibold text-gray-600 dark:text-gray-400 mb-1">Stop Loss</p>
-          <p className="text-lg font-bold text-yellow-700 dark:text-yellow-300">{stopLoss.toFixed(4)}</p>
-        </div>
-      </div>
-
-      {/* Metrics row with icons */}
-      <div className="grid grid-cols-2 gap-3 mb-5 pb-5 border-b">
-        <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-          <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
-          <div>
-            <p className="text-xs text-gray-600 dark:text-gray-400">Profit</p>
-            <p className="text-sm font-bold text-green-700 dark:text-green-300">{potentialProfit.toFixed(4)}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-          <div className="w-5 h-5 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-xs">R</div>
-          <div>
-            <p className="text-xs text-gray-600 dark:text-gray-400">Risk/Reward</p>
-            <p className="text-sm font-bold text-blue-700 dark:text-blue-300">1:{riskRewardRatio.toFixed(2)}</p>
-          </div>
+        <div className="flex items-center gap-2">
+           <button onClick={() => setIsSaved(!isSaved)} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+              <Heart className={`w-5 h-5 ${isSaved ? 'fill-rose-500 text-rose-500' : 'text-slate-400'}`} />
+           </button>
+           <button className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+              <Share2 className="w-5 h-5 text-slate-400" />
+           </button>
         </div>
       </div>
 
-      {/* Analysis section */}
-      <div className="mb-4">
-        <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-          {expanded ? analysis : shortAnalysis}
+      {/* 2. Main Signal & Visual Path */}
+      <div className={`relative p-4 rounded-2xl mb-6 bg-gradient-to-br ${isLong ? 'from-emerald-50 to-teal-50 dark:from-emerald-500/10 dark:to-teal-500/5' : 'from-rose-50 to-orange-50 dark:from-rose-500/10 dark:to-orange-500/5'}`}>
+        <div className="flex justify-between items-end mb-4">
+          <div>
+            <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-md ${isLong ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'}`}>
+              Signal {type}
+            </span>
+            <div className="text-3xl font-black mt-1 text-slate-900 dark:text-white">
+              {entry.toFixed(4)}
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] font-bold text-slate-400 uppercase">Est. Profit</p>
+            <p className={`text-xl font-bold ${isLong ? 'text-emerald-600' : 'text-rose-600'}`}>
+              +{pips.toFixed(4)}
+            </p>
+          </div>
+        </div>
+
+        {/* Visual Progress Line */}
+        <div className="relative h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full mb-8">
+           <div 
+            className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-4 border-white dark:border-slate-900 shadow-md ${isLong ? 'bg-emerald-500 left-[20%]' : 'bg-rose-500 right-[20%]'}`} 
+           />
+           <div className={`absolute top-full mt-2 text-[10px] font-bold text-slate-400 uppercase ${isLong ? 'left-0' : 'right-0'}`}>Stop Loss</div>
+           <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 text-[10px] font-bold text-slate-400 uppercase text-center">Entry</div>
+           <div className={`absolute top-full mt-2 text-[10px] font-bold text-slate-400 uppercase ${isLong ? 'right-0' : 'left-0'}`}>Target</div>
+        </div>
+      </div>
+
+      {/* 3. Detailed Metrics Grid */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+           <div className="flex items-center gap-2 mb-1">
+             <ShieldCheck className="w-3.5 h-3.5 text-blue-500" />
+             <span className="text-[10px] font-bold text-slate-500 uppercase">Risk Reward</span>
+           </div>
+           <div className="text-sm font-bold text-slate-900 dark:text-white">1 : {riskReward}</div>
+        </div>
+        <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+           <div className="flex items-center gap-2 mb-1">
+             <AlertCircle className={`w-3.5 h-3.5 ${riskLevel === 'High' ? 'text-orange-500' : 'text-emerald-500'}`} />
+             <span className="text-[10px] font-bold text-slate-500 uppercase">Risk Level</span>
+           </div>
+           <div className="text-sm font-bold text-slate-900 dark:text-white">{riskLevel}</div>
+        </div>
+      </div>
+
+      {/* 4. Mini Chart / Analysis Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h4 className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2 uppercase tracking-tight">
+            Analysis & Insights
+          </h4>
+          <div className="flex items-center gap-1">
+             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+             <span className="text-[10px] font-bold text-emerald-600 uppercase">{confidence}% Confidence</span>
+          </div>
+        </div>
+        
+        <p className={`text-sm leading-relaxed text-slate-600 dark:text-slate-400 ${!isExpanded && 'line-clamp-2'}`}>
+          {analysis}
         </p>
-        {analysis.length > 120 && (
-          <button
-            onClick={() => setExpanded((s) => !s)}
-            className="mt-3 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1 transition-colors"
-          >
-            {expanded ? (
-              <>
-                <ChevronUp className="w-4 h-4" /> Show less
-              </>
-            ) : (
-              <>
-                <ChevronDown className="w-4 h-4" /> Show more
-              </>
-            )}
-          </button>
-        )}
+
+        <button 
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="w-full py-2 flex items-center justify-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors border-t border-slate-100 dark:border-slate-800"
+        >
+          {isExpanded ? (
+            <><ChevronUp className="w-4 h-4" /> Collapse Analysis</>
+          ) : (
+            <><ChevronDown className="w-4 h-4" /> Read Full Breakdown</>
+          )}
+        </button>
       </div>
 
-      {/* Footer */}
-      <div className="flex justify-between items-center text-xs text-gray-500 pt-3 border-t">
-        <span>{new Date(createdAt).toLocaleDateString()}</span>
-        <span className="inline-block px-2.5 py-1 bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-700 dark:to-gray-600 rounded-full font-medium">
-          {timeframe}
-        </span>
+      {/* 5. Action Footer */}
+      <div className="mt-4 flex gap-2">
+        <button className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 active:scale-95 ${
+          isLong 
+          ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/20' 
+          : 'bg-rose-500 hover:bg-rose-600 text-white shadow-lg shadow-rose-500/20'
+        }`}>
+          Copy Parameters <Copy className="w-4 h-4" />
+        </button>
       </div>
     </Card>
   );

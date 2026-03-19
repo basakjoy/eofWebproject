@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Menu, X, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
+import { LogoIcon } from './LogoIcon';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,9 +19,9 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/home" className="flex items-center space-x-2 group">
-            {/* <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-blue-400 rounded-lg flex items-center justify-center group-hover:shadow-lg group-hover:shadow-blue-500/50 transition-all">
-              <span className="text-white font-black text-lg">E</span>
-            </div> */}
+            <div className="w-10 h-10 flex items-center justify-center group-hover:opacity-80 transition-opacity">
+              <LogoIcon size={40} rounded />
+            </div>
             <span className="text-xl font-black text-white hidden sm:inline">EOF</span>
           </Link>
 

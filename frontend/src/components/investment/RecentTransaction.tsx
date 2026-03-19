@@ -47,7 +47,7 @@ export default function RecentTransactions() {
       {/*  transaction list*/}
       <div className="space-y-3">
         {transactions.map((tx, index)=> (
-          <div key={index} className="flex items-center justify-between p-3 rounded-lg transition-colors" style={{ backgroundColor: "rgba(13, 115, 237, 0.03)" }}>
+          <div key={index} className="flex items-center justify-between p-3 rounded-lg transition-colors" style={{ backgroundColor: "rgba(241, 241, 241, 0.03)" }}>
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center`} style={{ 
               backgroundColor: tx.type === "deposit" ? "rgba(16, 185, 129, 0.1)" : "rgba(239, 68, 68, 0.1)"
