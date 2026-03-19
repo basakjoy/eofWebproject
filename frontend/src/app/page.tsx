@@ -13,7 +13,7 @@ export default function Home() {
       if (user?.role === 'admin') {
         router.push('/admin/dashboard');
       } else if (user?.role === 'investor') {
-        router.push('/dashboard/investor');
+        router.push('/dashboard/investments');
       } else if (user?.role === 'premium') {
         router.push('/dashboard/premium');
       } else {

@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
+import { LogoIcon } from "./LogoIcon";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -104,9 +105,9 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       {/* Logo */}
       <div className="flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 border-b border-gray-200">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          {/* <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-blue-600 via-blue-500 to-blue-400 flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-shadow">
-            <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-          </div> */}
+          <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center flex-shrink-0">
+            <LogoIcon size={40} rounded />
+          </div>
           {!collapsed && (
             <div className="min-w-0">
               <p className="font-display font-bold text-xs sm:text-sm text-gray-900 truncate">
@@ -210,7 +211,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           <div className="mt-auto px-2 sm:px-3 space-y-2 sm:space-y-3 border-t border-gray-200 pt-3 sm:pt-4">
             <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-lg p-3 sm:p-4 border border-blue-200">
               <div className="flex items-center gap-2 sm:gap-3">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-blue-600 to-blue-400 flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full  from-blue-600 to-blue-400 flex items-center justify-center flex-shrink-0">
                   <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
                 <div className="min-w-0">

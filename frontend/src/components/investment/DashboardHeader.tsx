@@ -3,6 +3,7 @@ import { Bell, Settings, User, TrendingUp } from "lucide-react";
 import { Button } from "@/components/dashboard/ui/button";
 import { useThemeStore } from "@/store/themeStore";
 import { useThemeColors } from "@/lib/themeColors";
+import { LogoIcon } from "@/components/common/LogoIcon";
 
 export function DashboardHeader() {
 const theme = useThemeStore((state) => state.theme);
@@ -13,8 +14,8 @@ const colors = useThemeColors();
     return (
         <header className="flex items-center justify-between py-4 sm:py-6 px-4 sm:px-8 border-b sticky top-0 z-50 transition-colors duration-300" style={{ borderColor: colors.border, backgroundColor: colors.bg.primary }}>
             <div className="flex items-center gap-3">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0" style={{ boxShadow: `0 0 30px rgba(13, 115, 237, 0.1)`, backgroundColor: theme === 'dark' ? 'rgba(13, 115, 237, 0.1)' : '#dbeafe' }}>
-                    <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: "#0D73ED" }} />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center flex-shrink-0">
+                    <LogoIcon size={48} rounded />
                 </div>
                 <div>
                     <a href="/home">
