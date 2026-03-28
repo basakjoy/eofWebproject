@@ -52,14 +52,14 @@ export default function AwardsSection() {
   }, []);
 
   return (
-    <section className="py-32 px-6 bg-black border-t border-gray-900">
+    <section className="py-12 sm:py-20 md:py-32 px-4 sm:px-6 bg-black border-t border-gray-900">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-24 awards-header text-center">
-          <p className="text-blue-400 font-medium text-sm tracking-widest uppercase mb-6">Recognition</p>
-          <h2 className="text-5xl md:text-6xl font-black text-white leading-tight">
+        <div className="mb-12 sm:mb-20 md:mb-24 awards-header text-center">
+          <p className="text-blue-400 font-medium text-xs sm:text-sm tracking-widest uppercase mb-4 sm:mb-6">Recognition</p>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight">
             An award-winning broker
           </h2>
-          <p className="text-gray-400 text-lg mt-6 max-w-2xl mx-auto">
+          <p className="text-gray-400 text-sm sm:text-base md:text-lg mt-4 sm:mt-6 max-w-2xl mx-auto px-2">
             Recognized globally for our commitment to excellence, innovation, and customer satisfaction.
           </p>
         </div>
@@ -67,13 +67,13 @@ export default function AwardsSection() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 awards-content">
           {/* Awards Display */}
           <div className="flex items-center justify-center">
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {awards.map((award, index) => (
-                <div key={index} className="award-item flex items-center gap-4">
-                  <span className="text-5xl">{award.badge}</span>
-                  <div>
-                    <p className="text-white font-bold text-lg">{award.title}</p>
-                    <p className="text-gray-500 text-sm">{award.year}</p>
+                <div key={index} className="award-item flex items-center gap-3 sm:gap-4">
+                  <span className="text-3xl sm:text-4xl md:text-5xl">{award.badge}</span>
+                  <div className="flex-1">
+                    <p className="text-white font-bold text-base sm:text-lg">{award.title}</p>
+                    <p className="text-gray-500 text-xs sm:text-sm">{award.year}</p>
                   </div>
                 </div>
               ))}

@@ -15,8 +15,8 @@ export default function Navbar() {
 
   return (
     <nav className="fixed top-0 w-full bg-black/10 backdrop-blur-lg border-b border-gray-900 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+      <div className="px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
+        <div className="w-full max-w-7xl mx-auto flex justify-between items-center h-full">
           {/* Logo */}
           <Link href="/home" className="flex items-center space-x-2 group">
             <div className="w-10 h-10 flex items-center justify-center group-hover:opacity-80 transition-opacity">
@@ -129,8 +129,8 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden bg-black border-t border-gray-900">
-          <div className="px-4 py-4 space-y-3">
+        <div className="md:hidden bg-black border-t border-gray-900 px-4 sm:px-6 lg:px-8">
+          <div className="py-4 space-y-3">
             <Link href="/" className="block text-gray-300 hover:text-white py-2">
               Home
             </Link>

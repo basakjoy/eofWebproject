@@ -34,19 +34,19 @@ export default function FinalCTASection() {
   }, []);
 
   return (
-    <section className="py-32 px-6 bg-gradient-to-b from-black to-gray-950 border-t border-gray-900">
-      <div className="max-w-4xl mx-auto text-center space-y-12">
-        <div className="final-cta-header space-y-6">
-          <p className="text-blue-400 font-medium text-sm tracking-widest uppercase">Ready to Start Trading?</p>
-          <h2 className="text-5xl md:text-7xl font-black text-white leading-tight">
+    <section className="py-12 sm:py-20 md:py-32 px-4 sm:px-6 bg-gradient-to-b from-black to-gray-950 border-t border-gray-900">
+      <div className="max-w-4xl mx-auto text-center space-y-8 sm:space-y-12">
+        <div className="final-cta-header space-y-4 sm:space-y-6">
+          <p className="text-blue-400 font-medium text-xs sm:text-sm tracking-widest uppercase">Ready to Start Trading?</p>
+          <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white leading-tight">
             Join thousands of successful traders
           </h2>
-          <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+          <p className="text-gray-400 text-sm sm:text-base md:text-lg max-w-2xl mx-auto px-2">
             Start your trading journey with tight spreads, fast execution, and comprehensive platform tools. Create your account in minutes.
           </p>
         </div>
 
-        <div className="final-cta-buttons flex flex-col sm:flex-row gap-6 justify-center">
+        <div className="final-cta-buttons flex flex-col sm:flex-row gap-3 sm:gap-6 justify-center">
           <Link
             href="/register"
             className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-green-600/50"

@@ -7,7 +7,7 @@ import Input from '@/components/common/Input';
 import Button from '@/components/common/Button';
 import Alert from '@/components/common/Alert';
 import { useAuthStore } from '@/store/authStore';
-import apiClient from '@/lib/api';
+import { authApi } from '@/lib/authApi';
 
 export default function LoginForm() {
   const router = useRouter();
@@ -31,12 +31,13 @@ export default function LoginForm() {
     setError('');
 
     try {
-      const response = await apiClient.post('/auth/login', formData);
-      const { data } = response.data;
+      const response = await authApi.login(formData);
+      const { data } = response;
       const { token, ...user } = data;
 
       // Save token to localStorage
       localStorage.setItem('token', token);
+      authApi.setUserData(user);
       
       // Save remember me preference
       if (rememberMe) {

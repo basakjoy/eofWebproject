@@ -113,39 +113,39 @@ export default function PortfolioSection() {
   }, []);
 
   return (
-    <section className="py-32 px-6 bg-black">
+    <section className="py-12 sm:py-20 md:py-32 px-4 sm:px-6 bg-black">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-24 portfolio-header">
-          <p className="text-blue-400 font-medium text-sm tracking-widest uppercase mb-6">Our Work</p>
-          <div className="flex items-end justify-between mb-8">
-            <h2 className="text-7xl md:text-8xl font-black text-white leading-tight max-w-3xl">
+        <div className="mb-12 sm:mb-20 md:mb-24 portfolio-header">
+          <p className="text-blue-400 font-medium text-xs sm:text-sm tracking-widest uppercase mb-4 sm:mb-6">Our Work</p>
+          <div className="flex items-end justify-between gap-4 mb-6 sm:mb-8">
+            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-white leading-tight max-w-3xl">
               Featured Projects
             </h2>
-            <div className="flex gap-4">
+            <div className="flex gap-2 sm:gap-4 flex-shrink-0">
               <button
                 onClick={prevSlide}
-                className="w-14 h-14 border-2 border-gray-700 hover:border-blue-400 text-gray-400 hover:text-blue-400 rounded-lg flex items-center justify-center transition-all duration-300 hover:scale-110 cursor-pointer"
+                className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 border-2 border-gray-700 hover:border-blue-400 text-gray-400 hover:text-blue-400 rounded-lg flex items-center justify-center transition-all duration-300 hover:scale-110 cursor-pointer"
               >
-                <ChevronLeft className="w-6 h-6" />
+                <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
               <button
                 onClick={nextSlide}
-                className="w-14 h-14 border-2 border-gray-700 hover:border-blue-400 text-gray-400 hover:text-blue-400 rounded-lg flex items-center justify-center transition-all duration-300 hover:scale-110 cursor-pointer"
+                className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 border-2 border-gray-700 hover:border-blue-400 text-gray-400 hover:text-blue-400 rounded-lg flex items-center justify-center transition-all duration-300 hover:scale-110 cursor-pointer"
               >
-                <ChevronRight className="w-6 h-6" />
+                <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
             </div>
           </div>
         </div>
 
         {/* Project Carousel */}
-        <div className="space-y-8 portfolio-carousel">
+        <div className="space-y-6 sm:space-y-8 portfolio-carousel">
           <div className="overflow-hidden rounded-xl">
             <div className="carousel-slide">
-              <div className={`${projects[current].image} h-96 rounded-xl flex items-center justify-center`}>
-                <div className="text-center">
-                  <p className="text-white/80 text-lg font-medium mb-2">{projects[current].category}</p>
-                  <h3 className="text-white text-4xl font-bold">{projects[current].title}</h3>
+              <div className={`${projects[current].image} h-48 sm:h-64 md:h-80 lg:h-96 rounded-xl flex items-center justify-center`}>
+                <div className="text-center px-4">
+                  <p className="text-white/80 text-sm sm:text-base md:text-lg font-medium mb-1 sm:mb-2">{projects[current].category}</p>
+                  <h3 className="text-white text-2xl sm:text-3xl md:text-4xl font-bold">{projects[current].title}</h3>
                 </div>
               </div>
             </div>

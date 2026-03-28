@@ -4,44 +4,53 @@ import Card from '@/components/common/Card';
 import MarketAnalysisCard from '@/components/forex/MarketAnalysisCard';
 
 export default function MarketAnalysisPage() {
-  const analyses = [
-    {
-      id: 1,
-      title: 'EUR/USD Technical Breakdown',
-      content: 'The EUR/USD pair is showing strong momentum above the 1.08 level. Key support levels at 1.080 and 1.075...',
-      pair: 'EURUSD',
-      sentiment: 'bullish' as const,
-      technicalLevel: 75,
-      createdAt: '2024-06-10T10:30:00Z',
-    },
-    {
-      id: 2,
-      title: 'GBP/USD Consolidation Pattern',
-      content: 'GBP/USD is consolidating within a tight range. Traders should wait for a breakout above 1.270 or below 1.260...',
-      pair: 'GBPUSD',
-      sentiment: 'neutral' as const,
-      technicalLevel: 50,
-      createdAt: '2024-06-09T14:20:00Z',
-    },
-    {
-      id: 3,
-      title: 'USD/JPY Downtrend Formation',
-      content: 'A clear downtrend is forming in USD/JPY after the rejection at 111.50. Next support level at 110.00...',
-      pair: 'USDJPY',
-      sentiment: 'bearish' as const,
-      technicalLevel: 25,
-      createdAt: '2024-06-08T09:45:00Z',
-    },
-  ];
+ const analyses = [
+  {
+    id: 1,
+    title: 'Strong Support Level Identified',
+    content: 'The pair is currently testing a major psychological support level at 1.0500. Indicators show oversold conditions on the RSI, suggesting a potential short-term reversal.',
+    pair: 'EURUSD' as const,
+    sentiment: 'bullish' as const,
+    technicalLevel: 85,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 2,
+    title: 'Bearish Momentum Building',
+    content: 'Resistance at 1.2750 remains firm. Price action indicates a lower-high formation on the H4 timeframe, pointing towards a continuation of the downtrend.',
+    pair: 'GBPUSD' as const,
+    sentiment: 'bearish' as const,
+    technicalLevel: 72,
+    createdAt: new Date(Date.now() - 3600000).toISOString(),
+  },
+  {
+    id: 3,
+    title: 'Consolidation Phase',
+    content: 'The pair is trading within a narrow range between 149.50 and 150.80. Volume is decreasing, suggesting a big move is coming post-NFP data release.',
+    pair: 'USDJPY' as const,
+    sentiment: 'neutral' as const,
+    technicalLevel: 45,
+    createdAt: new Date(Date.now() - 7200000).toISOString(),
+  },
+  {
+    id: 4,
+    title: 'Breakout Above 200 SMA',
+    content: 'AUDUSD has successfully closed above the 200-day Simple Moving Average. Bulls are targeting 0.6800 as the next significant liquidity zone.',
+    pair: 'AUDUSD' as const,
+    sentiment: 'bullish' as const,
+    technicalLevel: 92,
+    createdAt: new Date(Date.now() - 86400000).toISOString(),
+  },
+];
 
   return (
-    <div className="space-y-6">
+    <div className="">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Market Analysis</h1>
+        <h1 className="text-3xl font-bold dark:text-white  text-gray-900">Market Analysis</h1>
         <p className="text-gray-600 mt-1">Professional forex market analysis and insights</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid gap-6">
         {analyses.map((analysis) => (
           <MarketAnalysisCard key={analysis.id} {...analysis} />
         ))}

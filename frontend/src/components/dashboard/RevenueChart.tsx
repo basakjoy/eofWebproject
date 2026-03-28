@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   BarChart,
   Bar,
@@ -34,6 +34,23 @@ type TimeRange = "weekly" | "monthly" | "yearly";
 
 export function RevenueChart() {
   const [timeRange, setTimeRange] = useState<TimeRange>("yearly");
+  const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 640);
+      setIsTablet(window.innerWidth < 768 && window.innerWidth >= 640);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const chartHeight = isMobile ? 250 : isTablet ? 280 : 320;
+  const barSize = isMobile ? 30 : 45;
+  const fontSize = isMobile ? 10 : 12;
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
@@ -71,10 +88,10 @@ export function RevenueChart() {
         </div>
       </div>
 
-      <div className="w-full h-80 overflow-x-auto -mx-6 sm:mx-0">
+      <div className="w-full h-64 sm:h-72 md:h-80 overflow-x-auto -mx-6 sm:mx-0">
         <div className="px-6 sm:px-0">
-          <ResponsiveContainer width="100%" height={320} minWidth={400}>
-            <BarChart data={monthlyData} barSize={45}>
+          <ResponsiveContainer width="100%" height={chartHeight} minWidth={isMobile ? 280 : 350}>
+            <BarChart data={monthlyData} barSize={barSize}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
               <XAxis
                 dataKey="name"
@@ -82,7 +99,7 @@ export function RevenueChart() {
                 tickLine={false}
                 tick={{
                   fill: "#6b7280",
-                  fontSize: 12,
+                  fontSize: fontSize,
                   fontWeight: 500,
                 }}
               />
@@ -91,7 +108,7 @@ export function RevenueChart() {
                 tickLine={false}
                 tick={{
                   fill: "#6b7280",
-                  fontSize: 12,
+                  fontSize: fontSize,
                 }}
                 tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
               />

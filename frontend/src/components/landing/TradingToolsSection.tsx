@@ -52,26 +52,26 @@ export default function TradingToolsSection() {
   }, []);
 
   return (
-    <section className="py-32 px-6 bg-gradient-to-b from-gray-950 to-black border-t border-gray-900">
+    <section className="py-12 sm:py-20 md:py-32 px-4 sm:px-6 bg-gradient-to-b from-gray-950 to-black border-t border-gray-900">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-24 trading-header text-center">
-          <p className="text-blue-400 font-medium text-sm tracking-widest uppercase mb-6">Complete Toolkit</p>
-          <h2 className="text-5xl md:text-6xl font-black text-white leading-tight max-w-3xl mx-auto">
+        <div className="mb-12 sm:mb-20 md:mb-24 trading-header text-center">
+          <p className="text-blue-400 font-medium text-xs sm:text-sm tracking-widest uppercase mb-4 sm:mb-6">Complete Toolkit</p>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight max-w-3xl mx-auto">
             Everything you need to trade smarter
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 trading-cards">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8 trading-cards">
           {tools.map((tool, index) => {
             const Icon = tool.icon;
             return (
               <div
                 key={index}
-                className="trading-card bg-gradient-to-br from-gray-900 to-gray-950 border border-gray-800 hover:border-blue-600 p-8 rounded-xl transition-all duration-300 group hover:shadow-lg hover:shadow-blue-600/20"
+                className="trading-card bg-gradient-to-br from-gray-900 to-gray-950 border border-gray-800 hover:border-blue-600 p-4 sm:p-6 md:p-8 rounded-xl transition-all duration-300 group hover:shadow-lg hover:shadow-blue-600/20"
               >
-                <Icon className="w-12 h-12 text-blue-400 mb-4 group-hover:scale-110 transition-transform" />
-                <h3 className="text-white text-xl font-bold mb-3 group-hover:text-blue-400 transition-colors">{tool.title}</h3>
-                <p className="text-gray-400 leading-relaxed">{tool.description}</p>
+                <Icon className="w-10 h-10 sm:w-12 sm:h-12 text-blue-400 mb-3 sm:mb-4 group-hover:scale-110 transition-transform" />
+                <h3 className="text-white text-base sm:text-lg md:text-xl font-bold mb-2 sm:mb-3 group-hover:text-blue-400 transition-colors">{tool.title}</h3>
+                <p className="text-gray-400 text-sm sm:text-base leading-relaxed">{tool.description}</p>
               </div>
             );
           })}

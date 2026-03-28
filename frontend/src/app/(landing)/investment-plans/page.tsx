@@ -58,31 +58,34 @@ const plans = [
 
 export default function InvestmentPlansPage() {
   return (
-    <div className="space-y-20">
+    <div className="w-full">
       {/* Hero */}
-      <section className="max-w-7xl mx-auto px-4 py-20 text-center">
-        <h1 className="text-6xl font-bold gradient-text mb-6">Investment Plans</h1>
-        <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-          Choose the perfect investment plan that matches your goals and capital
-        </p>
+      <section className="w-full px-4 py-20">
+        <div className="max-w-7xl mx-auto text-center">
+          <h1 className="text-6xl font-bold gradient-text mb-6">Investment Plans</h1>
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            Choose the perfect investment plan that matches your goals and capital
+          </p>
+        </div>
       </section>
 
       {/* Plans Comparison */}
-      <section className="max-w-7xl mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-          {plans.map((plan) => (
-            <Card 
-              key={plan.name} 
-              hover 
-              className={plan.popular ? 'border-2 border-indigo-500/50' : ''}
-            >
-              {plan.popular && (
-                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                  <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-1 rounded-full text-xs font-bold">
-                    MOST POPULAR
+      <section className="w-full px-4 py-20">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            {plans.map((plan) => (
+              <Card 
+                key={plan.name} 
+                hover 
+                className={plan.popular ? 'border-2 border-indigo-500/50' : ''}
+              >
+                {plan.popular && (
+                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                    <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-1 rounded-full text-xs font-bold">
+                      MOST POPULAR
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
               
               <div className={`bg-gradient-to-br ${plan.color} rounded-2xl p-4 mb-6 text-white`}>
                 <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
@@ -126,25 +129,27 @@ export default function InvestmentPlansPage() {
               </Button>
             </Card>
           ))}
+          </div>
         </div>
       </section>
 
       {/* Detailed Comparison Table */}
-      <section className="max-w-7xl mx-auto px-4">
-        <Card>
-          <h2 className="text-4xl font-bold gradient-text mb-8">Detailed Comparison</h2>
-          
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-700">
-                  <th className="text-left py-4 px-4 font-bold text-white">Feature</th>
-                  <th className="text-center py-4 px-4 font-bold text-white">Normal</th>
-                  <th className="text-center py-4 px-4 font-bold text-white">Premium</th>
-                  <th className="text-center py-4 px-4 font-bold text-white">Investor</th>
-                </tr>
-              </thead>
-              <tbody>
+      <section className="w-full px-4 py-20">
+        <div className="max-w-7xl mx-auto">
+          <Card>
+            <h2 className="text-4xl font-bold gradient-text mb-8">Detailed Comparison</h2>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-700">
+                    <th className="text-left py-4 px-4 font-bold text-white">Feature</th>
+                    <th className="text-center py-4 px-4 font-bold text-white">Normal</th>
+                    <th className="text-center py-4 px-4 font-bold text-white">Premium</th>
+                    <th className="text-center py-4 px-4 font-bold text-white">Investor</th>
+                  </tr>
+                </thead>
+                <tbody>
                 {[
                   { name: 'Trading Signals', normal: true, premium: true, investor: true },
                   { name: 'Market Analysis', normal: true, premium: true, investor: true },
@@ -183,29 +188,32 @@ export default function InvestmentPlansPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
-          </div>
-        </Card>
+              </table>
+            </div>
+          </Card>
+        </div>
       </section>
 
       {/* FAQ */}
-      <section className="max-w-4xl mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-5xl font-bold gradient-text mb-4">Frequently Asked Questions</h2>
-        </div>
+      <section className="w-full px-4 py-20">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-5xl font-bold gradient-text mb-4">Frequently Asked Questions</h2>
+          </div>
 
-        <div className="space-y-4">
-          {[
-            { q: 'Can I upgrade or downgrade my plan?', a: 'Yes, you can change your plan anytime. Changes take effect at the start of your next billing cycle.' },
-            { q: 'What happens if I withdraw before the end of the month?', a: 'Early withdrawals are processed, but you may forfeit the monthly profit share for that month.' },
-            { q: 'Is there a lock-in period for investments?', a: 'No, your funds are always accessible. You can withdraw anytime without penalties.' },
-            { q: 'How are profits calculated?', a: 'Profits are calculated daily on your current balance and paid out monthly. Returns vary based on market conditions.' },
-          ].map((faq, idx) => (
-            <Card key={idx} hover>
-              <h3 className="text-lg font-bold text-white mb-2">{faq.q}</h3>
+          <div className="space-y-4">
+            {[
+              { q: 'Can I upgrade or downgrade my plan?', a: 'Yes, you can change your plan anytime. Changes take effect at the start of your next billing cycle.' },
+              { q: 'What happens if I withdraw before the end of the month?', a: 'Early withdrawals are processed, but you may forfeit the monthly profit share for that month.' },
+              { q: 'Is there a lock-in period for investments?', a: 'No, your funds are always accessible. You can withdraw anytime without penalties.' },
+              { q: 'How are profits calculated?', a: 'Profits are calculated daily on your current balance and paid out monthly. Returns vary based on market conditions.' },
+            ].map((faq, idx) => (
+              <Card key={idx} hover>
+                <h3 className="text-lg font-bold text-white mb-2">{faq.q}</h3>
               <p className="text-gray-400">{faq.a}</p>
             </Card>
           ))}
+          </div>
         </div>
       </section>
     </div>

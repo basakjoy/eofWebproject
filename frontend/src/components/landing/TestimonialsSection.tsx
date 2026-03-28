@@ -66,16 +66,16 @@ export default function TestimonialsSection() {
   }, []);
 
   return (
-    <section className="py-32 px-6 bg-black border-t border-gray-900">
+    <section className="py-12 sm:py-20 md:py-32 px-4 sm:px-6 bg-black border-t border-gray-900">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-24 testimonials-header">
-          <p className="text-blue-400 font-medium text-sm tracking-widest uppercase mb-6">Testimonials</p>
-          <h2 className="text-7xl md:text-8xl font-black text-white leading-tight max-w-3xl">
+        <div className="mb-12 sm:mb-20 md:mb-24 testimonials-header">
+          <p className="text-blue-400 font-medium text-xs sm:text-sm tracking-widest uppercase mb-4 sm:mb-6">Testimonials</p>
+          <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white leading-tight max-w-3xl">
             Trusted by Professionals
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 testimonials-container">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 md:gap-12 testimonials-container">
           {testimonials.map((testimonial) => (
             <div
               key={testimonial.id}
