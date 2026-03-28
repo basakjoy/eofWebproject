@@ -45,15 +45,15 @@ const services = [
 
 export default function ServiceOverview() {
   return (
-    <section className="max-w-7xl mx-auto px-4 py-20">
-      <div className="text-center mb-16">
-        <h2 className="text-5xl font-bold gradient-text mb-4">Our Services</h2>
-        <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-20">
+      <div className="text-center mb-12 sm:mb-16">
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold gradient-text mb-3 sm:mb-4">Our Services</h2>
+        <p className="text-base sm:text-lg md:text-xl text-gray-400 max-w-2xl mx-auto px-2">
           Everything you need for professional forex trading and investment management
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
         {services.map((service) => (
           <Link key={service.title} href={service.href}>
             <Card hover className="h-full">

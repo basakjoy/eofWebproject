@@ -9,10 +9,10 @@ export default function LandingLayout({
   children: React.ReactNode;
 }) {
   return (
-    <>
+    <div className="dark">
       <Navbar />
       <main className="pt-16 bg-black">{children}</main>
       <Footer />
-    </>
+    </div>
   );
 }

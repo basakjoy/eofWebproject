@@ -54,23 +54,23 @@ export default function BrokerTrustSection() {
   }, []);
 
   return (
-    <section className="py-32 px-6 bg-gradient-to-b from-black to-gray-950 border-t border-gray-900">
+    <section className="py-12 sm:py-20 md:py-32 px-4 sm:px-6 bg-gradient-to-b from-black to-gray-950 border-t border-gray-900">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-10 md:gap-16 items-center">
           {/* Left - Content */}
           <div className="space-y-8 broker-content">
             <div className="broker-header">
-              <p className="text-blue-400 font-medium text-sm tracking-widest uppercase mb-6">Why Choose Us</p>
-              <h2 className="text-5xl md:text-6xl font-black text-white leading-tight">
+              <p className="text-blue-400 font-medium text-xs sm:text-sm tracking-widest uppercase mb-4 sm:mb-6">Why Choose Us</p>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight">
                 A platform you can trust
               </h2>
             </div>
 
-            <div className="space-y-4 feature-items">
+            <div className="space-y-3 sm:space-y-4 feature-items">
               {features.map((feature, index) => (
-                <div key={index} className="feature-item flex items-start gap-4">
-                  <CheckCircle className="w-6 h-6 text-green-400 flex-shrink-0 mt-1" />
-                  <p className="text-gray-300 text-lg">{feature}</p>
+                <div key={index} className="feature-item flex items-start gap-3 sm:gap-4">
+                  <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-400 flex-shrink-0 mt-1" />
+                  <p className="text-gray-300 text-sm sm:text-base md:text-lg">{feature}</p>
                 </div>
               ))}
             </div>

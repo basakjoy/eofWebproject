@@ -40,12 +40,12 @@ const mockInsights: Insight[] = [
 
 export function MarketInsightsCard() {
   return (
-    <div className="glass-card rounded-xl p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="glass-card rounded-xl p-6 dark:bg-secondary/30 border border-transparent hover:border-primary/20 transition-all">
+      <div className="flex items-center justify-between mb-6 ">
         <h3 className="section-title mb-0">Market Insights</h3>
-        <button className="text-sm text-primary hover:underline flex items-center gap-1">
+        <button className="text-sm text-primary hover:underline flex items-center gap-1"> 
           View All <ExternalLink className="w-3 h-3" />
-        </button>
+        </button> 
       </div>
 
       <div className="space-y-4">

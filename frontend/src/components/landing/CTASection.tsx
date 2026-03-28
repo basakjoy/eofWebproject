@@ -94,30 +94,30 @@ export default function CTASection() {
   }, []);
 
   return (
-    <section className="py-32 px-6 bg-black border-t border-gray-900">
+    <section className="py-12 sm:py-20 md:py-32 px-4 sm:px-6 bg-black border-t border-gray-900">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 sm:gap-16 md:gap-20 lg:gap-24 items-center">
           {/* Left Content */}
-          <div className="space-y-10 cta-content">
+          <div className="space-y-6 sm:space-y-8 md:space-y-10 cta-content">
             <div className="cta-header">
-              <p className="text-blue-400 font-medium text-sm tracking-widest uppercase mb-6">Get Started</p>
-              <h2 className="text-6xl md:text-7xl font-black text-white leading-tight">
+              <p className="text-blue-400 font-medium text-xs sm:text-sm tracking-widest uppercase mb-4 sm:mb-6">Get Started</p>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white leading-tight">
                 Ready to Transform Your Trading?
               </h2>
             </div>
 
-            <p className="text-gray-400 text-lg leading-relaxed max-w-xl font-light">
+            <p className="text-gray-400 text-sm sm:text-base md:text-lg leading-relaxed max-w-xl font-light">
               Our studio is a safe space where traders scale and shine. Join thousands of successful investors
               who've already experienced the difference.
             </p>
 
             {/* Contact Info */}
-            <div className="space-y-6 pt-6 contact-items">
-              <div className="contact-item flex items-center gap-4">
-                <div className="w-12 h-12 bg-blue-600/20 rounded-lg flex items-center justify-center hover:bg-blue-600/40 transition-colors">
-                  <Mail className="w-6 h-6 text-blue-400" />
+            <div className="space-y-4 sm:space-y-6 pt-4 sm:pt-6 contact-items">
+              <div className="contact-item flex items-center gap-3 sm:gap-4">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-600/20 rounded-lg flex items-center justify-center hover:bg-blue-600/40 transition-colors flex-shrink-0">
+                  <Mail className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
                 </div>
-                <div>
+                <div className="flex-1">
                   <p className="text-gray-500 text-sm">Email</p>
                   <p className="text-white font-semibold">hello@empireofforex.com</p>
                 </div>

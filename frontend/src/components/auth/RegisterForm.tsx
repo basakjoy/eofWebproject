@@ -7,7 +7,7 @@ import Input from '@/components/common/Input';
 import Button from '@/components/common/Button';
 import Alert from '@/components/common/Alert';
 import { useAuthStore } from '@/store/authStore';
-import apiClient from '@/lib/api';
+import { authApi } from '@/lib/authApi';
 
 const COUNTRY_CODES = [
   { code: '+1', country: '🇺🇸 USA' },
@@ -67,19 +67,19 @@ export default function RegisterForm() {
     setLoading(true);
 
     try {
-      const response = await apiClient.post('/auth/register', {
+      const response = await authApi.register({
         name: `${formData.firstName} ${formData.lastName}`,
         email: formData.email,
         password: formData.password,
-        phone: `${countryCode}${formData.phone}`,
         userType,
       });
 
-      const { data } = response.data;
+      const { data } = response;
       const { token, ...user } = data;
 
       // Save token and user
       localStorage.setItem('token', token);
+      authApi.setUserData(user);
       setToken(token);
       setUser(user);
 

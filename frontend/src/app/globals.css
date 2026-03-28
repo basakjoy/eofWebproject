@@ -351,3 +351,217 @@ html.dark .stat-card:hover {
 * {
   transition: color 0.3s ease-in-out, background-color 0.3s ease-in-out, border-color 0.3s ease-in-out;
 }
+
+/* ============================================
+   RESPONSIVE DESIGN UTILITIES
+   ============================================ */
+
+/* Mobile-friendly touch targets */
+@media (max-width: 768px) {
+  button,
+  a[role="button"],
+  input[type="submit"],
+  input[type="button"],
+  input[type="reset"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Responsive container utilities */
+.container-responsive {
+  padding-left: 1rem;    /* 16px */
+  padding-right: 1rem;   /* 16px */
+}
+
+@media (min-width: 640px) {
+  .container-responsive {
+    padding-left: 1.5rem; /* 24px */
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-responsive {
+    padding-left: 2rem;   /* 32px */
+    padding-right: 2rem;
+  }
+}
+
+/* Mobile-optimized spacing */
+.space-responsive {
+  gap: 1rem;            /* 16px - Mobile */
+}
+
+@media (min-width: 640px) {
+  .space-responsive {
+    gap: 1.5rem;        /* 24px - Tablet */
+  }
+}
+
+@media (min-width: 1024px) {
+  .space-responsive {
+    gap: 2rem;          /* 32px - Desktop */
+  }
+}
+
+/* Responsive text container */
+.text-responsive {
+  font-size: 0.875rem;  /* 14px - Mobile */
+  line-height: 1.5;
+}
+
+@media (min-width: 640px) {
+  .text-responsive {
+    font-size: 1rem;    /* 16px - Tablet/Desktop */
+  }
+}
+
+/* Hide scrollbar for mobile, show on desktop */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
+@media (min-width: 1024px) {
+  .scrollbar-hide {
+    -ms-overflow-style: auto;
+    scrollbar-width: auto;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: block;
+  }
+}
+
+/* Responsive grid helpers */
+.grid-auto-responsive {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .grid-auto-responsive {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+}
+
+/* Aspect ratio helpers for mobile */
+.aspect-video-responsive {
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  height: auto;
+}
+
+.aspect-square-responsive {
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  height: auto;
+}
+
+/* Responsive font sizing helper */
+@media (max-width: 640px) {
+  .text-hero {
+    font-size: 1.875rem;  /* 30px on mobile */
+    line-height: 1.2;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 1024px) {
+  .text-hero {
+    font-size: 2.25rem;   /* 36px on tablet */
+    line-height: 1.2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .text-hero {
+    font-size: 3.75rem;   /* 60px on desktop */
+    line-height: 1.2;
+  }
+}
+
+/* Responsive padding utilities */
+.px-responsive {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .px-responsive {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .px-responsive {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+.py-responsive {
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .py-responsive {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .py-responsive {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+}
+
+/* Responsive margin utilities */
+.my-responsive {
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .my-responsive {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .my-responsive {
+    margin-top: 3rem;
+    margin-bottom: 3rem;
+  }
+}
+
+/* Safe area support for mobile notches */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+}
+
+/* Mobile-friendly form inputs */
+@media (max-width: 768px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="number"],
+  textarea,
+  select {
+    font-size: 16px;  /* Prevents zoom on iOS */
+    min-height: 44px;
+  }
+}

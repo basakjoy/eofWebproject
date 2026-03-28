@@ -101,8 +101,8 @@ export default function TradingPage() {
 
       {/* Currency Ticker */}
       <div className="bg-slate-900/80 border-b border-slate-800/50">
-        <div className="overflow-hidden py-2">
-          <div className="ticker-scroll flex gap-8 px-6 animate-scroll whitespace-nowrap">
+        <div className="overflow-hidden py-1 sm:py-2">
+          <div className="ticker-scroll flex gap-6 sm:gap-8 px-4 sm:px-6 animate-scroll whitespace-nowrap text-xs sm:text-sm">
             {[
               { pair: 'USD/CAD', rate: '1.3490', change: '+0.05%', isPositive: true },
               { pair: 'USD/CHF', rate: '0.8650', change: '-0.02%', isPositive: false },
@@ -144,33 +144,33 @@ export default function TradingPage() {
       </div>
 
       {/* Main Hero Section */}
-      <div className="max-w-7xl mx-auto px-6 py-20">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-20">
+        <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 md:gap-16 items-center">
           {/* LEFT COLUMN - Description Content */}
           <div className="live-signals-header">
-            <h1 className="text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-4 sm:mb-6 leading-tight">
               Real-Time <span className="bg-gradient-to-r from-green-400 to-cyan-400 bg-clip-text text-transparent">Intelligence</span> For Modern Traders
             </h1>
-            <p className="text-lg text-gray-400 mb-10 leading-relaxed">
+            <p className="text-sm sm:text-base md:text-lg text-gray-400 mb-8 sm:mb-10 leading-relaxed">
               Our advanced algorithms scan 50+ currency pairs 24/7 to identify high-probability trading opportunities. Stop guessing and start trading with precision.
             </p>
 
             {/* Features List */}
-            <div className="space-y-4 mb-12 feature-items">
+            <div className="space-y-3 sm:space-y-4 mb-8 sm:mb-12 feature-items">
               {features.map((feature, i) => (
-                <div key={i} className="flex items-center gap-3">
+                <div key={i} className="flex items-center gap-2 sm:gap-3">
                   <div className="w-2 h-2 bg-green-400 rounded-full flex-shrink-0"></div>
-                  <span className="text-gray-200 font-medium">{feature}</span>
+                  <span className="text-gray-200 font-medium text-sm sm:text-base">{feature}</span>
                 </div>
               ))}
             </div>
 
             {/* CTA Buttons */}
-            <div className="flex gap-4">
-              <button className="px-8 py-3 bg-gradient-to-r from-green-500 to-cyan-500 text-white rounded font-bold hover:shadow-lg hover:shadow-green-500/50 transition-all">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <button className="px-6 sm:px-8 py-2 sm:py-3 bg-gradient-to-r from-green-500 to-cyan-500 text-white rounded font-bold text-sm sm:text-base hover:shadow-lg hover:shadow-green-500/50 transition-all">
                 Start Free Trial
               </button>
-              <button className="px-8 py-3 border border-cyan-500/50 text-cyan-400 rounded font-bold hover:bg-cyan-500/10 transition-all">
+              <button className="px-6 sm:px-8 py-2 sm:py-3 border border-cyan-500/50 text-cyan-400 rounded font-bold text-sm sm:text-base hover:bg-cyan-500/10 transition-all">
                 Watch Demo
               </button>
             </div>
@@ -187,14 +187,14 @@ export default function TradingPage() {
             >
               
               {/* Header */}
-              <div className="p-8 border-b border-slate-700/50">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+              <div className="p-4 sm:p-6 md:p-8 border-b border-slate-700/50">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1 sm:mb-2">
                   Latest Signal
                 </p>
-                <div className="flex items-center justify-between">
-                  <h2 className="text-3xl font-bold text-white">Live Signals</h2>
-                  <div className="px-3 py-1.5 bg-green-500/30 rounded-full border border-green-500/50">
-                    <span className="text-xs font-bold text-green-300">Live Feed Active</span>
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white">Live Signals</h2>
+                  <div className="px-2 sm:px-3 py-1 sm:py-1.5 bg-green-500/30 rounded-full border border-green-500/50">
+                    <span className="text-xs font-bold text-green-300 whitespace-nowrap">Live Feed Active</span>
                   </div>
                 </div>
               </div>

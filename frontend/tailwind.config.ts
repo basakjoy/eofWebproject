@@ -8,6 +8,14 @@ const config: Config = {
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
+    screens: {
+      xs: '320px',
+      sm: '640px',
+      md: '768px',
+      lg: '1024px',
+      xl: '1280px',
+      '2xl': '1536px',
+    },
     extend: {
       colors: {
         primary: '#0D73ED',
@@ -26,6 +34,10 @@ const config: Config = {
           border: 'var(--sidebar-border)',
           ring: 'var(--sidebar-ring)',
         },
+      },
+      spacing: {
+        'sidebar-expanded': '256px',
+        'sidebar-collapsed': '80px',
       },
       keyframes: {
         marquee: {
