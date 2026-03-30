@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Facebook , Instagram, X , Youtube } from 'lucide-react';
+import { LogoIcon } from './LogoIcon';
 
 interface FooterProps {}
 
@@ -28,7 +29,7 @@ export default function Footer({}: FooterProps) {
           </div>
         </div>
 
-        {/* Links Grid */}
+        Links Grid
         <div className="grid grid-cols-2 md:grid-cols-4 gap-16 mb-16">
           {/* Home */}
           <div>
@@ -122,26 +123,24 @@ export default function Footer({}: FooterProps) {
         {/* Bottom */}
         <div className="border-t border-gray-900 pt-12 flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-blue-400 rounded-lg flex items-center justify-center">
-              <span className="text-white font-black">E</span>
-            </div>
+            <LogoIcon className="w-10 h-10 text-blue-600" />
             <p className="text-gray-500 text-sm">
               © {currentYear} Empire of Forex. All rights reserved.
             </p>
           </div>
 
-          <div className="flex gap-8">
-            <a href="#" className="text-gray-400 hover:text-white transition-colors text-sm">
-              Twitter
+          <div className="flex gap-8 ">
+            <a href="https://www.facebook.com/empireforex" className="border boder-white/20 bg-white/70 backdrop-blur-md p-3 rounded-full hover:scale-110 hover:border-blue-500 transition">
+              <Facebook size={22} className="w-5 h-5" />
             </a>
-            <a href="#" className="text-gray-400 hover:text-white transition-colors text-sm">
-              Facebook
+            <a href="https://www.instagram.com/empireofforexworld/?next=%2F" className="border boder-white/20 bg-white/70 backdrop-blur-md p-3 rounded-full hover:scale-110 hover:border-blue-500 transition">
+              <Instagram size={22} className="w-5 h-5" />
             </a>
-            <a href="#" className="text-gray-400 hover:text-white transition-colors text-sm">
-              LinkedIn
+            <a href="https://www.instagram.com/empireofforexworld/?next=%2F" className="border boder-white/20 bg-white/70 backdrop-blur-md p-3 rounded-full hover:scale-110 hover:border-blue-500 transition">
+              <X size={22} className="w-5 h-5" />
             </a>
-            <a href="#" className="text-gray-400 hover:text-white transition-colors text-sm">
-              YouTube
+            <a href="https://www.youtube.com/@EmpireofForex" className="border boder-white/20 bg-white/70 backdrop-blur-md p-3 rounded-full hover:scale-110 hover:border-blue-500 transition">
+              <Youtube size={22} className="w-5 h-5" />
             </a>
           </div>
         </div>

@@ -528,7 +528,7 @@ html.dark .stat-card:hover {
   }
 }
 
-/* ✅ FIXED: Safe area for notched phones — no longer adds 12px padding to all devices */
+/*  FIXED: Safe area for notched phones — no longer adds 12px padding to all devices */
 @supports (padding: max(0px)) {
   @media (max-width: 768px) {
   body {
