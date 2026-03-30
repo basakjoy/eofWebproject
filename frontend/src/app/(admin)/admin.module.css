@@ -1,6 +1,7 @@
 .adminRoot {
   min-height: 100vh;
   display: flex;
+  width : 100%;
   background: var(--bg-secondary);
   color: var(--text-primary);
   flex-direction: column;
@@ -10,6 +11,7 @@
 .mainContent {
   flex: 1;
   display: flex;
+  
   flex-direction: column;
   transition: all 0.3s ease;
   background: var(--bg-secondary);
@@ -78,6 +80,7 @@
 .pageContent {
   flex: 1;
   overflow-y: auto;
+  width: 100%;
   padding: 24px;
   background: var(--bg-secondary);
 }
