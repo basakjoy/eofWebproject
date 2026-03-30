@@ -11,7 +11,7 @@ export default function LandingLayout({
   return (
     <div className="dark">
       <Navbar />
-      <main className="pt-16 bg-black">{children}</main>
+      <main className=" bg-black">{children}</main>
       <Footer />
     </div>
   );
