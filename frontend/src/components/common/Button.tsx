@@ -1,55 +1,10 @@
-// import React from 'react';
-// import { Loader } from 'lucide-react';
-
-// interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-//   variant?: 'primary' | 'secondary' | 'danger' | 'outline' | 'gradient';
-//   size?: 'sm' | 'md' | 'lg';
-//   loading?: boolean;
-//   children: React.ReactNode;
-// }
-
-// export default function Button({
-//   variant = 'primary',
-//   size = 'md',
-//   loading = false,
-//   children,
-//   disabled,
-//   ...props
-// }: ButtonProps) {
-//   const baseStyles = 'font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2 tracking-tight transform hover:scale-105 active:scale-95';
-
-//   const variants = {
-//     primary: 'bg-[#0D73ED] dark:bg-[#4A9FF5] hover:bg-[#0A5CB8] hover:shadow-lg dark:hover:bg-[#6AC3FF] text-white dark:text-gray-900 shadow-md disabled:opacity-50 disabled:scale-100',
-//     secondary: 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white shadow-sm hover:shadow-md disabled:opacity-50 disabled:scale-100',
-//     danger: 'bg-red-600 dark:bg-red-700 hover:bg-red-700 hover:shadow-lg dark:hover:bg-red-600 text-white shadow-md disabled:opacity-50 disabled:scale-100',
-//     outline: 'border-2 border-gray-300 dark:border-gray-600 hover:border-[#0D73ED] dark:hover:border-[#4A9FF5] hover:shadow-md text-gray-900 dark:text-white hover:text-[#0D73ED] dark:hover:text-[#4A9FF5] disabled:opacity-50 disabled:scale-100',
-//     gradient: 'bg-gradient-to-r from-[#0D73ED] to-[#4A9FF5] dark:from-[#0D73ED] dark:to-[#6AC3FF] hover:shadow-lg text-white shadow-md disabled:opacity-50 disabled:scale-100',
-//   };
-
-//   const sizes = {
-//     sm: 'px-4 py-2 text-sm',
-//     md: 'px-6 py-2.5 text-base',
-//     lg: 'px-8 py-3.5 text-lg',
-//   };
-
-//   return (
-//     <button
-//       className={`${baseStyles} ${variants[variant]} ${sizes[size]}`}
-//       disabled={disabled || loading}
-//       {...props}
-//     >
-//       {loading && <Loader className="w-4 h-4 animate-spin" />}
-//       {children}
-//     </button>
-//   );
-// }
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { Loader } from 'lucide-react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'danger' | 'outline' | 'gradient';
+  variant?: 'primary' | 'secondary' | 'danger' | 'outline' | 'gradient' | 'ghost' | 'gold';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
   children: React.ReactNode;
@@ -61,73 +16,115 @@ export default function Button({
   loading = false,
   children,
   disabled,
+  className = '',
+  onMouseMove,
   ...props
 }: ButtonProps) {
-  const baseStyles = `
-    font-semibold rounded-xl transition-all duration-300 flex items-center justify-center gap-2 
-    tracking-tight relative overflow-hidden group disabled:cursor-not-allowed
-    before:absolute before:inset-0 before:bg-white before:opacity-0 before:transition-opacity 
-    before:duration-300 hover:before:opacity-20 active:before:opacity-40
-  `;
+  const btnRef = useRef<HTMLButtonElement>(null);
 
-  const variants = {
-    primary: `
-      bg-gradient-to-br from-[#0D73ED] to-[#0A5CB8] dark:from-[#4A9FF5] dark:to-[#0D73ED]
-      hover:shadow-2xl dark:hover:shadow-blue-500/50 text-white shadow-lg
-      disabled:opacity-50 disabled:shadow-none
-      relative before:absolute before:w-0 before:h-0 before:-top-0 before:-right-0 
-      before:rounded-full before:bg-white before:opacity-30
-      hover:before:w-96 hover:before:h-96 before:transition-all before:duration-500
-    `,
-    secondary: `
-      bg-gradient-to-br from-gray-100 to-gray-50 dark:from-gray-700 dark:to-gray-800
-      hover:shadow-xl dark:hover:shadow-gray-900/50 text-gray-900 dark:text-white shadow-md
-      disabled:opacity-50 disabled:shadow-none
-      border border-gray-200 dark:border-gray-600
-      relative before:absolute before:w-0 before:h-0 before:-top-0 before:-right-0 
-      before:rounded-full before:bg-gray-300 dark:before:bg-gray-500 before:opacity-20
-      hover:before:w-96 hover:before:h-96 before:transition-all before:duration-500
-    `,
-    danger: `
-      bg-gradient-to-br from-red-600 to-red-700 dark:from-red-700 dark:to-red-800
-      hover:shadow-2xl dark:hover:shadow-red-500/50 text-white shadow-lg
-      disabled:opacity-50 disabled:shadow-none
-      relative before:absolute before:w-0 before:h-0 before:-top-0 before:-right-0 
-      before:rounded-full before:bg-white before:opacity-30
-      hover:before:w-96 hover:before:h-96 before:transition-all before:duration-500
-    `,
-    outline: `
-      border-2 border-[#0D73ED] dark:border-[#4A9FF5] text-[#0D73ED] dark:text-[#4A9FF5]
-      hover:shadow-xl hover:shadow-blue-500/20 dark:hover:shadow-blue-500/30
-      relative bg-transparent hover:bg-[#0D73ED] hover:bg-opacity-5 dark:hover:bg-[#4A9FF5] dark:hover:bg-opacity-10
-      transition-all duration-300 disabled:opacity-50 disabled:shadow-none
-      before:absolute before:inset-0 before:rounded-xl before:border-2 before:border-transparent 
-      before:bg-gradient-to-r before:from-[#0D73ED] before:to-[#4A9FF5] before:opacity-0
-      hover:before:opacity-20 before:transition-opacity before:duration-300
-    `,
-    gradient: `
-      bg-gradient-to-r from-[#0D73ED] via-[#2E8CE8] to-[#4A9FF5] 
-      dark:from-[#0D73ED] dark:via-[#2E8CE8] dark:to-[#6AC3FF]
-      hover:shadow-2xl dark:hover:shadow-blue-500/60 text-white shadow-lg
-      disabled:opacity-50 disabled:shadow-none
-      relative before:absolute before:w-0 before:h-0 before:-top-0 before:-right-0 
-      before:rounded-full before:bg-white before:opacity-30
-      hover:before:w-96 hover:before:h-96 before:transition-all before:duration-500
-      after:absolute after:inset-0 after:rounded-xl after:opacity-0
-      after:bg-gradient-to-l after:from-[#4A9FF5] after:via-[#2E8CE8] after:to-[#0D73ED]
-      hover:after:opacity-20 after:transition-opacity after:duration-300
-    `,
+  const handleMouseMove = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const btn = btnRef.current;
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    btn.style.setProperty('--mx', `${x}%`);
+    btn.style.setProperty('--my', `${y}%`);
+    onMouseMove?.(e);
   };
 
-  const sizes = {
-    sm: 'px-4 py-2 text-sm',
-    md: 'px-6 py-3 text-base',
-    lg: 'px-8 py-4 text-lg',
+  const base = [
+    'relative inline-flex items-center justify-center gap-2 font-semibold',
+    'rounded-2xl overflow-hidden cursor-pointer select-none',
+    'transition-all duration-200 ease-out',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500',
+    'disabled:opacity-40 disabled:pointer-events-none',
+    // shimmer spot follows cursor
+    'before:absolute before:inset-0 before:rounded-[inherit]',
+    'before:bg-[radial-gradient(circle_at_var(--mx,50%)_var(--my,50%),rgba(255,255,255,0.18)_0%,transparent_65%)]',
+    'before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300',
+  ].join(' ');
+
+  const variants: Record<string, string> = {
+    primary: [
+      'bg-[#0A5CB8] text-white',
+      'shadow-[0_2px_0_#084a96,0_4px_12px_rgba(13,115,237,0.35),inset_0_1px_0_rgba(255,255,255,0.18)]',
+      'hover:bg-[#0D6FE0]',
+      'hover:shadow-[0_2px_0_#084a96,0_8px_24px_rgba(13,115,237,0.5),inset_0_1px_0_rgba(255,255,255,0.22)]',
+      'active:translate-y-px active:shadow-[0_1px_0_#084a96,0_2px_8px_rgba(13,115,237,0.3)]',
+      // top-edge gloss
+      'after:absolute after:inset-x-0 after:top-0 after:h-[1px] after:rounded-t-2xl',
+      'after:bg-gradient-to-r after:from-transparent after:via-white/40 after:to-transparent',
+    ].join(' '),
+
+    secondary: [
+      'bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100',
+      'border border-gray-200 dark:border-gray-700',
+      'shadow-[0_1px_0_#d1d5db,0_2px_8px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.9)]',
+      'dark:shadow-[0_1px_0_#374151,0_2px_8px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.04)]',
+      'hover:shadow-[0_1px_0_#d1d5db,0_4px_16px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.9)]',
+      'active:translate-y-px',
+    ].join(' '),
+
+    danger: [
+      'bg-red-600 text-white',
+      'shadow-[0_2px_0_#b91c1c,0_4px_12px_rgba(220,38,38,0.35),inset_0_1px_0_rgba(255,255,255,0.15)]',
+      'hover:bg-red-500',
+      'hover:shadow-[0_2px_0_#b91c1c,0_8px_24px_rgba(220,38,38,0.45),inset_0_1px_0_rgba(255,255,255,0.2)]',
+      'active:translate-y-px active:shadow-[0_1px_0_#b91c1c,0_2px_8px_rgba(220,38,38,0.3)]',
+      'after:absolute after:inset-x-0 after:top-0 after:h-[1px] after:rounded-t-2xl',
+      'after:bg-gradient-to-r after:from-transparent after:via-white/35 after:to-transparent',
+    ].join(' '),
+
+    outline: [
+      'bg-transparent text-[#0D73ED] dark:text-[#60A5FA]',
+      'border-2 border-[#0D73ED] dark:border-[#60A5FA]',
+      'shadow-[0_0_0_0_rgba(13,115,237,0)] hover:shadow-[0_0_0_4px_rgba(13,115,237,0.12)]',
+      'hover:bg-[#0D73ED]/5 dark:hover:bg-[#60A5FA]/8',
+      'active:translate-y-px',
+    ].join(' '),
+
+    gradient: [
+      'text-white',
+      'bg-[linear-gradient(135deg,#0D73ED_0%,#2E8CE8_40%,#6AC3FF_100%)]',
+      'shadow-[0_2px_0_rgba(0,0,0,0.18),0_4px_16px_rgba(13,115,237,0.4),inset_0_1px_0_rgba(255,255,255,0.2)]',
+      'hover:shadow-[0_2px_0_rgba(0,0,0,0.18),0_8px_28px_rgba(13,115,237,0.55),inset_0_1px_0_rgba(255,255,255,0.25)]',
+      'hover:brightness-110',
+      'active:translate-y-px active:brightness-95',
+      'after:absolute after:inset-x-0 after:top-0 after:h-[1px] after:rounded-t-2xl',
+      'after:bg-gradient-to-r after:from-transparent after:via-white/50 after:to-transparent',
+    ].join(' '),
+
+    ghost: [
+      'bg-transparent text-gray-700 dark:text-gray-300',
+      'hover:bg-gray-100 dark:hover:bg-gray-800',
+      'active:bg-gray-200 dark:active:bg-gray-700',
+      'active:translate-y-px',
+    ].join(' '),
+
+    gold: [
+      'text-[#5c3a00]',
+      'bg-[linear-gradient(135deg,#F5C842_0%,#FBDC6A_35%,#E8A800_70%,#F5C842_100%)]',
+      'shadow-[0_2px_0_#c48800,0_4px_16px_rgba(232,168,0,0.4),inset_0_1px_0_rgba(255,255,255,0.5)]',
+      'hover:shadow-[0_2px_0_#c48800,0_8px_28px_rgba(232,168,0,0.55),inset_0_1px_0_rgba(255,255,255,0.55)]',
+      'hover:brightness-105',
+      'active:translate-y-px active:brightness-95',
+      'after:absolute after:inset-x-0 after:top-0 after:h-[1px] after:rounded-t-2xl',
+      'after:bg-gradient-to-r after:from-transparent after:via-white/60 after:to-transparent',
+    ].join(' '),
+  };
+
+  const sizes: Record<string, string> = {
+    sm: 'px-4 py-2 text-sm tracking-wide h-9',
+    md: 'px-6 py-3 text-base tracking-wide h-11',
+    lg: 'px-8 py-4 text-lg tracking-wide h-14',
   };
 
   return (
     <button
-      className={`${baseStyles} ${variants[variant]} ${sizes[size]}`}
+      ref={btnRef}
+      onMouseMove={handleMouseMove}
+      className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}
       disabled={disabled || loading}
       {...props}
     >

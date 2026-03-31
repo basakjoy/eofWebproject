@@ -8,6 +8,7 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'EOF - Empire of Forex | Professional Trading Platform',
   description: 'Advanced forex trading signals, real-time market analysis, and professional portfolio management.',
+  
 };
 
 export default function RootLayout({

@@ -146,14 +146,14 @@ export default function TradingSignalsPage() {
                 <ResponsiveContainer width="100%" height={chartHeight}>
                   <BarChart data={performanceHistory}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(99, 102, 241, 0.1)" />
-                  <XAxis stroke="#999" dataKey="date" tick={{ fontSize: isMobile ? 10 : 12 }} />
+                  <XAxis stroke="#ffffff" dataKey="date" tick={{ fontSize: isMobile ? 10 : 12 }} />
                   <YAxis stroke="#999" tick={{ fontSize: isMobile ? 10 : 12 }} />
                   <Tooltip 
-                    contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #4f46e5', borderRadius: '8px' }}
+                    contentStyle={{ backgroundColor: '#281f1f', border: '1px solid #4f46e5', borderRadius: '8px' }}
                     labelStyle={{ color: '#e0e7ff' }}
                   />
-                  <Bar dataKey="wins" stackId="a" fill="#10b981" radius={[8, 8, 0, 0]} />
-                  <Bar dataKey="losses" stackId="a" fill="#ef4444" radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="wins" stackId="a" fill="#1e81e4" radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="losses" stackId="a" fill="#7d2f2f" radius={[8, 8, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -168,15 +168,15 @@ export default function TradingSignalsPage() {
                   <XAxis stroke="#999" dataKey="date" tick={{ fontSize: isMobile ? 10 : 12 }} />
                   <YAxis stroke="#999" tick={{ fontSize: isMobile ? 10 : 12 }} />
                   <Tooltip 
-                    contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #4f46e5', borderRadius: '8px' }}
-                    labelStyle={{ color: '#e0e7ff' }}
+                    contentStyle={{ backgroundColor: '#d2d9e2', border: '1px solid #4f46e5', borderRadius: '8px' }}
+                    labelStyle={{ color: '#111213' }}
                   />
                   <Line 
                     type="monotone" 
                     dataKey="roi" 
-                    stroke="#ec4899" 
+                    stroke="#000000ae" 
                     strokeWidth={isMobile ? 2 : 3}
-                    dot={{ fill: '#ec4899', r: isMobile ? 3 : 5 }}
+                    dot={{ fill: '#f5d0e2', r: isMobile ? 3 : 5 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
