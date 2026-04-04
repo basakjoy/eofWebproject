@@ -1,30 +1,30 @@
 .adminRoot {
   min-height: 100vh;
   display: flex;
-  width : 100%;
+  width: 100%;
   background: var(--bg-secondary);
   color: var(--text-primary);
-  flex-direction: column;
+  flex-direction: row;
 }
 
 /* Main Content Layout */
 .mainContent {
   flex: 1;
   display: flex;
-  
   flex-direction: column;
   transition: all 0.3s ease;
   background: var(--bg-secondary);
   width: 100%;
+  min-width: 0;
 }
 
 /* Sidebar states */
 .expanded {
-  margin-left: 256px;
+  margin-left: 0;
 }
 
 .collapsed {
-  margin-left: 80px;
+  margin-left: 0;
 }
 
 /* Mobile Header */
@@ -80,6 +80,7 @@
 .pageContent {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   width: 100%;
   padding: 24px;
   background: var(--bg-secondary);
@@ -87,12 +88,8 @@
 
 /* Tablet (768px - 1023px) */
 @media (max-width: 1023px) {
-  .expanded {
-    margin-left: 80px;
-  }
-
-  .collapsed {
-    margin-left: 0;
+  .adminRoot {
+    flex-direction: column;
   }
 
   .pageContent {
@@ -108,11 +105,6 @@
 
   .mobileHeader {
     display: flex;
-  }
-
-  .expanded,
-  .collapsed {
-    margin-left: 0;
   }
 
   .pageContent {
@@ -138,5 +130,6 @@
 
   .pageContent {
     padding: 12px;
+    gap: 12px;
   }
 }
