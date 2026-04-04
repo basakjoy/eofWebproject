@@ -1,8 +1,8 @@
-# eofWebproject - Forex Trading Platform 🚀
+# eofWebproject - Forex Trading Platform 
 
 > A complete, production-ready forex trading platform with investment management, admin dashboard, and modern UI. Built with Next.js, Express.js, and TypeScript.
 
-## 📊 Project Status
+## Project Status
 
 - **Build Status**: ✅ **PASSING** (Both frontend & backend compile successfully)
 - **Overall Status**: 🟢 **PRODUCTION READY** (Core Features)
@@ -20,43 +20,43 @@
 
 ## ✨ Key Features
 
-### 🎯 For Users
-- ✅ Complete investment portfolio management
-- ✅ Real-time ROI calculations
-- ✅ Full transaction history tracking
-- ✅ Responsive user dashboard
-- ✅ Modern dark/light theme
-- ✅ Secure JWT authentication
-- ✅ Account management & settings
-- ✅ Quick action buttons
-- ✅ Portfolio overview cards
-- ✅ Transaction filtering & search
+###  For Users
+-  Complete investment portfolio management
+-  Real-time ROI calculations
+-  Full transaction history tracking
+-  Responsive user dashboard
+-  Modern dark/light theme
+-  Secure JWT authentication
+-  Account management & settings
+-  Quick action buttons
+-  Portfolio overview cards
+-  Transaction filtering & search
 
-### 👨‍💼 For Admins
-- ✅ Complete user management
-- ✅ Investment approval system
-- ✅ Withdrawal processing
-- ✅ Trading signal creation & management
-- ✅ System statistics dashboard
-- ✅ Activity logging
-- ✅ User search & filtering
-- ✅ Batch operations
+###  For Admins
+-  Complete user management
+-  Investment approval system
+-  Withdrawal processing
+-  Trading signal creation & management
+-  System statistics dashboard
+-  Activity logging
+-  User search & filtering
+-  Batch operations
 
-### 🏗️ Technical Features
-- ✅ TypeScript throughout
-- ✅ Responsive design (mobile-first)
-- ✅ Automatic database initialization
-- ✅ JWT authentication
-- ✅ Theme persistence
-- ✅ Error handling middleware
-- ✅ CORS protection
-- ✅ Proper code organization
-- ✅ Component library (30+ UI components)
-- ✅ Docker support
+###  Technical Features
+-  TypeScript throughout
+-  Responsive design (mobile-first)
+-  Automatic database initialization
+-  JWT authentication
+-  Theme persistence
+-  Error handling middleware
+-  CORS protection
+-  Proper code organization
+-  Component library (30+ UI components)
+-  Docker support
 
 ---
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Option 1: Local Development (Recommended for First Run)
 
@@ -97,7 +97,7 @@ docker-compose logs -f
 
 ---
 
-## 📂 Project Structure
+##  Project Structure
 
 ```
 eofWebproject/
@@ -186,7 +186,7 @@ DELETE /api/signals/:id         - Delete signal
 
 ---
 
-## 🎨 Frontend Pages
+##  Frontend Pages
 
 ### User Pages
 - `/ ` - Home/Landing
@@ -214,7 +214,7 @@ DELETE /api/signals/:id         - Delete signal
 
 ---
 
-## 💾 Database Schema
+##  Database Schema
 
 ### Core Tables
 ```sql
@@ -232,20 +232,20 @@ All tables auto-create on first startup with proper indexes and constraints.
 
 ## 🔐 Security Features
 
-- ✅ JWT authentication (15min access, 7-day refresh)
-- ✅ bcryptjs password hashing (10 rounds)
-- ✅ CORS protection
-- ✅ Environment variable secrets
-- ✅ Error handling middleware
-- ✅ Protected API routes
-- ✅ Input validation
+-  JWT authentication (15min access, 7-day refresh)
+-  bcryptjs password hashing (10 rounds)
+-  CORS protection
+-  Environment variable secrets
+-  Error handling middleware
+-  Protected API routes
+-  Input validation
 - [ ] Rate limiting (ready to enable)
 - [ ] 2FA support (infrastructure ready)
 - [ ] Email verification (infrastructure ready)
 
 ---
 
-## 🎯 Getting Started (First Time Users)
+##  Getting Started (First Time Users)
 
 ### 1. **Initial Setup** (5 minutes)
    - Clone the repository
@@ -278,7 +278,7 @@ All tables auto-create on first startup with proper indexes and constraints.
 
 ---
 
-## 🛠️ Development Commands
+##  Development Commands
 
 ### Backend
 ```bash
@@ -300,7 +300,7 @@ npm run type-check # TypeScript verification
 
 ---
 
-## 🐳 Docker Deployment
+##  Docker Deployment
 
 ### Build & Run with Docker Compose
 ```bash
@@ -330,7 +330,7 @@ docker run -p 3000:3000 eofweb-frontend
 
 ---
 
-## 📈 Performance
+##  Performance
 
 | Metric | Value |
 |--------|-------|
@@ -343,7 +343,7 @@ docker run -p 3000:3000 eofweb-frontend
 
 ---
 
-## 🧪 Testing the APIs
+##  Testing the APIs
 
 ### Using cURL
 ```bash
@@ -369,18 +369,18 @@ curl http://localhost:5000/api/investments/portfolio/overview/USER_ID \
 
 ---
 
-## 📱 Browser Support
+##  Browser Support
 
-- ✅ Chrome/Edge (Latest)
-- ✅ Firefox (Latest)
-- ✅ Safari (Latest)
-- ✅ Mobile browsers
-- ✅ Dark mode support
-- ✅ Responsive design (320px+)
+-  Chrome/Edge (Latest)
+-  Firefox (Latest)
+-  Safari (Latest)
+-  Mobile browsers
+-  Dark mode support
+-  Responsive design (320px+)
 
 ---
 
-## 🤝 Contributing
+##  Contributing
 
 1. Create a feature branch (`git checkout -b feature/amazing-feature`)
 2. Commit changes (`git commit -m 'Add amazing feature'`)
@@ -389,7 +389,7 @@ curl http://localhost:5000/api/investments/portfolio/overview/USER_ID \
 
 ---
 
-## 📋 Next Steps (Roadmap)
+##  Next Steps (Roadmap)
 
 ### Phase 1 (Current) ✅
 - Core API infrastructure
@@ -430,7 +430,7 @@ curl http://localhost:5000/api/investments/portfolio/overview/USER_ID \
 
 ---
 
-## 🆘 Troubleshooting
+##  Troubleshooting
 
 ### Backend won't start
 ```bash
@@ -465,7 +465,7 @@ npm run build
 
 ---
 
-## 📚 Documentation Files
+##  Documentation Files
 
 1. **[QUICK_START.md](./QUICK_START.md)** - Getting started guide
 2. **[PRODUCTION_SETUP.md](./PRODUCTION_SETUP.md)** - Deployment & configuration
@@ -475,23 +475,23 @@ npm run build
 
 ---
 
-## 📞 Support
+##  Support
 
-- 📖 Read documentation files
-- 🐛 Check [FEATURE_CHECKLIST.md](./FEATURE_CHECKLIST.md) for known issues
-- 💻 Review error messages in console
-- 🔍 Check browser DevTools for runtime errors
-- 📧 Review API responses in Network tab
+-  Read documentation files
+-  Check [FEATURE_CHECKLIST.md](./FEATURE_CHECKLIST.md) for known issues
+-  Review error messages in console
+-  Check browser DevTools for runtime errors
+-  Review API responses in Network tab
 
 ---
 
-## 📄 License
+##  License
 
 This project is proprietary. All rights reserved.
 
 ---
 
-## 🎉 Success Checklist
+##  Success Checklist
 
 After setup, verify:
 - [ ] Backend runs without errors on `http://localhost:5000`
@@ -506,8 +506,8 @@ After setup, verify:
 
 ---
 
-**Built with ❤️ using Next.js, Express.js, and TypeScript**
+**Built with  using Next.js, Express.js, and TypeScript**
 
 **Version**: 1.0.0 (Production Ready - Core Features)  
 **Last Updated**: February 2024  
-**Status**: ✅ Everything working perfectly!
+**Status**:  Everything working perfectly!
