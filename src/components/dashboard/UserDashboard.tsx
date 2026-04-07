@@ -35,7 +35,6 @@ import {
   ResponsiveContainer,
   Cell,
 } from 'recharts';
-import { MarketInsightsCard } from './MarketInsightsCard';
 import { useForex } from '@/hooks/use-forex';
 
 
@@ -668,10 +667,7 @@ export default function UserDashboard() {
         </Card>
       </div>
 
-      {/* Market Insights Row */}
-      <div className="grid grid-cols-1 gap-6">
-        <MarketInsightsCard />
-      </div>
+
     </div>
   );
 }

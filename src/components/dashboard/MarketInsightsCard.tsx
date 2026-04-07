@@ -40,7 +40,7 @@ const mockInsights: Insight[] = [
 
 export function MarketInsightsCard() {
   return (
-    <div className="glass-card rounded-xl p-6 dark:bg-secondary/30 border border-transparent hover:border-primary/20 transition-all">
+    <div className="glass-card rounded-xl p-6 bg-white/50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-primary/20 dark:hover:border-primary/30 transition-all">
       <div className="flex items-center justify-between mb-6 ">
         <h3 className="section-title mb-0">Market Insights</h3>
         <button className="text-sm text-primary hover:underline flex items-center gap-1"> 
@@ -52,15 +52,15 @@ export function MarketInsightsCard() {
         {mockInsights.map((insight) => (
           <div
             key={insight.id}
-            className="p-4 rounded-lg bg-secondary/30 border border-transparent hover:border-primary/20 transition-all cursor-pointer"
+            className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 hover:border-primary/40 dark:hover:border-primary/30 transition-all cursor-pointer"
           >
             <div className="flex items-start gap-3">
               <div
                 className={cn(
                   "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0",
-                  insight.impact === "bullish" && "bg-success/20",
-                  insight.impact === "bearish" && "bg-destructive/20",
-                  insight.impact === "neutral" && "bg-muted"
+                  insight.impact === "bullish" && "bg-success/20 dark:bg-success/30",
+                  insight.impact === "bearish" && "bg-destructive/20 dark:bg-destructive/30",
+                  insight.impact === "neutral" && "bg-muted dark:bg-slate-700"
                 )}
               >
                 {insight.impact === "bullish" && <TrendingUp className="w-4 h-4 text-success" />}
@@ -74,7 +74,7 @@ export function MarketInsightsCard() {
                   {insight.pairs.map((pair) => (
                     <span
                       key={pair}
-                      className="text-xs px-2 py-0.5 rounded bg-primary/10 text-primary"
+                      className="text-xs px-2 py-0.5 rounded bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary/90"
                     >
                       {pair}
                     </span>

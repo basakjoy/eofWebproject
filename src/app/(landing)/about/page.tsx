@@ -3,13 +3,14 @@
 import Card from '@/components/common/Card';
 import Button from '@/components/common/Button';
 import Link from 'next/link';
+
 import { Award, Users, Target, TrendingUp } from 'lucide-react';
 
 const teamMembers = [
   {
     name: 'John Smith',
     role: 'Founder & CEO',
-    image: '👨‍💼',
+    image: '../images/ceo1.png',
     bio: '15+ years in forex trading and financial markets',
   },
   {
@@ -54,11 +55,11 @@ export default function AboutPage() {
       </section>
 
       {/* Company Story */}
-      <section className="w-full px-4 py-20">
-        <div className="max-w-5xl mx-auto">
+      <section className="w-full px-4 py-20 ">
+        <div className="max-w-5xl mx-auto ">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <Card>
-              <h2 className="text-4xl font-bold gradient-text mb-6">Our Story</h2>
+              <h2 className="text-4xl font-bold gradient-text mb-6 ">Our Story</h2>
               <p className="text-gray-300 mb-4">
                 Founded in 2020, Empire of Forex emerged from a vision to democratize professional forex trading. Our founders, with combined experience of 50+ years in financial markets, created a platform that levels the playing field for retail traders.
               </p>

@@ -41,8 +41,8 @@ export default function Card({
   return (
     <div
       ref={ref}
-      className={`bg-white dark:bg-[#070b14]/70 backdrop-blur-2xl rounded-[1.75rem] border border-gray-200/50 dark:border-white/[0.06] ${paddingClasses[padding]} shadow-sm shadow-black/5 dark:shadow-2xl transition-all duration-500 ease-out ${hover
-          ? 'hover:border-gray-300 dark:hover:border-white/[0.12] hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1.5 cursor-pointer'
+      className={`bg-dark  backdrop-blur-2xl rounded-[1.75rem] border border-gray-200/50 dark:border-white/[0.06] ${paddingClasses[padding]} shadow-sm shadow-black/5 dark:shadow-2xl transition-all duration-500 ease-out ${hover
+          ? 'hover:border-gray-300  hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1.5 cursor-pointer'
           : ''
         } ${className}`}
     >
