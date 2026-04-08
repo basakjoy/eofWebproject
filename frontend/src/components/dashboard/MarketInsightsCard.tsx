@@ -76,7 +76,7 @@ export function MarketInsightsCard() {
                       key={pair}
                       className="text-xs px-2 py-0.5 rounded bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary/90"
                     >
-                      {pair}
+                      {pair}  
                     </span>
                   ))}
                   <span className="text-xs text-muted-foreground ml-auto">{insight.timestamp}</span>
