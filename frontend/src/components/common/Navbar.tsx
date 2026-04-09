@@ -1,154 +1,211 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu, X, ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { Menu, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { LogoIcon } from './LogoIcon';
+import gsap from 'gsap';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
-  const toggleDropdown = (name: string) => {
-    setOpenDropdown(openDropdown === name ? null : name);
+  useEffect(() => {
+    // Navbar entrance animation
+    gsap.fromTo(
+      '.navbar-container',
+      { opacity: 0, y: -30, scale: 0.95 },
+      { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'back.out' }
+    );
+
+    // Logo animation
+    gsap.fromTo(
+      '.navbar-logo',
+      { opacity: 0, x: -20 },
+      { opacity: 1, x: 0, duration: 0.6, delay: 0.2, ease: 'power3.out' }
+    );
+
+    // Nav items animation
+    gsap.fromTo(
+      '.nav-item',
+      { opacity: 0, y: -10 },
+      { opacity: 1, y: 0, duration: 0.5, delay: 0.3, stagger: 0.1, ease: 'power3.out' }
+    );
+
+    // Auth buttons animation
+    gsap.fromTo(
+      '.auth-button',
+      { opacity: 0, x: 20 },
+      { opacity: 1, x: 0, duration: 0.6, delay: 0.5, stagger: 0.1, ease: 'power3.out' }
+    );
+  }, []);
+
+  // Hover animation for buttons
+  const handleButtonHover = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    gsap.to(e.currentTarget, {
+      scale: 1.05,
+      duration: 0.3,
+      ease: 'power2.out',
+    });
+  };
+
+  const handleButtonHoverEnd = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    gsap.to(e.currentTarget, {
+      scale: 1,
+      duration: 0.3,
+      ease: 'power2.out',
+    });
   };
 
   return (
-    <nav className="fixed top-0 w-full bg-black/10 backdrop-blur-lg border-b border-gray-900 z-50">
-
-      {/* ✅ Single container — max-width + padding in one place, no more double-wrapping */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
-
-        {/* Logo */}
-        <Link href="/home" className="flex items-center space-x-2 group">
-          <div className="w-10 h-10 flex items-center justify-center group-hover:opacity-80 transition-opacity">
-            <LogoIcon size={40} rounded />
-          </div>
-          <span className="text-xl font-black text-white hidden sm:inline">EOF</span>
-        </Link>
-
-        {/* Desktop Menu */}
-        <div className="hidden md:flex space-x-8 items-center">
-          <Link
-            href="/home"
-            className="text-gray-300 hover:text-white font-medium text-sm transition-colors"
+    <nav className="fixed top-3 left-1/2 transform -translate-x-1/2 w-[95%] md:w-[90%] lg:w-[85%] max-w-8xl z-50">
+      {/* Main Navbar Container - Rounded Pill Shape */}
+      <div className="navbar-container bg-white/40 backdrop-blur-md border border-white/20 rounded-full px-4 md:px-6 lg:px-8 py-2 md:py-2.5 lg:py-3 shadow-2xl">
+        <div className="flex justify-between items-center">
+          
+          {/* Logo */}
+          <Link 
+            href="/home" 
+            className="navbar-logo flex items-center space-x-2 md:space-x-3 group flex-shrink-0"
+            onMouseEnter={handleButtonHover}
+            onMouseLeave={handleButtonHoverEnd}
           >
-            Home
-          </Link>
-
-          {/* Trading Dropdown */}
-          <div className="relative group">
-            <button className="flex items-center gap-1 text-gray-300 hover:text-white font-medium text-sm transition-colors">
-              Trading
-              <ChevronDown className="w-4 h-4 group-hover:rotate-180 transition-transform" />
-            </button>
-            <div className="absolute left-0 mt-0 w-48 bg-gray-950 border border-gray-800 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pt-2">
-              <Link href="/trading-signals" className="block px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-900 rounded-t-lg transition-colors">
-                Trading Signals
-              </Link>
-              <Link href="/market-analysis" className="block px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-900 transition-colors">
-                Market Analysis
-              </Link>
-              <Link href="/dashboard/signals" className="block px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-900 rounded-b-lg transition-colors">
-                Signal Dashboard
-              </Link>
+            <div className="w-10 h-10 md:w-11 md:h-11 lg:w-12 lg:h-12 flex items-center justify-center rounded-full bg-black group-hover:opacity-80 transition-opacity">
+              <LogoIcon size={32} rounded />
             </div>
-          </div>
-
-          {/* Investment Dropdown */}
-          <div className="relative group">
-            <button className="flex items-center gap-1 text-gray-300 hover:text-white font-medium text-sm transition-colors">
-              Investment
-              <ChevronDown className="w-4 h-4 group-hover:rotate-180 transition-transform" />
-            </button>
-            <div className="absolute left-0 mt-0 w-48 bg-gray-950 border border-gray-800 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pt-2">
-              <Link href="/investment-plans" className="block px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-900 rounded-t-lg transition-colors">
-                Investment Plans
-              </Link>
-              <Link href="/dashboard/investments" className="block px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-900 transition-colors">
-                My Investments
-              </Link>
-              <Link href="/dashboard/transactions" className="block px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-900 rounded-b-lg transition-colors">
-                Transactions
-              </Link>
-            </div>
-          </div>
-
-          <Link href="/services" className="text-gray-300 hover:text-white font-medium text-sm transition-colors">
-            Services
+            <span className="text-base md:text-lg lg:text-xl font-black text-white hidden sm:inline">EOF</span>
           </Link>
-          <Link href="/about" className="text-gray-300 hover:text-white font-medium text-sm transition-colors">
-            About
-          </Link>
-        </div>
 
-        {/* Auth Buttons */}
-        <div className="hidden md:flex space-x-3 items-center">
-          <Link href="/login" className="px-6 py-2 text-gray-300 hover:text-white font-medium text-sm transition-colors">
-            Login
-          </Link>
-          <Link href="/register" className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg transition-colors">
-            Get Started
-          </Link>
-        </div>
-
-        {/* Mobile Menu Button */}
-        <button className="md:hidden text-gray-300" onClick={() => setIsOpen(!isOpen)}>
-          {isOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      </div>
-
-      {/* Mobile Menu — ✅ same max-width + padding as the navbar for alignment */}
-      {isOpen && (
-        <div className="md:hidden bg-black border-t border-gray-900">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-3">
-            <Link href="/" className="block text-gray-300 hover:text-white py-2">
+          {/* Desktop Menu - Center */}
+          <div className="hidden md:flex space-x-1 lg:space-x-2 items-center">
+            <Link
+              href="/home"
+              className="nav-item text-black/80 hover:text-white font-medium text-xs lg:text-base px-3 lg:px-5 py-1.5 lg:py-2.5 transition-colors rounded-full hover:bg-black/5"
+              onMouseEnter={handleButtonHover}
+              onMouseLeave={handleButtonHoverEnd}
+            >
               Home
             </Link>
+            <Link
+              href="/trading-signals"
+              className="nav-item text-black/80 hover:text-white font-medium text-xs lg:text-base px-3 lg:px-5 py-1.5 lg:py-2.5 transition-colors rounded-full hover:bg-black/20"
+              onMouseEnter={handleButtonHover}
+              onMouseLeave={handleButtonHoverEnd}
+            >
+              Trading
+            </Link>
+             <Link
+              href="/investment-plans"
+              className="nav-item text-black/80 hover:text-white font-medium text-xs lg:text-base px-3 lg:px-5 py-1.5 lg:py-2.5 transition-colors rounded-full hover:bg-black/20 hidden lg:block"
+              onMouseEnter={handleButtonHover}
+              onMouseLeave={handleButtonHoverEnd}
+            >
+              Investment Plans
+            </Link>
 
-            {/* Trading Dropdown Mobile */}
-            <div>
-              <button
-                onClick={() => toggleDropdown('trading')}
-                className="flex items-center gap-2 text-gray-300 hover:text-white py-2 w-full"
+            <Link
+              href="/about"
+              className="nav-item text-black/80 hover:text-white font-medium text-xs lg:text-base px-3 lg:px-5 py-1.5 lg:py-2.5 transition-colors rounded-full hover:bg-black/20"
+              onMouseEnter={handleButtonHover}
+              onMouseLeave={handleButtonHoverEnd}
+            >
+              About
+            </Link>
+            <Link
+              href="/services"
+              className="nav-item text-black/80 hover:text-white font-medium text-xs lg:text-base px-3 lg:px-5 py-1.5 lg:py-2.5 transition-colors rounded-full hover:bg-black/20 hidden lg:block"
+              onMouseEnter={handleButtonHover}
+              onMouseLeave={handleButtonHoverEnd}
+            >
+              Services
+            </Link>
+          </div>
+
+          {/* Right Side - Auth Buttons */}
+          <div className="hidden md:flex items-center gap-2 lg:gap-4 flex-shrink-0">
+            <Link
+              href="/login"
+              className="auth-button text-black/80 hover:text-white font-medium text-xs lg:text-base px-4 lg:px-6 py-1.5 lg:py-2.5 transition-colors rounded-full hover:bg-black/20"
+              onMouseEnter={handleButtonHover}
+              onMouseLeave={handleButtonHoverEnd}
+            >
+              Login
+            </Link>
+            <Link
+              href="/register"
+              className="auth-button bg-black hover:bg-black/80 text-white font-medium text-xs lg:text-base px-4 lg:px-7 py-1.5 lg:py-2.5 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl"
+              onMouseEnter={handleButtonHover}
+              onMouseLeave={handleButtonHoverEnd}
+            >
+              Sign Up
+            </Link>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            className="md:hidden text-black text-2xl flex-shrink-0"
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            {isOpen ? <X size={28} /> : <Menu size={28} />}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
+      {isOpen && (
+        <div className="md:hidden mt-4 md:mt-6 bg-white/95 backdrop-blur-md border border-white/20 rounded-3xl px-6 md:px-8 py-6 md:py-8 shadow-2xl animate-in fade-in zoom-in-95 duration-300">
+          <div className="space-y-4 md:space-y-6">
+            <Link
+              href="/home"
+              className="block text-black/80 hover:text-black font-medium text-sm md:text-base py-2 md:py-3 px-3 md:px-4 rounded-lg hover:bg-black/5 transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              Home
+            </Link>
+            <Link
+              href="/trading-signals"
+              className="block text-black/80 hover:text-black font-medium text-sm md:text-base py-2 md:py-3 px-3 md:px-4 rounded-lg hover:bg-black/5 transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              Trading
+            </Link>
+            <Link
+              href="/investment-plans"
+              className="block text-black/80 hover:text-black font-medium text-sm md:text-base py-2 md:py-3 px-3 md:px-4 rounded-lg hover:bg-black/5 transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              Investment Plans
+            </Link>
+            
+
+            <Link
+              href="/about"
+              className="block text-black/80 hover:text-black font-medium text-sm md:text-base py-2 md:py-3 px-3 md:px-4 rounded-lg hover:bg-black/5 transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              About
+            </Link>
+            <Link
+              href="/services"
+              className="block text-black/80 hover:text-black font-medium text-sm md:text-base py-2 md:py-3 px-3 md:px-4 rounded-lg hover:bg-black/5 transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              Services
+            </Link>
+
+            <div className="pt-4 md:pt-6 border-t border-black/10 space-y-3 md:space-y-4">
+              <Link
+                href="/login"
+                className="block text-black/80 hover:text-black font-medium text-sm md:text-base py-2 md:py-3 px-3 md:px-4 rounded-lg hover:bg-black/5 transition-colors"
+                onClick={() => setIsOpen(false)}
               >
-                Trading
-                <ChevronDown className={`w-4 h-4 transition-transform ${openDropdown === 'trading' ? 'rotate-180' : ''}`} />
-              </button>
-              {openDropdown === 'trading' && (
-                <div className="pl-4 space-y-2">
-                  <Link href="/trading-signals" className="block text-gray-400 hover:text-white py-2">Trading Signals</Link>
-                  <Link href="/market-analysis" className="block text-gray-400 hover:text-white py-2">Market Analysis</Link>
-                  <Link href="/dashboard/signals" className="block text-gray-400 hover:text-white py-2">Signal Dashboard</Link>
-                </div>
-              )}
-            </div>
-
-            {/* Investment Dropdown Mobile */}
-            <div>
-              <button
-                onClick={() => toggleDropdown('investment')}
-                className="flex items-center gap-2 text-gray-300 hover:text-white py-2 w-full"
+                Login
+              </Link>
+              <Link
+                href="/register"
+                className="block w-full bg-black hover:bg-black/80 text-white font-medium text-sm md:text-base px-6 py-2 md:py-3 rounded-full text-center transition-all shadow-lg hover:shadow-xl"
+                onClick={() => setIsOpen(false)}
               >
-                Investment
-                <ChevronDown className={`w-4 h-4 transition-transform ${openDropdown === 'investment' ? 'rotate-180' : ''}`} />
-              </button>
-              {openDropdown === 'investment' && (
-                <div className="pl-4 space-y-2">
-                  <Link href="/investment-plans" className="block text-gray-400 hover:text-white py-2">Investment Plans</Link>
-                  <Link href="/dashboard/investments" className="block text-gray-400 hover:text-white py-2">My Investments</Link>
-                  <Link href="/dashboard/transactions" className="block text-gray-400 hover:text-white py-2">Transactions</Link>
-                </div>
-              )}
-            </div>
-
-            <Link href="/services" className="block text-gray-300 hover:text-white py-2">Services</Link>
-            <Link href="/about" className="block text-gray-300 hover:text-white py-2">About</Link>
-
-            <div className="pt-4 space-y-3">
-              <Link href="/login" className="block text-gray-300 hover:text-white py-2">Login</Link>
-              <Link href="/register" className="block px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-center">
-                Get Started
+                Sign Up
               </Link>
             </div>
           </div>

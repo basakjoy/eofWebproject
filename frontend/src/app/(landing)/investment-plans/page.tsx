@@ -58,11 +58,11 @@ const plans = [
 
 export default function InvestmentPlansPage() {
   return (
-    <div className="w-full">
+    <div className="w-full pt-16">
       {/* Hero */}
       <section className="w-full px-4 py-20">
         <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-6xl font-bold gradient-text mb-6">Investment Plans</h1>
+          <h1 className="text-5xl md:text-9xl font-bold text-white/80 tracking-tight mb-8 leading-tight">Investment Plans</h1>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
             Choose the perfect investment plan that matches your goals and capital
           </p>
