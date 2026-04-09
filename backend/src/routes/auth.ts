@@ -224,4 +224,62 @@ router.get('/me', async (req: AuthRequest, res: Response) => {
   }
 });
 
+// Google OAuth endpoint
+router.post('/google', async (req: Request, res: Response) => {
+  try {
+    const { email, name, googleId } = req.body;
+
+    // Validation
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required for Google login',
+      });
+    }
+
+    // Check if user exists
+    let user = await getAsync('SELECT id, name, email, role, status FROM users WHERE email = ?', [email]);
+
+    // If user doesn't exist, create one
+    if (!user) {
+      const userId = uuidv4();
+      // For Google users, we don't need a password, use googleId as placeholder
+      const hashedPassword = await bcrypt.hash(googleId || 'google-auth', 10);
+      
+      await runAsync(
+        `INSERT INTO users (id, name, email, password, role, status) 
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [userId, name || email.split('@')[0], email, hashedPassword, 'user', 'active']
+      );
+
+      user = await getAsync('SELECT id, name, email, role, status FROM users WHERE id = ?', [userId]);
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET || 'secret',
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      success: true,
+      message: 'Google login successful',
+      data: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        token,
+      },
+    });
+  } catch (error: any) {
+    console.error('Google OAuth error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Google OAuth login failed',
+    });
+  }
+});
+
 export default router;

@@ -20,12 +20,7 @@ export default function LoginPage() {
           <LoginForm />
         </Card>
 
-        <p className="text-center text-gray-600 dark:text-gray-400 mt-6">
-          Don't have an account?{' '}
-          <Link href="/register" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold">
-            Create one
-          </Link>
-        </p>
+       
       </div>
     </div>
   );
