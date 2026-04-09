@@ -262,7 +262,7 @@ export default function App() {
   }, [gsapLoaded]);
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-black text-white font-sans selection:bg-indigo-500/30">
+    <div ref={containerRef} className="min-h-screen bg-black text-white pt-16 font-sans selection:bg-indigo-500/30">
       
       {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
@@ -290,18 +290,11 @@ export default function App() {
           <p className="text-xl md:text-2xl text-zinc-400 max-w-3xl mx-auto mb-10 font-light leading-relaxed">
             We've redefined the trading experience by bridging the gap between institutional expertise and retail traders. Founded in 2020, powered by precision.
           </p>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-6 w-full sm:w-auto">
-            <Button variant="gradient" size="lg" className="w-full sm:w-auto h-12 sm:h-auto flex items-center justify-center">
-              Start Trading Now
-            </Button>
-            <Button variant="outline" size="lg" className="w-full sm:w-auto h-12 sm:h-auto flex items-center justify-center gap-2">
-              View Performance <ArrowRight size={20} />
-            </Button>
-          </div>
+          
         </div>
 
         {/* Floating Stats */}
-        <div className="absolute bottom-1 left-0 right-0 hidden md:block">
+        <div className="absolute bottom-1 left-0 right-0 hidden p-8 md:block">
           <div className="max-w-7xl mx-auto px-4 grid grid-cols-4 gap-8">
             {[
               { label: 'Active Traders', value: '12K+' },
