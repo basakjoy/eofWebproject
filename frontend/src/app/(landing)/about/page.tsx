@@ -284,7 +284,7 @@ export default function App() {
           <h1 className="text-5xl md:text-8xl font-black tracking-tight mb-8 leading-tight">
             THE EMPIRE OF <br/>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">
-              MODERN FOREX
+            FOREX
             </span>
           </h1>
           <p className="text-xl md:text-2xl text-zinc-400 max-w-3xl mx-auto mb-10 font-light leading-relaxed">
