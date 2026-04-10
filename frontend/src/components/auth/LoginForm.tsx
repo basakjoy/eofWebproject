@@ -90,7 +90,7 @@ export default function LoginForm() {
       } else if (user.role === 'investor') {
         router.push('/dashboard/investor');
       } else {
-        router.push('/dashboard');
+        router.push('/dashboard/user');
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');
