@@ -1,142 +1,166 @@
-'use client';
+"use client";
 
-import Card from '@/components/common/Card';
-import Button from '@/components/common/Button';
-import Input from '@/components/common/Input';
-import Select from '@/components/common/Select';
-import { Plus, Edit2, Trash2 } from 'lucide-react';
-import { useState } from 'react';
 
-export default function SignalManager() {
-  const [signals, setSignals] = useState([
-    {
-      id: 1,
-      pair: 'EURUSD',
-      type: 'BUY',
-      entry: 1.085,
-      target: 1.092,
-      stopLoss: 1.080,
-      status: 'active',
-    },
-    {
-      id: 2,
-      pair: 'GBPUSD',
-      type: 'SELL',
-      entry: 1.265,
-      target: 1.250,
-      stopLoss: 1.275,
-      status: 'active',
-    },
-  ]);
+import  { useState, useEffect, use} from "react";
+import {Plus, Edit2, Trash2, Zap, ArrorwUpRight, ArrowDownLeft, Loader2, X} from "lucide-react"; 
+import { signalService } from "@/services/signalService";
+import { toast } from "sonner";
+import { set } from "react-hook-form";
 
-  return (
-    <div className="space-y-6">
-      <Card>
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Create Signal</h2>
-          <Button size="sm">
-            <Plus className="w-4 h-4" />
-            New Signal
-          </Button>
-        </div>
+export default function SignalManager() {          
+  const [signals, setsignals] = useState<any[]>([]);
+  const [isloading, setisloading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const[ isDeleting, setIsDeleting] = useState<string | null>(null);
 
-        <form className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Select
-              label="Currency Pair"
-              options={[
-                { value: 'EURUSD', label: 'EUR/USD' },
-                { value: 'GBPUSD', label: 'GBP/USD' },
-                { value: 'USDJPY', label: 'USD/JPY' },
-                { value: 'AUDUSD', label: 'AUD/USD' },
-              ]}
-            />
-            <Select
-              label="Signal Type"
-              options={[
-                { value: 'BUY', label: 'BUY' },
-                { value: 'SELL', label: 'SELL' },
-                { value: 'TP', label: 'Take Profit' },
-                { value: 'SL', label: 'Stop Loss' },
-              ]}
-            />
-            <Input label="Entry Price" type="number" step="0.0001" placeholder="1.0850" />
-            <Input label="Target Price" type="number" step="0.0001" placeholder="1.0920" />
-            <Input label="Stop Loss" type="number" step="0.0001" placeholder="1.0800" />
-            <Select
-              label="Timeframe"
-              options={[
-                { value: '15m', label: '15 Minutes' },
-                { value: '1h', label: '1 Hour' },
-                { value: '4h', label: '4 Hours' },
-                { value: '1d', label: '1 Day' },
-              ]}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Analysis</label>
-            <textarea
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-              rows={4}
-              placeholder="Technical analysis and reasons for this signal..."
-            ></textarea>
-          </div>
-          <Button variant="primary">Publish Signal</Button>
-        </form>
-      </Card>
+  const [editingId, setEditindId] = useState<string | null>(null);
 
-      <Card>
-        <h2 className="text-2xl font-bold mb-6">Active Signals</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-4 py-3 text-left font-semibold">Pair</th>
-                <th className="px-4 py-3 text-left font-semibold">Type</th>
-                <th className="px-4 py-3 text-left font-semibold">Entry</th>
-                <th className="px-4 py-3 text-left font-semibold">Target</th>
-                <th className="px-4 py-3 text-left font-semibold">SL</th>
-                <th className="px-4 py-3 text-left font-semibold">Status</th>
-                <th className="px-4 py-3 text-left font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {signals.map((signal) => (
-                <tr key={signal.id} className="border-b hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium">{signal.pair}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-semibold ${
-                        signal.type === 'BUY'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {signal.type}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">{signal.entry}</td>
-                  <td className="px-4 py-3">{signal.target}</td>
-                  <td className="px-4 py-3">{signal.stopLoss}</td>
-                  <td className="px-4 py-3">
-                    <span className="px-2 py-1 rounded text-xs font-semibold bg-blue-100 text-blue-800">
-                      {signal.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 flex gap-2">
-                    <button className="p-1 hover:bg-blue-100 rounded">
-                      <Edit2 className="w-4 h-4 text-blue-600" />
-                    </button>
-                    <button className="p-1 hover:bg-red-100 rounded">
-                      <Trash2 className="w-4 h-4 text-red-600" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+  // form state
+   const [ formData, setFormData] = useState({
+    pair: "EUR/USD",
+    type: "Buy",
+    entryPrice:"",
+    takeProfit1:"",
+    takeProfit2:"",
+    takeProfit3:"",
+    stopLoss:"",
+    reliability: "85",
+    timeframe: "1h",
+    analysis: ""
+   });
+
+   const fetchSignals = async () => {
+    setisloading(true);
+
+    try {
+      const response = await signalService .getSignals();
+      setsignals(response.data || []);
+    } catch (error) {
+      toast.error("Failed to fetch signals. Please try again.");
+
+    } finally {
+      setisloading(false);
+    }
+};
+
+useEffect(()=> {
+  fetchSignals();
+}, []);
+
+const resetForm = () => {
+  setFormData ({
+    pair: "EUR/USD",
+    type: "Buy",
+    entryPrice:"",
+    takeProfit1:"",
+    takeProfit2:"",
+    takeProfit3:"",
+    stopLoss:"",
+    reliability: "85",
+    timeframe: "1h",
+    analysis: ""
+
+  });
+
+  setEditindId(null);
+};
+
+const handleEdit = ( signal: any ) => {
+   setEditindId(signal.id);
+   setFormData({
+    pair: signal.pair,
+    type: signal.type,
+    entryPrice: signal.entry_price ? signal.entry_price.toString() : signal.entryPrice?.toString()|| "",
+    takeProfit1: signal.take_profit_1 ? signal.take_profit_1.toString() : signal.take_profit_1?. toString() || "", 
+    takeProfit2: signal.take_profit_2 ? signal.take_profit_2.toString() : signal.take_profit_2?. toString() || "",
+    takeProfit3: signal.take_profit_3 ? signal.take_profit_3.toString() : signal.take_profit_3?. toString() || "",
+    stopLoss: signal.stop_loss ? signal.stop_loss.toString() : signal.stop_loss?.toString() || "",
+    reliability: (signal.reliability?(signal.reliability * 100).toString() || "85"),
+    timeframe: signal.timeframe || "1h",
+    analysis: signal.analysis || ""
+   });
+}
+
+const handleDelete =async (id: string) => {
+  if (!window.confirm("Are you sure you want to delete this signal?"))
+    return;
+
+  setIsDeleting(id);
+
+  try {
+    await signalService.deleteSignal(id);
+    toast.success("Signal deleted successfully.");
+    fetchSignals();
+  } catch (error) {
+    toast.error("Failed to delete signal.Please try again")
+  } finally {
+    setIsDeleting(null);
+  }
+};
+
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsSubmitting(true);
+  
+  try {
+    const signalData = {
+      pair: formData.pair,
+      type: formData.type,
+      entryPrice: parseFloat (formData.entryPrice),
+      takeProfit1: parseFloat(formData.takeProfit1),
+      takeProfit2: parseFloat(formData.takeProfit2),
+      takeProfit3: parseFloat(formData.takeProfit3),
+      stopLoss: parseFloat(formData.stopLoss),
+      reliability: parseFloat (formData.reliability) / 100,
+      timeframe: formData.timeframe,
+      analysis: formData.analysis
+    };
+
+    if (editingId) {
+      await signalService.updateSignal(editingId, signalData);
+      toast.success("Signal upadated successfully!");
+    } else {
+      await signalService.createSignal (signalData);
+      toast.success("Trading signal publised successfully;");
+    }
+
+    resetForm();
+    fetchSignals();
+  }
+
+  catch (error) {
+    toast.error(editingId? " Failed to upadate signal" : "failed to publish signal");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
+return (
+  <div className="space-y-6">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between items-start sm:items-start gap-4">
+      <div>
+        <h2 className="text-3xl font-back tracking light text-white">
+        Signal Center
+        </h2>
+       <p className="text -muted-foreground font-medium"> Broadcast premium trading signals</p>
+      </div>
+      
     </div>
-  );
+
+    <div className="grid grid-cols-1 xl:grid-cols-3 gap-60">
+      {/* Create and edit signal from admin panel */}
+       <div className="xl:col-span-1">
+        <div className="glass-card bg-card/40 p-6 sticky top-24">
+
+        <div className="flex items-center us gap-2 mb-6">
+         <div></div>
+        </div>
+        </div>
+       </div>
+    </div>
+  </div>
+)
+
+
+
 }
