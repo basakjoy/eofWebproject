@@ -29,7 +29,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useThemeStore } from "@/store/themeStore";
 import { useThemeColors } from "@/lib/themeColors";
-
+import SignalManager from "./SignalManager";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { SignalsCard } from "@/components/dashboard/SignalsCard";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
@@ -185,7 +185,7 @@ export default function AdminDashboard() {
   const router = useRouter();
   const theme = useThemeStore((state) => state.theme);
   const colors = useThemeColors();
-  
+
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; userId: string | null; userName: string | null }>({ open: false, userId: null, userName: null });
@@ -232,7 +232,7 @@ export default function AdminDashboard() {
   const [educationModules, setEducationModules] = useState<EducationModule[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  
+
   // Loading and error states
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -243,7 +243,7 @@ export default function AdminDashboard() {
       try {
         setLoading(true);
         setError(null);
-        
+
         // Fetch all data in parallel
         const [dashboardStatsRes, usersRes, signalsRes, withdrawalsRes, analysisRes, notificationsRes] = await Promise.all([
           adminApi.getDashboardStats().catch(err => ({ success: false, data: {} })),
@@ -384,7 +384,7 @@ export default function AdminDashboard() {
 
   const filteredUsers = users.filter(user => !deletedUsers.has(user.id));
   return (
-    <div className="space-y-6 animate-fade-in transition-colors duration-300" style={{  color: colors.text.primary }}>
+    <div className="space-y-6 animate-fade-in transition-colors duration-300" style={{ color: colors.text.primary }}>
       {/* Header */}
       <div className="px-4 sm:px-6">
         <h1 className="text-xl sm:text-2xl md:text-3xl font-bold font-display transition-colors duration-300 break-words" style={{ color: colors.text.primary }}>
@@ -430,7 +430,7 @@ export default function AdminDashboard() {
           ) : (
             <>
               {/* Stats - Responsive Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 lg:gap-6">
                 {statsData.map((stat) => (
                   <StatsCard key={stat.title} {...stat} />
                 ))}
@@ -439,10 +439,10 @@ export default function AdminDashboard() {
               {/* Content - Responsive Layout */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                 {/* Left */}
-                <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+                <div className="lg:col-span-2 space-y-6">
                   <RevenueChart />
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <SignalsCard />
                     <MarketInsightsCard />
                   </div>
@@ -451,7 +451,7 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Right - Sidebar on large screens */}
-                <div className="space-y-4 sm:space-y-6">
+                <div className="space-y-6">
                   <CalendarWidget />
                   <QuickActions />
                   <UserActivityCard />
@@ -466,37 +466,36 @@ export default function AdminDashboard() {
       {activeTab === "articles" && (
         <div className="space-y-6 px-4 sm:px-6">
           {/* Search & Filter */}
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-            <div className="relative flex-1 min-w-0">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors duration-300 flex-shrink-0" style={{ color: colors.text.tertiary }} />
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors duration-300" style={{ color: colors.text.tertiary }} />
               <Input placeholder="Search articles..." className="pl-10 w-full transition-colors duration-300" />
             </div>
 
-            <div className="flex gap-2 sm:gap-4 flex-wrap sm:flex-nowrap">
-              <Button variant="outline" className="flex-1 sm:flex-none">
+            <div className="flex gap-4">
+              <Button variant="outline" className="flex-1 lg:flex-none">
                 <Filter className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Filter</span>
+                Filter
               </Button>
 
               <Button
-                className="flex-1 sm:flex-none bg-gradient-to-r from-blue-600 to-blue-400 text-white hover:shadow-lg transition-all"
+                className="flex-1 lg:flex-none bg-gradient-to-r from-blue-600 to-blue-400 text-white hover:shadow-lg transition-all"
               >
                 <Plus className="w-4 h-4 mr-1" />
-                <span className="hidden sm:inline">New Article</span>
-                <span className="sm:hidden">New</span>
+                New Article
               </Button>
             </div>
           </div>
 
           {/* Articles List */}
-          <div className="grid gap-4">
+          <div className="grid grid-cols-1 gap-4">
             {mockArticles.map((article) => (
               <div
                 key={article.id}
                 className="border rounded-lg p-4 sm:p-6 transition-all duration-300"
-                style={{  borderColor: colors.border }}
+                style={{ borderColor: colors.border }}
               >
-                <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+                <div className="flex flex-col lg:flex-row items-start justify-between gap-4">
                   <div className="flex gap-3 sm:gap-4 min-w-0 flex-1">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center shrink-0 transition-colors duration-300" style={{ backgroundColor: theme === 'dark' ? 'rgba(59, 130, 246, 0.2)' : 'rgb(219, 234, 254)' }}>
                       <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
@@ -511,51 +510,52 @@ export default function AdminDashboard() {
                         {article.excerpt}
                       </p>
 
-                      <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-3">
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3">
                         <Badge variant="info" label={article.category} size="sm" />
 
-                        <span className="text-xs flex items-center gap-1 transition-colors duration-300 whitespace-nowrap" style={{ color: colors.text.secondary }}>
+                        <span className="text-xs flex items-center gap-1 transition-colors duration-300" style={{ color: colors.text.secondary }}>
                           <Clock className="w-3 h-3 flex-shrink-0" />
                           {article.readTime}
                         </span>
 
-                        <span className="text-xs transition-colors duration-300 truncate" style={{ color: colors.text.secondary }}>
+                        <span className="text-xs transition-colors duration-300 truncate max-w-[100px]" style={{ color: colors.text.secondary }}>
                           {article.author}
                         </span>
 
-                        <span className="text-xs transition-colors duration-300 whitespace-nowrap" style={{ color: colors.text.secondary }}>
+                        <span className="text-xs transition-colors duration-300" style={{ color: colors.text.secondary }}>
                           {article.date}
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto flex-wrap sm:flex-nowrap justify-between sm:justify-start">
-                    <Badge
-                      variant={
-                        article.status === "published"
-                          ? "success"
-                          : article.status === "draft"
-                          ? "info"
-                          : "warning"
-                      }
-                      label={article.status}
-                    />
+                  <div className="flex items-center gap-2 sm:gap-4 w-full lg:w-auto justify-between lg:justify-start">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <Badge
+                        variant={
+                          article.status === "published"
+                            ? "success"
+                            : article.status === "draft"
+                              ? "info"
+                              : "warning"
+                        }
+                        label={article.status}
+                      />
 
-                    {article.status === "published" && (
-                      <div className="hidden md:flex items-center gap-3 sm:gap-4 text-xs sm:text-sm transition-colors duration-300 whitespace-nowrap" style={{ color: colors.text.secondary }}>
-                        <span className="flex items-center gap-1">
-                          <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
-                          <span className="hidden sm:inline">{article.views.toLocaleString()}</span>
-                          <span className="sm:hidden">{article.views > 999 ? `${(article.views / 1000).toFixed(1)}k` : article.views}</span>
-                        </span>
+                      {article.status === "published" && (
+                        <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm transition-colors duration-300" style={{ color: colors.text.secondary }}>
+                          <span className="flex items-center gap-1">
+                            <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
+                            {article.views > 999 ? `${(article.views / 1000).toFixed(1)}k` : article.views}
+                          </span>
 
-                        <span className="flex items-center gap-1">
-                          <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4" />
-                          {article.comments}
-                        </span>
-                      </div>
-                    )}
+                          <span className="flex items-center gap-1">
+                            <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4" />
+                            {article.comments}
+                          </span>
+                        </div>
+                      )}
+                    </div>
 
                     <div className="relative">
                       <button
@@ -766,37 +766,39 @@ export default function AdminDashboard() {
                 </div>
               ) : (
                 signals.map((signal) => (
-                  <div key={signal.id} className="border rounded-lg p-4 sm:p-6 transition-all duration-300 overflow-x-auto" style={{ backgroundColor: colors.bg.card, borderColor: colors.border }}>
+                  <div key={signal.id} className="border rounded-lg p-4 sm:p-6 transition-all duration-300" style={{ backgroundColor: colors.bg.card, borderColor: colors.border }}>
                     <div className="flex flex-col sm:flex-row items-start gap-4">
                       <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center shrink-0 transition-colors duration-300" style={{ backgroundColor: signal.direction === 'BUY' ? (theme === 'dark' ? 'rgba(34, 197, 94, 0.2)' : 'rgb(220, 252, 231)') : (theme === 'dark' ? 'rgba(239, 68, 68, 0.2)' : 'rgb(254, 226, 226)') }}>
                         {signal.direction === 'BUY' ? <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" /> : <TrendingDown className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                      <div className="flex-1 min-w-0 w-full">
+                        <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-3 flex-wrap">
                           <h3 className="font-semibold transition-colors duration-300 text-sm sm:text-base" style={{ color: colors.text.primary }}>{signal.pair}</h3>
-                          <Badge variant={signal.direction === 'BUY' ? 'success' : 'danger'} label={signal.direction} />
-                          <Badge variant={signal.status === 'active' ? 'info' : 'warning'} label={signal.status} />
+                          <div className="flex gap-2">
+                            <Badge variant={signal.direction === 'BUY' ? 'success' : 'danger'} label={signal.direction} />
+                            <Badge variant={signal.status === 'active' ? 'info' : 'warning'} label={signal.status} />
+                          </div>
                         </div>
-                        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3 mt-3 text-xs sm:text-sm">
+                        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mt-4">
                           <div className="min-w-0">
-                            <p className="transition-colors duration-300 truncate" style={{ color: colors.text.secondary }}>Entry</p>
-                            <p className="font-semibold transition-colors duration-300 truncate" style={{ color: colors.text.primary }}>{signal.entryPrice.toFixed(4)}</p>
+                            <p className="text-[10px] lg:text-xs transition-colors duration-300 uppercase tracking-wider font-semibold" style={{ color: colors.text.tertiary }}>Entry</p>
+                            <p className="text-xs lg:text-sm font-bold transition-colors duration-300 truncate mt-0.5" style={{ color: colors.text.primary }}>{signal.entryPrice.toFixed(4)}</p>
                           </div>
                           <div className="min-w-0">
-                            <p className="transition-colors duration-300 truncate" style={{ color: colors.text.secondary }}>SL</p>
-                            <p className="font-semibold transition-colors duration-300 truncate" style={{ color: colors.text.primary }}>{signal.stopLoss.toFixed(4)}</p>
+                            <p className="text-[10px] lg:text-xs transition-colors duration-300 uppercase tracking-wider font-semibold" style={{ color: colors.text.tertiary }}>SL</p>
+                            <p className="text-xs lg:text-sm font-bold transition-colors duration-300 truncate mt-0.5" style={{ color: colors.text.primary }}>{signal.stopLoss.toFixed(4)}</p>
                           </div>
                           <div className="min-w-0">
-                            <p className="transition-colors duration-300 truncate" style={{ color: colors.text.secondary }}>TP</p>
-                            <p className="font-semibold transition-colors duration-300 truncate" style={{ color: colors.text.primary }}>{signal.takeProfits[0]?.toFixed(4) || "N/A"}</p>
+                            <p className="text-[10px] lg:text-xs transition-colors duration-300 uppercase tracking-wider font-semibold" style={{ color: colors.text.tertiary }}>TP</p>
+                            <p className="text-xs lg:text-sm font-bold transition-colors duration-300 truncate mt-0.5" style={{ color: colors.text.primary }}>{signal.takeProfits[0]?.toFixed(4) || "N/A"}</p>
                           </div>
                           <div className="min-w-0">
-                            <p className="transition-colors duration-300 truncate" style={{ color: colors.text.secondary }}>Acc</p>
-                            <p className="font-semibold transition-colors duration-300 truncate" style={{ color: colors.text.primary }}>{signal.accuracy.toFixed(1)}%</p>
+                            <p className="text-[10px] lg:text-xs transition-colors duration-300 uppercase tracking-wider font-semibold" style={{ color: colors.text.tertiary }}>Reliability</p>
+                            <p className="text-xs lg:text-sm font-bold transition-colors duration-300 mt-0.5" style={{ color: colors.text.primary }}>{signal.accuracy.toFixed(0)}%</p>
                           </div>
                           <div className="min-w-0">
-                            <p className="transition-colors duration-300 truncate" style={{ color: colors.text.secondary }}>P/L</p>
-                            <p className="font-semibold transition-colors duration-300 truncate" style={{ color: signal.profitLoss >= 0 ? '#16a34a' : '#dc2626' }}>${signal.profitLoss}</p>
+                            <p className="text-[10px] lg:text-xs transition-colors duration-300 uppercase tracking-wider font-semibold" style={{ color: colors.text.tertiary }}>P/L</p>
+                            <p className="text-xs lg:text-sm font-bold transition-colors duration-300 mt-0.5" style={{ color: signal.profitLoss >= 0 ? '#16a34a' : '#dc2626' }}>{signal.profitLoss >= 0 ? '+' : ''}${signal.profitLoss}</p>
                           </div>
                         </div>
                       </div>
@@ -825,7 +827,7 @@ export default function AdminDashboard() {
           </div>
           <div className="grid gap-4">
             {mockBlogPosts.map((post) => (
-              <div key={post.id} className="border rounded-lg p-4 sm:p-6 transition-all duration-300" style={{  borderColor: colors.border }}>
+              <div key={post.id} className="border rounded-lg p-4 sm:p-6 transition-all duration-300" style={{ borderColor: colors.border }}>
                 <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                   <div className="flex gap-3 sm:gap-4 min-w-0 flex-1">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center shrink-0 transition-colors duration-300" style={{ backgroundColor: theme === 'dark' ? 'rgba(59, 130, 246, 0.2)' : 'rgb(219, 234, 254)' }}>
@@ -982,22 +984,22 @@ export default function AdminDashboard() {
                 </div>
               ) : (
                 notifications.map((notif) => (
-                  <div key={notif.id} className="border rounded-lg p-4 sm:p-6 transition-all duration-300" style={{ 
+                  <div key={notif.id} className="border rounded-lg p-4 sm:p-6 transition-all duration-300" style={{
                     backgroundColor: notif.read ? colors.bg.card : (theme === 'dark' ? 'rgba(59, 130, 246, 0.1)' : 'rgb(239, 246, 255)'),
                     borderColor: notif.read ? colors.border : '#3b82f6'
                   }}>
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors duration-300" style={{ 
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors duration-300" style={{
                           backgroundColor: notif.type === 'success' ? (theme === 'dark' ? 'rgba(34, 197, 94, 0.2)' : 'rgb(220, 252, 231)') :
-                          notif.type === 'warning' ? (theme === 'dark' ? 'rgba(234, 179, 8, 0.2)' : 'rgb(254, 243, 199)') :
-                          notif.type === 'error' ? (theme === 'dark' ? 'rgba(239, 68, 68, 0.2)' : 'rgb(254, 226, 226)') :
-                          (theme === 'dark' ? 'rgba(59, 130, 246, 0.2)' : 'rgb(219, 234, 254)')
+                            notif.type === 'warning' ? (theme === 'dark' ? 'rgba(234, 179, 8, 0.2)' : 'rgb(254, 243, 199)') :
+                              notif.type === 'error' ? (theme === 'dark' ? 'rgba(239, 68, 68, 0.2)' : 'rgb(254, 226, 226)') :
+                                (theme === 'dark' ? 'rgba(59, 130, 246, 0.2)' : 'rgb(219, 234, 254)')
                         }}>
                           {notif.type === 'success' ? <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" /> :
-                           notif.type === 'warning' ? <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600" /> :
-                           notif.type === 'error' ? <X className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" /> :
-                           <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />}
+                            notif.type === 'warning' ? <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600" /> :
+                              notif.type === 'error' ? <X className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" /> :
+                                <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />}
                         </div>
                         <div className="min-w-0 flex-1">
                           <h3 className="font-semibold transition-colors duration-300 text-sm sm:text-base truncate" style={{ color: colors.text.primary }}>{notif.title}</h3>
@@ -1018,7 +1020,7 @@ export default function AdminDashboard() {
       {/* Settings Tab */}
       {activeTab === "settings" && (
         <div className="space-y-6 max-w-2xl">
-          <div className="border rounded-lg p-6 transition-colors duration-300" style={{  borderColor: colors.border }}>
+          <div className="border rounded-lg p-6 transition-colors duration-300" style={{ borderColor: colors.border }}>
             <h2 className="text-lg font-semibold mb-4 transition-colors duration-300" style={{ color: colors.text.primary }}>General Settings</h2>
             <div className="space-y-4">
               <div>
@@ -1032,7 +1034,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="border rounded-lg p-6 transition-colors duration-300" style={{  borderColor: colors.border }}>
+          <div className="border rounded-lg p-6 transition-colors duration-300" style={{ borderColor: colors.border }}>
             <h2 className="text-lg font-semibold mb-4 transition-colors duration-300" style={{ color: colors.text.primary }}>Signal Settings</h2>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -1050,7 +1052,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="border rounded-lg p-6 transition-colors duration-300" style={{  borderColor: colors.border }}>
+          <div className="border rounded-lg p-6 transition-colors duration-300" style={{ borderColor: colors.border }}>
             <h2 className="text-lg font-semibold mb-4 transition-colors duration-300" style={{ color: colors.text.primary }}>User Management</h2>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -1067,7 +1069,7 @@ export default function AdminDashboard() {
           <div className="flex gap-3">
             <Button className="bg-gradient-to-r from-blue-600 to-blue-400 text-white hover:shadow-lg transition-all px-6 border-radius-200">
               Save Settings
-            </Button> 
+            </Button>
             <Button >Reset to Defaults</Button>
           </div>
         </div>

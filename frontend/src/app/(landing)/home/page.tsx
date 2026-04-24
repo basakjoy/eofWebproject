@@ -8,7 +8,8 @@ import TradingToolsSection from '@/components/landing/TradingToolsSection';
 import SpreadsSection from '@/components/landing/SpreadsSection';
 import PaymentMethodsSection from '@/components/landing/PaymentMethodsSection';
 import FeaturedToolsSection from '@/components/landing/FeaturedToolsSection';
-import MobileTradingSection from '@/components/landing/MobileTradingSection';
+
+
 import PremiumAccountSection from '@/components/landing/PremiumAccountSection';
 import AwardsSection from '@/components/landing/AwardsSection';
 import FinalCTASection from '@/components/landing/FinalCTASection';
@@ -26,7 +27,7 @@ export default function HomePage() {
       <SpreadsSection />
       <PaymentMethodsSection />
       <FeaturedToolsSection />
-      <MobileTradingSection />
+      
       <PremiumAccountSection />
       <AwardsSection />
       <TestimonialsSection />

@@ -1,147 +1,116 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
-import { ArrowRight, Facebook , Instagram, X , Youtube } from 'lucide-react';
+import { ArrowRight, Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin } from 'lucide-react';
 import { LogoIcon } from './LogoIcon';
 
-interface FooterProps {}
-
-export default function Footer({}: FooterProps) {
+export default function Footer() {
   const currentYear = new Date().getFullYear();
 
+  const footerLinks = [
+    {
+      title: 'Navigation',
+      links: [
+        { name: 'Home', href: '/home' },
+        { name: 'Trading Signals', href: '/trading-signals' },
+        { name: 'Investment Plans', href: '/investment-plans' },
+        { name: 'Market Analysis', href: '/dashboard/market-analysis' },
+      ]
+    },
+    {
+      title: 'Support',
+      links: [
+        { name: 'Contact Us', href: '/contact' },
+        { name: 'About Empire', href: '/about' },
+        { name: 'FAQ', href: '/faq' },
+        { name: 'Support Portal', href: '/support' },
+      ]
+    },
+    {
+      title: 'Legal',
+      links: [
+        { name: 'Privacy Policy', href: '/privacy-policy' },
+        { name: 'Terms of Service', href: '/terms-of-service' },
+        { name: 'Risk Disclaimer', href: '/disclaimer' },
+      ]
+    }
+  ];
+
   return (
-    <footer className="bg-black border-t border-gray-900">
-      <div className="max-w-7xl mx-auto px-6 py-24 sm:px-8 lg:px-10">
-        {/* CTA Section */}
-        <div className="mb-24 pb-24 border-b border-gray-900">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-12">
-            <div className="max-w-2xl">
-              <h2 className="text-5xl md:text-6xl font-black text-white mb-6">
-                Have a Great Idea?
-              </h2>
-              <p className="text-gray-400 text-xl">Tell us about it and let's create something amazing together.</p>
+    <footer className="relative bg-[#020817] pt-24 pb-12 overflow-hidden border-t border-white/5">
+      {/* Decorative Background Glow */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[100%] h-[50%] bg-blue-600/5 blur-[120px] rounded-full pointer-events-none" />
+
+      <div className="container mx-auto px-6">
+        {/* Main Footer Container */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 mb-20">
+          
+          {/* Brand Column */}
+          <div className="lg:col-span-4 space-y-8">
+            <div className="flex items-center gap-3">
+              <LogoIcon size={40} />
+              <span className="text-2xl font-black text-white tracking-tighter uppercase">Empire of Forex</span>
             </div>
-            <Link
-              href="#contact"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all duration-300 whitespace-nowrap text-lg"
-            >
-              Let's Talk! <ArrowRight className="w-5 h-5" />
-            </Link>
-          </div>
-        </div>
-
-        Links Grid
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-16 mb-16">
-          {/* Home */}
-          <div>
-            <h3 className="text-white font-bold mb-6">Home</h3>
-            <ul className="space-y-4">
-              <li>
-                <Link href="/" className="text-gray-400 hover:text-white transition-colors">
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link href="/about" className="text-gray-400 hover:text-white transition-colors">
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="text-gray-400 hover:text-white transition-colors">
-                  Contact us
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Trading */}
-          <div>
-            <h3 className="text-white font-bold mb-6">Trading</h3>
-            <ul className="space-y-4">
-              <li>
-                <Link href="/trading-signals" className="text-gray-400 hover:text-white transition-colors">
-                  Live Signals
-                </Link>
-              </li>
-              <li>
-                <Link href="/dashboard/market-analysis" className="text-gray-400 hover:text-white transition-colors">
-                  Market Analysis
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-gray-400 hover:text-white transition-colors">
-                  Education
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Resources */}
-          <div>
-            <h3 className="text-white font-bold mb-6">Resources</h3>
-            <ul className="space-y-4">
-              <li>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                  Documentation
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                  FAQ
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                  Support
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Legal */}
-          <div>
-            <h3 className="text-white font-bold mb-6">Legal</h3>
-            <ul className="space-y-4">
-              <li>
-                <Link href="/privacy-policy" className="text-gray-400 hover:text-white transition-colors">
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link href="/terms-of-service" className="text-gray-400 hover:text-white transition-colors">
-                  Terms of Service
-                </Link>
-              </li>
-              <li>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                  Disclaimer
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Bottom */}
-        <div className="border-t border-gray-900 pt-12 flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex items-center gap-3">
-            <LogoIcon className="w-10 h-10 text-blue-600" />
-            <p className="text-gray-500 text-sm">
-              © {currentYear} Empire of Forex. All rights reserved.
+            <p className="text-gray-500 max-w-sm leading-relaxed">
+              Empowering traders worldwide with elite market intelligence, institutional-grade signals, and secure investment strategies.
             </p>
+            <div className="flex gap-4">
+              {[Facebook, Twitter, Instagram, Youtube].map((Icon, i) => (
+                <a 
+                  key={i} 
+                  href="https://www.facebook.com/empireofforex, https://www.instagram.com/empireofforex, https://www.youtube.com/empireofforex, https://www.twitter.com/empireofforex" 
+                  className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-blue-600 hover:text-white transition-all transform hover:-translate-y-1"
+                >
+                  <Icon size={18} />
+                </a>
+              ))}
+            </div>
           </div>
 
-          <div className="flex gap-8 ">
-            <a href="https://www.facebook.com/empireforex" className="border boder-white/20 bg-white/70 backdrop-blur-md p-3 rounded-full hover:scale-110 hover:border-blue-500 transition">
-              <Facebook size={22} className="w-5 h-5" />
-            </a>
-            <a href="https://www.instagram.com/empireofforexworld/?next=%2F" className="border boder-white/20 bg-white/70 backdrop-blur-md p-3 rounded-full hover:scale-110 hover:border-blue-500 transition">
-              <Instagram size={22} className="w-5 h-5" />
-            </a>
-            <a href="https://www.instagram.com/empireofforexworld/?next=%2F" className="border boder-white/20 bg-white/70 backdrop-blur-md p-3 rounded-full hover:scale-110 hover:border-blue-500 transition">
-              <X size={22} className="w-5 h-5" />
-            </a>
-            <a href="https://www.youtube.com/@EmpireofForex" className="border boder-white/20 bg-white/70 backdrop-blur-md p-3 rounded-full hover:scale-110 hover:border-blue-500 transition">
-              <Youtube size={22} className="w-5 h-5" />
-            </a>
+          {/* Links Columns */}
+          <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-3 gap-12">
+            {footerLinks.map((column) => (
+              <div key={column.title}>
+                <h4 className="text-white font-bold mb-6 uppercase tracking-widest text-xs">{column.title}</h4>
+                <ul className="space-y-4">
+                  {column.links.map((link) => (
+                    <li key={link.name}>
+                      <Link href={link.href} className="text-gray-500 hover:text-blue-400 text-sm transition-colors block">
+                        {link.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Newsletter / Contact Row */}
+        <div className="grid md:grid-cols-3 gap-8 py-10 border-y border-white/5 mb-10">
+          <div className="flex items-center gap-4">
+             <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-blue-500"><Mail size={20} /></div>
+             <div><p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Email Us</p><p className="text-sm font-bold text-white">support@empireofforex.com</p></div>
+          </div>
+          <div className="flex items-center gap-4">
+             <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-blue-500"><Phone size={20} /></div>
+             <div><p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Call Center</p><p className="text-sm font-bold text-white">+880-1804-351578</p></div>
+          </div>
+          <div className="flex items-center gap-4">
+             <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-blue-500"><MapPin size={20} /></div>
+             <div><p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Global HQ</p><p className="text-sm font-bold text-white">Wall Street, New York, NY</p></div>
+          </div>
+        </div>
+
+        {/* Bottom copyright */}
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+          <p className="text-xs font-bold text-gray-600 uppercase tracking-[0.2em]">
+            © {currentYear} Empire of Forex International. All rights reserved.
+          </p>
+          <div className="flex gap-8 text-[10px] font-black text-gray-600 uppercase tracking-widest">
+            <span className="cursor-pointer hover:text-white transition-colors">Risk Warning</span>
+            <span className="cursor-pointer hover:text-white transition-colors">Sitemap</span>
           </div>
         </div>
       </div>

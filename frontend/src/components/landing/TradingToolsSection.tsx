@@ -1,78 +1,76 @@
 'use client';
 
-import { TrendingUp, BarChart3, Zap, LineChart } from 'lucide-react';
-import { useEffect } from 'react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
+import { TrendingUp, BarChart3, Zap, Shield, Cpu, Target } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function TradingToolsSection() {
   const tools = [
     {
-      icon: TrendingUp,
-      title: 'Live Trading',
-      description: 'Trade with real money or practice with a demo account',
-    },
-    {
       icon: BarChart3,
       title: 'Advanced Analytics',
-      description: 'Real-time market data and professional-grade charts',
+      description: 'Professional-grade charting with 50+ technical indicators and drawing tools.',
+      size: 'col-span-1 md:col-span-2',
+      color: 'blue'
+    },
+    {
+      icon: TrendingUp,
+      title: 'Real-Time Insights',
+      description: 'Institutional-grade data feeds for instant edge.',
+      size: 'col-span-1',
+      color: 'indigo'
+    },
+    {
+      icon: Cpu,
+      title: 'AI Signal Core',
+      description: 'Neural networks optimized for pattern recognition.',
+      size: 'col-span-1',
+      color: 'blue'
     },
     {
       icon: Zap,
       title: 'Fast Execution',
-      description: 'Ultra-fast order execution with minimal latency',
-    },
+      description: 'Ultra-low latency infrastructure with sub-ms execution.',
+      size: 'col-span-1 md:col-span-2',
+      color: 'indigo'
+    }
   ];
 
-  useEffect(() => {
-    gsap.from('.trading-header', {
-      scrollTrigger: {
-        trigger: '.trading-header',
-        start: 'top 80%',
-        once: true,
-      },
-      duration: 0.8,
-      opacity: 0,
-      y: 30,
-    });
-
-    gsap.from('.trading-card', {
-      scrollTrigger: {
-        trigger: '.trading-cards',
-        start: 'top 80%',
-        once: true,
-      },
-      duration: 0.6,
-      opacity: 0,
-      y: 30,
-      stagger: 0.15,
-    });
-  }, []);
-
   return (
-    <section className="py-12 sm:py-20 md:py-32 px-4 sm:px-6 bg-gradient-to-b from-gray-950 to-black border-t border-gray-900">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-12 sm:mb-20 md:mb-24 trading-header text-center">
-          <p className="text-blue-400 font-medium text-xs sm:text-sm tracking-widest uppercase mb-4 sm:mb-6">Complete Toolkit</p>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight max-w-3xl mx-auto">
-            Everything you need to trade smarter
-          </h2>
+    <section className="py-24 bg-[#020817] relative">
+      <div className="container mx-auto px-6">
+        <div className="text-center mb-16">
+          <span className="text-xs font-black text-blue-500 uppercase tracking-[0.3em]">Institutional Grade</span>
+          <h2 className="text-4xl md:text-5xl font-black text-white mt-4">Precision Trading Toolkit.</h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8 trading-cards">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {tools.map((tool, index) => {
             const Icon = tool.icon;
             return (
-              <div
+              <motion.div
                 key={index}
-                className="trading-card bg-gradient-to-br from-gray-900 to-gray-950 border border-gray-800 hover:border-blue-600 p-4 sm:p-6 md:p-8 rounded-xl transition-all duration-300 group hover:shadow-lg hover:shadow-blue-600/20"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                className={`${tool.size} group relative bg-white/5 border border-white/5 rounded-3xl p-8 hover:bg-white/[0.07] transition-all overflow-hidden`}
               >
-                <Icon className="w-10 h-10 sm:w-12 sm:h-12 text-blue-400 mb-3 sm:mb-4 group-hover:scale-110 transition-transform" />
-                <h3 className="text-white text-base sm:text-lg md:text-xl font-bold mb-2 sm:mb-3 group-hover:text-blue-400 transition-colors">{tool.title}</h3>
-                <p className="text-gray-400 text-sm sm:text-base leading-relaxed">{tool.description}</p>
-              </div>
+                {/* Decorative Gradient Inner */}
+                <div className={`absolute top-0 right-0 w-32 h-32 bg-blue-600/10 blur-[50px] rounded-full group-hover:scale-150 transition-transform`} />
+                
+                <div className="relative z-10 flex flex-col h-full">
+                  <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    <Icon className="w-6 h-6 text-blue-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">{tool.title}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed max-w-xs">{tool.description}</p>
+                </div>
+
+                {/* Bottom Corner Decoration */}
+                <div className="absolute bottom-4 right-6 opacity-5 group-hover:opacity-10 transition-opacity">
+                   <Icon size={80} className="text-white" />
+                </div>
+              </motion.div>
             );
           })}
         </div>
