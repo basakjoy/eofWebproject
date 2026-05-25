@@ -4,7 +4,8 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import ThemeProvider from '@/components/providers/ThemeProvider';
 import  Providers from '@/app/providers';
-import { Analytics } from '@vercel/analytics/react';
+import { GoogleAnalytics } from '@next/third-parties/google';
+
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -24,11 +25,12 @@ export default function RootLayout({
         <Providers>
           <ThemeProvider>
             {children}
-
-            <Analytics />
-
           </ThemeProvider>
         </Providers>
+
+
+
+        <GoogleAnalytics gaId ="G-T0ZC3HNQ0K"/>
       </body>
     </html>
   );
