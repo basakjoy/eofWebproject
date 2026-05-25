@@ -1,15 +1,16 @@
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import ThemeProvider from '@/components/providers/ThemeProvider';
 import  Providers from '@/app/providers';
+import { Analytics } from '@vercel/analytics/react';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'EOF - Empire of Forex | Professional Trading Platform',
   description: 'Advanced forex trading signals, real-time market analysis, and professional portfolio management.',
-  
 };
 
 export default function RootLayout({
@@ -23,6 +24,9 @@ export default function RootLayout({
         <Providers>
           <ThemeProvider>
             {children}
+
+            <Analytics />
+
           </ThemeProvider>
         </Providers>
       </body>

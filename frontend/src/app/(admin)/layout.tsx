@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Sidebar } from "@/components/common/Sidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import styles from "./admin.module.css";
+import "../midnight-theme.css";
 
 
 export default function AdminLayout({
@@ -15,7 +16,7 @@ export default function AdminLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className={styles.adminRoot}>
+    <div className={`${styles.adminRoot} midnight-theme`}>
       {/* Desktop Sidebar */}
       <div className="hidden lg:block">
         <Sidebar

@@ -20,6 +20,7 @@ import {
   LogOut,
   Grid3x3,
   Newspaper,
+  Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
@@ -34,6 +35,7 @@ interface SidebarProps {
 
 const baseItems = [
   { id: "overview", icon: LayoutDashboard, label: "Overview", path: "/admin?tab=overview" },
+  { id: "traffic", icon: Activity, label: "Traffic", path: "/admin?tab=traffic" },
 ];
 
 const mainMenuItems = [
@@ -97,23 +99,23 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "h-screen bg-white border-r border-gray-200 transition-all duration-300 flex flex-col",
-        "fixed left-0 top-0 z-40 md:sticky md:top-0",
+        "h-screen glass-morphism-sidebar transition-all duration-300 flex flex-col z-40 md:sticky md:top-0",
+        "fixed left-0 top-0",
         collapsed ? "w-16 sm:w-20" : "w-56 sm:w-64"
       )}
     >
       {/* Logo */}
-      <div className="flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 border-b border-gray-200">
+      <div className="flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 border-b border-white/5">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center flex-shrink-0">
             <LogoIcon size={40} rounded />
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <p className="font-display font-bold text-xs sm:text-sm text-gray-900 truncate">
+              <p className="font-display font-bold text-xs sm:text-sm text-white truncate">
                 Empire Of
               </p>
-              <p className="font-display font-bold text-xs sm:text-sm bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
+              <p className="font-display font-bold text-xs sm:text-sm text-purple-400">
                 Forex
               </p>
             </div>
@@ -122,7 +124,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
         <button
           onClick={onToggle}
-          className="p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-600 hover:text-gray-900 flex-shrink-0"
+          className="p-1.5 sm:p-2 rounded-lg hover:bg-white/5 transition-colors text-slate-400 hover:text-white flex-shrink-0"
           aria-label="Toggle sidebar"
         >
           {collapsed ? (
@@ -134,18 +136,18 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex flex-col h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] py-3 sm:py-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+      <nav className="flex flex-col h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] py-3 sm:py-4 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
         <div className="px-2 sm:px-3 space-y-0.5 sm:space-y-1">
-          {/* Render all base items first (Overview) */}
-          {items.slice(0, 1).map((item) => (
+          {/* Render all base items first (Overview & Traffic) */}
+          {items.slice(0, 2).map((item) => (
             <Link
               key={item.id}
               href={item.path}
               className={cn(
                 "flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-all text-sm sm:text-base",
-                "text-gray-600 hover:text-gray-900 hover:bg-gray-50",
+                "text-slate-400 hover:text-white hover:bg-white/5",
                 isActive(item.path) &&
-                  "bg-blue-50 text-blue-600 hover:bg-blue-100 font-medium",
+                  "bg-purple-500/10 text-purple-400 border border-purple-500/20 font-medium",
                 collapsed && "justify-center px-2 sm:px-3 gap-0"
               )}
               title={collapsed ? item.label : undefined}
@@ -156,21 +158,21 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           ))}
 
           {/* Main Menu Section */}
-          {!collapsed && items.length > 1 && (
-            <span className="px-2 sm:px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider block py-2 mt-4">
+          {!collapsed && items.length > 2 && (
+            <span className="px-2 sm:px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest block py-2 mt-4 font-display">
               Main Menu
             </span>
           )}
 
-          {items.slice(1, 1 + mainMenuItems.length).map((item) => (
+          {items.slice(2, 2 + mainMenuItems.length).map((item) => (
             <Link
               key={item.id}
               href={item.path}
               className={cn(
                 "flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-all text-sm sm:text-base",
-                "text-gray-600 hover:text-gray-900 hover:bg-gray-50",
+                "text-slate-400 hover:text-white hover:bg-white/5",
                 isActive(item.path) &&
-                  "bg-blue-50 text-blue-600 hover:bg-blue-100 font-medium",
+                  "bg-purple-500/10 text-purple-400 border border-purple-500/20 font-medium",
                 collapsed && "justify-center px-2 sm:px-3 gap-0"
               )}
               title={collapsed ? item.label : undefined}
@@ -181,21 +183,21 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           ))}
 
           {/* Administration Section */}
-          {!collapsed && items.length > 1 + mainMenuItems.length && (
-            <span className="px-2 sm:px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider block py-2 mt-4">
+          {!collapsed && items.length > 2 + mainMenuItems.length && (
+            <span className="px-2 sm:px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest block py-2 mt-4 font-display">
               Administration
             </span>
           )}
 
-          {items.slice(1 + mainMenuItems.length).map((item) => (
+          {items.slice(2 + mainMenuItems.length).map((item) => (
             <Link
               key={item.id}
               href={item.path}
               className={cn(
                 "flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-all text-sm sm:text-base",
-                "text-gray-600 hover:text-gray-900 hover:bg-gray-50",
+                "text-slate-400 hover:text-white hover:bg-white/5",
                 isActive(item.path) &&
-                  "bg-blue-50 text-blue-600 hover:bg-blue-100 font-medium",
+                  "bg-purple-500/10 text-purple-400 border border-purple-500/20 font-medium",
                 collapsed && "justify-center px-2 sm:px-3 gap-0"
               )}
               title={collapsed ? item.label : undefined}
@@ -208,18 +210,18 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
         {/* User Info */}
         {!collapsed && user && (
-          <div className="mt-auto px-2 sm:px-3 space-y-2 sm:space-y-3 border-t border-gray-200 pt-3 sm:pt-4">
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-lg p-3 sm:p-4 border border-blue-200">
+          <div className="mt-auto px-2 sm:px-3 space-y-2 sm:space-y-3 border-t border-white/5 pt-3 sm:pt-4">
+            <div className="bg-white/5 rounded-xl p-3 sm:p-4 border border-white/10">
               <div className="flex items-center gap-2 sm:gap-3">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full  from-blue-600 to-blue-400 flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center flex-shrink-0 shadow-lg shadow-purple-500/20">
                   <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs sm:text-sm font-semibold text-gray-900 truncate">
+                  <p className="text-xs sm:text-sm font-semibold text-white truncate">
                     {user.role.toUpperCase()}
                   </p>
-                  <p className="text-xs text-gray-600">
-                    Admin
+                  <p className="text-[10px] text-slate-400 uppercase tracking-wider">
+                    Authorized
                   </p>
                 </div>
               </div>
@@ -227,7 +229,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
             <button
               onClick={logout}
-              className="w-full flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all text-sm"
+              className="w-full flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all text-sm"
             >
               <LogOut className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
               <span>Logout</span>
