@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { Sidebar } from "@/components/common/Sidebar";
-import { Menu } from "lucide-react";
+import { AdminHeader } from "@/components/admin/AdminHeader";
 import styles from "./admin.module.css";
+import "../midnight-theme.css";
 
 
 export default function AdminLayout({
@@ -15,9 +16,9 @@ export default function AdminLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className={styles.adminRoot}>
+    <div className={`${styles.adminRoot} midnight-theme`}>
       {/* Desktop Sidebar */}
-      <div className="hidden md:block">
+      <div className="hidden lg:block">
         <Sidebar
           collapsed={collapsed}
           onToggle={() => setCollapsed(!collapsed)}
@@ -28,11 +29,11 @@ export default function AdminLayout({
       {sidebarOpen && (
         <>
           <div
-            className="fixed inset-0 z-30 bg-black/50 md:hidden"
+            className="fixed inset-0 z-30 bg-black/50 lg:hidden"
             onClick={() => setSidebarOpen(false)}
             aria-hidden="true"
           />
-          <div className="fixed inset-y-0 left-0 z-40 md:hidden">
+          <div className="fixed inset-y-0 left-0 z-40 lg:hidden">
             <Sidebar
               collapsed={false}
               onToggle={() => setSidebarOpen(false)}
@@ -43,16 +44,8 @@ export default function AdminLayout({
 
       {/* Main Content */}
       <div className={styles.mainContent}>
-        {/* Mobile Header */}
-        <header className={styles.mobileHeader}>
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className={styles.menuBtn}
-          >
-            <Menu size={22} />
-          </button>
-          <span className={styles.headerTitle}>Empire of Forex</span>
-        </header>
+        {/* New Admin Header (Profile & Search) */}
+        <AdminHeader onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
 
         {/* Page Content */}
         <main className={styles.pageContent}>

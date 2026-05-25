@@ -2,8 +2,6 @@
   min-height: 100vh;
   display: flex;
   width: 100%;
-  background: var(--bg-secondary);
-  color: var(--text-primary);
   flex-direction: row;
 }
 
@@ -13,7 +11,6 @@
   display: flex;
   flex-direction: column;
   transition: all 0.3s ease;
-  background: var(--bg-secondary);
   width: 100%;
   min-width: 0;
 }
@@ -27,56 +24,6 @@
   margin-left: 0;
 }
 
-/* Mobile Header */
-.mobileHeader {
-  display: none;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border-color);
-  background: var(--bg-primary);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  position: sticky;
-  top: 0;
-  z-index: 40;
-}
-
-/* Menu Button - Touch-friendly size (48x48px minimum) */
-.menuBtn {
-  padding: 8px;
-  border-radius: 8px;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  transition: all 0.2s ease;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 44px;
-  height: 44px;
-  flex-shrink: 0;
-}
-
-.menuBtn:hover {
-  background: var(--bg-tertiary);
-  border-color: var(--primary);
-}
-
-.menuBtn:active {
-  transform: scale(0.95);
-}
-
-/* Header Title */
-.headerTitle {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-primary);
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
-}
 
 /* Page Content */
 .pageContent {
@@ -85,7 +32,6 @@
   overflow-x: hidden;
   width: 100%;
   padding: 24px;
-  background: var(--bg-secondary);
 }
 
 /* Desktop and Large Tablet (1024px and up) */
@@ -112,10 +58,6 @@
     flex-direction: column;
   }
 
-  .mobileHeader {
-    display: flex;
-  }
-
   .pageContent {
     padding: 16px;
   }
@@ -123,20 +65,6 @@
 
 /* Small Mobile (below 480px) */
 @media (max-width: 479px) {
-  .mobileHeader {
-    padding: 10px 12px;
-    gap: 8px;
-  }
-
-  .menuBtn {
-    min-width: 40px;
-    height: 40px;
-  }
-
-  .headerTitle {
-    font-size: 14px;
-  }
-
   .pageContent {
     padding: 12px;
   }
@@ -144,21 +72,6 @@
 
 /* Extra Small Mobile (below 360px) */
 @media (max-width: 359px) {
-  .mobileHeader {
-    padding: 8px 10px;
-    gap: 6px;
-  }
-
-  .menuBtn {
-    min-width: 36px;
-    height: 36px;
-    padding: 6px;
-  }
-
-  .headerTitle {
-    font-size: 13px;
-  }
-
   .pageContent {
     padding: 8px;
   }

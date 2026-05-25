@@ -48,11 +48,11 @@ export default function TradingSignalsPage() {
   const chartHeight = isMobile ? 250 : isTablet ? 280 : 300;
 
   return (
-    <div className="w-full">
+    <div className="w-full pt-16">
       {/* Hero */}
       <section className="w-full px-4 py-12 sm:py-16 md:py-20">
         <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold gradient-text mb-4 sm:mb-6">Trading Signals</h1>
+          <h1 className="text-5xl md:text-9xl font-bold text-white/80 tracking-tight mb-8 leading-tight">Trading Signals</h1>
           <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-3xl mx-auto px-2">
             Real-time forex signals with high accuracy and consistent performance
           </p>

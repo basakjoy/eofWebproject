@@ -54,7 +54,7 @@ export default function ServicesSection() {
         trigger: '.services-container',
         start: 'top 80%',
         once: true,
-      },
+      },  
       duration: 0.8,
       opacity: 0,
       y: 40,

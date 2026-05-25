@@ -1,68 +1,67 @@
 'use client';
 
-import { Award } from 'lucide-react';
-import { useEffect } from 'react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
+import { Award, Trophy, Star, ShieldCheck } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function WinsSection() {
   const wins = [
-    { year: '2023', title: 'Best Trading Platform' },
-    { year: '2023', title: 'Most Reliable Broker' },
-    { year: '2022', title: 'Best Customer Service' },
-    { year: '2022', title: 'Innovation Award' },
-    { year: '2021', title: 'Best Signals Provider' },
-    { year: '2021', title: 'Top Rated Broker' },
+    { year: '2024', title: 'Best Trading Platform', provider: 'Forex Awards' },
+    { year: '2023', title: 'Top Signals Provider', provider: 'Global Finance' },
+    { year: '2023', title: 'Most Secure Broker', provider: 'Security Intl' },
   ];
 
-  useEffect(() => {
-    gsap.from('.wins-header', {
-      scrollTrigger: {
-        trigger: '.wins-header',
-        start: 'top 80%',
-        once: true,
-      },
-      duration: 0.8,
-      opacity: 0,
-      y: 30,
-    });
-
-    gsap.from('.win-card', {
-      scrollTrigger: {
-        trigger: '.wins-container',
-        start: 'top 80%',
-        once: true,
-      },
-      duration: 0.6,
-      opacity: 0,
-      y: 30,
-      stagger: 0.1,
-    });
-  }, []);
-
   return (
-    <section className="py-12 sm:py-20 md:py-32 px-4 sm:px-6 bg-black border-t border-gray-900">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-12 sm:mb-20 md:mb-24 wins-header text-center">
-          <p className="text-blue-400 font-medium text-xs sm:text-sm tracking-widest uppercase mb-4 sm:mb-6">Our Achievements</p>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight">
-            Our latest wins
-          </h2>
+    <section className="py-24 bg-[#020817] border-t border-white/5 relative overflow-hidden">
+      {/* Background Decorative Text */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[15vw] font-black text-white/[0.02] pointer-events-none select-none uppercase">
+        Excellence
+      </div>
+
+      <div className="container mx-auto px-6 relative z-10">
+        <div className="text-center mb-16">
+          <span className="text-xs font-black text-blue-500 uppercase tracking-[0.4em]">Proven Success</span>
+          <h2 className="text-4xl md:text-5xl font-black text-white mt-4">World Class Recognition.</h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8 wins-container">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {wins.map((win, index) => (
-            <div
+            <motion.div
               key={index}
-              className="win-card bg-gradient-to-br from-blue-900/20 to-blue-950/40 border border-blue-800/50 hover:border-blue-600 p-8 rounded-xl transition-all duration-300 group hover:shadow-lg hover:shadow-blue-600/20 flex flex-col items-center justify-center text-center"
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: index * 0.1 }}
+              className="group relative p-8 rounded-3xl bg-white/5 border border-white/5 hover:border-blue-600/30 transition-all text-center"
             >
-              <Award className="w-12 h-12 text-yellow-400 mb-4 group-hover:scale-110 transition-transform" />
-              <p className="text-blue-400 text-sm font-medium mb-2">{win.year}</p>
-              <p className="text-white text-xl font-bold group-hover:text-blue-400 transition-colors">{win.title}</p>
-            </div>
+              <div className="mb-6 flex justify-center">
+                <div className="w-16 h-16 rounded-2xl bg-blue-600/10 flex items-center justify-center text-blue-400 group-hover:scale-110 group-hover:rotate-6 transition-transform">
+                  <Trophy size={32} />
+                </div>
+              </div>
+              <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-2">{win.year} — {win.provider}</span>
+              <h3 className="text-xl font-bold text-white group-hover:text-blue-400 transition-colors uppercase tracking-tight">{win.title}</h3>
+              
+              {/* Decorative Stars */}
+              <div className="flex justify-center gap-1 mt-4 opacity-30">
+                {[1,2,3,4,5].map(i => <Star key={i} size={8} fill="currentColor" className="text-blue-400" />)}
+              </div>
+            </motion.div>
           ))}
+        </div>
+
+        {/* Dynamic Counter Mockup */}
+        <div className="mt-20 pt-10 border-t border-white/5 grid grid-cols-2 md:grid-cols-4 gap-8">
+           {[
+             { label: 'Active Users', value: '150k+' },
+             { label: 'Total Volume', value: '$2.5B' },
+             { label: 'Signal Accuracy', value: '84.2%' },
+             { label: 'Support Rate', value: '99.9%' }
+           ].map((stat, i) => (
+             <div key={i} className="text-center">
+                <div className="text-2xl md:text-3xl font-black text-white mb-1 tracking-tighter">{stat.value}</div>
+                <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{stat.label}</div>
+             </div>
+           ))}
         </div>
       </div>
     </section>

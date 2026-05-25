@@ -1,127 +1,83 @@
 'use client';
 
-import { useEffect } from 'react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
+import { motion } from 'framer-motion';
+import { MousePointerClick, Zap } from 'lucide-react';
 
 export default function SpreadsSection() {
   const spreads = [
-    {
-      pair: 'EUR/USD',
-      spread: '0.3',
-      commission: 'No',
-      leverage: '1:500',
-      margin: '0.2%',
-    },
-    {
-      pair: 'GBP/USD',
-      spread: '0.5',
-      commission: 'No',
-      leverage: '1:500',
-      margin: '0.2%',
-    },
-    {
-      pair: 'USD/JPY',
-      spread: '0.8',
-      commission: 'No',
-      leverage: '1:500',
-      margin: '0.2%',
-    },
-    {
-      pair: 'AUD/USD',
-      spread: '0.8',
-      commission: 'No',
-      leverage: '1:500',
-      margin: '0.2%',
-    },
-    {
-      pair: 'GOLD',
-      spread: '0.30',
-      commission: 'No',
-      leverage: '1:200',
-      margin: '0.5%',
-    },
-    {
-      pair: 'Crude Oil',
-      spread: '0.05',
-      commission: 'No',
-      leverage: '1:100',
-      margin: '1%',
-    },
+    { pair: 'EUR/USD', spread: '0.3', commission: '0.00', leverage: '1:500', trend: 'down' },
+    { pair: 'GBP/USD', spread: '0.5', commission: '0.00', leverage: '1:500', trend: 'up' },
+    { pair: 'USD/JPY', spread: '0.8', commission: '0.00', leverage: '1:500', trend: 'up' },
+    { pair: 'XAU/USD', spread: '12.0', commission: '0.00', leverage: '1:200', trend: 'down' },
+    { pair: 'BTC/USD', spread: '2.5', commission: '0.00', leverage: '1:100', trend: 'up' },
   ];
 
-  useEffect(() => {
-    gsap.from('.spreads-header', {
-      scrollTrigger: {
-        trigger: '.spreads-header',
-        start: 'top 80%',
-        once: true,
-      },
-      duration: 0.8,
-      opacity: 0,
-      y: 30,
-    });
-
-    gsap.from('.spreads-table', {
-      scrollTrigger: {
-        trigger: '.spreads-table',
-        start: 'top 80%',
-        once: true,
-      },
-      duration: 0.8,
-      opacity: 0,
-      y: 40,
-    });
-  }, []);
-
   return (
-    <section className="py-12 sm:py-20 md:py-32 px-4 sm:px-6 bg-black border-t border-gray-900">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-12 sm:mb-20 md:mb-24 spreads-header text-center">
-          <p className="text-blue-400 font-medium text-xs sm:text-sm tracking-widest uppercase mb-4 sm:mb-6">Competitive Pricing</p>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight">
-            Take advantage of tight spreads
-          </h2>
-          <p className="text-gray-400 text-sm sm:text-base md:text-lg mt-4 sm:mt-6 max-w-2xl mx-auto">
-            Trade with the tightest spreads in the industry. No hidden fees, no commission.
-          </p>
+    <section className="py-24 bg-[#020817] relative border-t border-white/5 overflow-hidden">
+      <div className="container mx-auto px-6">
+        
+        <div className="text-center mb-16">
+          <span className="text-xs font-black text-blue-500 uppercase tracking-[0.4em] block mb-4">Competitive Edge</span>
+          <h2 className="text-4xl md:text-5xl font-black text-white mt-4 uppercase tracking-tighter">Low Spreads. <span className="text-gray-500">Zero Commission.</span></h2>
+          <p className="text-gray-500 mt-6 max-w-xl mx-auto text-sm">Experience the industry's most competitive trading conditions with institutional-grade hardware and liquidity providers.</p>
         </div>
 
-        <div className="spreads-table overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-800">
-                <th className="text-left py-4 px-6 text-gray-400 font-semibold">Instrument</th>
-                <th className="text-left py-4 px-6 text-gray-400 font-semibold">Spread</th>
-                <th className="text-left py-4 px-6 text-gray-400 font-semibold">Commission</th>
-                <th className="text-left py-4 px-6 text-gray-400 font-semibold">Leverage</th>
-                <th className="text-left py-4 px-6 text-gray-400 font-semibold">Min Margin</th>
-              </tr>
-            </thead>
-            <tbody>
-              {spreads.map((item, index) => (
-                <tr key={index} className="border-b border-gray-900 hover:bg-gray-900/50 transition-colors">
-                  <td className="py-4 px-6 text-white font-medium">{item.pair}</td>
-                  <td className="py-4 px-6 text-green-400 font-semibold">{item.spread}</td>
-                  <td className="py-4 px-6 text-blue-400">{item.commission}</td>
-                  <td className="py-4 px-6 text-gray-300">{item.leverage}</td>
-                  <td className="py-4 px-6 text-gray-300">{item.margin}</td>
+        <div className="relative group bg-white/5 border border-white/5 rounded-[40px] overflow-hidden backdrop-blur-3xl shadow-2xl">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-white/5">
+                  <th className="py-8 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest">Instrument</th>
+                  <th className="py-8 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest">Typical Spread</th>
+                  <th className="py-8 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest">Commission</th>
+                  <th className="py-8 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest">Max Leverage</th>
+                  <th className="py-8 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest">Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {spreads.map((item, index) => (
+                  <motion.tr 
+                    key={index}
+                    whileHover={{ backgroundColor: 'rgba(255,255,255,0.02)' }}
+                    className="transition-colors group/row"
+                  >
+                    <td className="py-6 px-8">
+                       <div className="flex items-center gap-3">
+                         <div className={`w-1.5 h-6 rounded-full ${index % 2 === 0 ? 'bg-blue-600' : 'bg-indigo-600'}`} />
+                         <span className="text-lg font-black text-white tracking-tight">{item.pair}</span>
+                       </div>
+                    </td>
+                    <td className="py-6 px-8">
+                       <div className="flex items-center gap-2">
+                         <span className="text-base font-bold text-green-400">{item.spread}</span>
+                         <span className="text-[10px] font-black text-gray-500 uppercase">Pips</span>
+                       </div>
+                    </td>
+                    <td className="py-6 px-8 text-sm font-bold text-gray-400">${item.commission}</td>
+                    <td className="py-6 px-8 text-sm font-bold text-white">{item.leverage}</td>
+                    <td className="py-6 px-8">
+                       <button className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 group-hover/row:bg-blue-600 group-hover/row:text-white transition-all text-[10px] font-black uppercase tracking-widest text-gray-400">
+                          Trade
+                       </button>
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          {/* Footer of card */}
+          <div className="p-8 bg-white/[0.02] border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
+             <div className="flex items-center gap-4">
+                <Zap size={20} className="text-yellow-500" />
+                <p className="text-xs font-bold text-gray-400">Execution time: <span className="text-white">&lt; 14ms</span></p>
+             </div>
+             <button className="flex items-center gap-2 text-[10px] font-black text-blue-500 uppercase tracking-widest hover:text-white transition-colors">
+                View All 150+ Instruments <MousePointerClick size={14} />
+             </button>
+          </div>
         </div>
 
-        <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
-          <button className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all duration-300 hover:scale-105">
-            Open Live Account
-          </button>
-          <button className="px-8 py-3 border-2 border-gray-600 hover:border-blue-400 text-white font-semibold rounded-lg transition-all duration-300 hover:scale-105">
-            View All Instruments
-          </button>
-        </div>
       </div>
     </section>
   );

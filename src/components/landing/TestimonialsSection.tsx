@@ -1,11 +1,7 @@
 'use client';
 
-import { Star } from 'lucide-react';
-import { useEffect } from 'react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
+import { Star, Quote } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function TestimonialsSection() {
   const testimonials = [
@@ -13,92 +9,66 @@ export default function TestimonialsSection() {
       id: 1,
       name: 'Sarah Chen',
       role: 'Portfolio Manager',
-      company: 'Goldman Ventures',
-      content:
-        'Empire of Forex transformed our trading strategy. The signal accuracy is unmatched, and the platform\'s stability is exceptional.',
-      rating: 5,
+      company: 'Institutional Assets',
+      content: 'Empire of Forex transformed our trading strategy. The signal accuracy is unmatched, and the platform structural integrity is exceptional.',
+      image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah'
     },
     {
       id: 2,
       name: 'Michael Rodriguez',
       role: 'Investment Director',
       company: 'Capital Growth Fund',
-      content:
-        'The analytics dashboard saved us countless hours. Real-time insights and accurate signals helped us increase ROI by 40%.',
-      rating: 5,
+      content: 'The analytics dashboard saved us countless hours. Real-time insights and accurate signals helped us increase ROI by 40% in two quarters.',
+      image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Michael'
     },
     {
       id: 3,
       name: 'Emma Thompson',
-      role: 'Independent Trader',
-      company: 'Self-employed',
-      content:
-        'Finally, a platform built for serious traders. The UX is intuitive, and the features are exactly what I needed to scale my operations.',
-      rating: 5,
+      role: 'Independent Wealth',
+      company: 'Family Office',
+      content: 'Finally, a platform built for serious traders. The UX is intuitive, and the features are exactly what I needed to scale my global operations.',
+      image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emma'
     },
   ];
 
-  useEffect(() => {
-    // Animate section header
-    gsap.from('.testimonials-header', {
-      scrollTrigger: {
-        trigger: '.testimonials-header',
-        start: 'top 80%',
-        once: true,
-      },
-      duration: 0.8,
-      opacity: 0,
-      y: 30,
-    });
-
-    // Animate testimonial cards with stagger
-    gsap.from('.testimonial-card', {
-      scrollTrigger: {
-        trigger: '.testimonials-container',
-        start: 'top 80%',
-        once: true,
-      },
-      duration: 0.8,
-      opacity: 0,
-      y: 40,
-      stagger: 0.15,
-    });
-  }, []);
-
   return (
-    <section className="py-12 sm:py-20 md:py-32 px-4 sm:px-6 bg-black border-t border-gray-900">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-12 sm:mb-20 md:mb-24 testimonials-header">
-          <p className="text-blue-400 font-medium text-xs sm:text-sm tracking-widest uppercase mb-4 sm:mb-6">Testimonials</p>
-          <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white leading-tight max-w-3xl">
-            Trusted by Professionals
-          </h2>
+    <section className="py-24 bg-[#020817] relative border-t border-white/5 overflow-hidden">
+      <div className="container mx-auto px-6">
+        
+        <div className="text-center mb-16">
+          <span className="text-xs font-black text-blue-500 uppercase tracking-[0.4em] block mb-4">Elite Community</span>
+          <h2 className="text-4xl md:text-5xl font-black text-white mt-4 uppercase tracking-tighter">Voice of <span className="text-gray-500">Excellence.</span></h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 md:gap-12 testimonials-container">
-          {testimonials.map((testimonial) => (
-            <div
-              key={testimonial.id}
-              className="testimonial-card bg-gray-950 border border-gray-800 hover:border-blue-600 p-8 rounded-xl transition-all duration-300 group hover:shadow-lg hover:shadow-blue-600/20"
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {testimonials.map((t, index) => (
+            <motion.div
+              key={t.id}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: index * 0.1 }}
+              className="relative p-10 rounded-[40px] bg-white/5 border border-white/5 hover:bg-white/[0.07] transition-all group overflow-hidden"
             >
+              <Quote className="absolute top-10 right-10 text-white/5 group-hover:text-blue-500/20 transition-colors" size={60} />
+              
               <div className="flex gap-1 mb-6">
-                {Array.from({ length: testimonial.rating }).map((_, i) => (
-                  <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                ))}
+                {[1,2,3,4,5].map(i => <Star key={i} size={12} fill="currentColor" className="text-blue-500" />)}
               </div>
 
-              <p className="text-gray-300 text-lg leading-relaxed mb-8 font-light">
-                "{testimonial.content}"
-              </p>
+              <p className="text-lg text-gray-300 leading-relaxed mb-8 relative z-10">"{t.content}"</p>
 
-              <div>
-                <p className="text-white font-bold text-lg group-hover:text-blue-400 transition-colors">{testimonial.name}</p>
-                <p className="text-gray-500 text-sm">{testimonial.role}</p>
-                <p className="text-gray-600 text-xs">{testimonial.company}</p>
+              <div className="flex items-center gap-4">
+                <img src={t.image} alt={t.name} className="w-12 h-12 rounded-full border border-white/10" />
+                <div>
+                   <h4 className="text-sm font-black text-white uppercase tracking-widest">{t.name}</h4>
+                   <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">{t.role} — {t.company}</p>
+                </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
+
       </div>
     </section>
   );

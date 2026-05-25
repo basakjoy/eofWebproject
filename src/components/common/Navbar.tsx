@@ -1,159 +1,131 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu, X, ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { Menu, X, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { LogoIcon } from './LogoIcon';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [scrolled, setScrolled] = useState(false);
 
-  const toggleDropdown = (name: string) => {
-    setOpenDropdown(openDropdown === name ? null : name);
-  };
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const navLinks = [
+    { name: 'Home', href: '/home' },
+    { name: 'Trading', href: '/trading-signals' },
+    { name: 'Investments', href: '/investment-plans' },
+    { name: 'Services', href: '/services' },
+    { name: 'About', href: '/about' },
+  ];
 
   return (
-    <nav className="fixed top-0 w-full bg-black/10 backdrop-blur-lg border-b border-gray-900 z-50">
+    <nav 
+      className={`fixed top-0 left-0 w-full z-[100] transition-all duration-500 ${
+        scrolled ? 'py-4' : 'py-8'
+      }`}
+    >
+      <div className="container mx-auto px-6">
+        <div className={`relative flex items-center justify-between px-6 py-3 rounded-full border transition-all duration-500 ${
+          scrolled 
+            ? 'bg-black/60 backdrop-blur-xl border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)]' 
+            : 'bg-transparent border-transparent'
+        }`}>
+          
+          {/* Logo Section */}
+          <Link href="/home" className="flex items-center gap-2 group">
+            <LogoIcon size={32} />
+            <span className="text-xl font-black text-white tracking-tighter uppercase hidden sm:block group-hover:text-blue-400 transition-colors">
+              Empire of Forex
+            </span>
+          </Link>
 
-      {/* ✅ Single container — max-width + padding in one place, no more double-wrapping */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
-
-        {/* Logo */}
-        <Link href="/home" className="flex items-center space-x-2 group">
-          <div className="w-10 h-10 flex items-center justify-center group-hover:opacity-80 transition-opacity">
-            <LogoIcon size={40} rounded />
+          {/* Desktop Menu */}
+          <div className="hidden md:flex items-center gap-1">
+            {navLinks.map((link) => (
+              <Link
+                key={link.name}
+                href={link.href}
+                className="px-5 py-2 text-sm font-bold text-gray-300 hover:text-white transition-colors rounded-full hover:bg-white/5"
+              >
+                {link.name}
+              </Link>
+            ))}
           </div>
-          <span className="text-xl font-black text-white hidden sm:inline">EOF</span>
-        </Link>
 
-        {/* Desktop Menu */}
-        <div className="hidden md:flex space-x-8 items-center">
-          <Link
-            href="/home"
-            className="text-gray-300 hover:text-white font-medium text-sm transition-colors"
+          {/* Auth Actions */}
+          <div className="hidden md:flex items-center gap-4">
+            <Link
+              href="/login"
+              className="text-sm font-bold text-white hover:text-blue-400 transition-colors"
+            >
+              Sign In
+            </Link>
+            <Link
+              href="/register"
+              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black uppercase tracking-widest rounded-full transition-all hover:scale-105 active:scale-95 shadow-lg shadow-blue-600/20"
+            >
+              Get Started
+            </Link>
+          </div>
+
+          {/* Mobile Menu Icon */}
+          <button 
+            className="md:hidden text-white p-2"
+            onClick={() => setIsOpen(!isOpen)}
           >
-            Home
-          </Link>
-
-          {/* Trading Dropdown */}
-          <div className="relative group">
-            <button className="flex items-center gap-1 text-gray-300 hover:text-white font-medium text-sm transition-colors">
-              Trading
-              <ChevronDown className="w-4 h-4 group-hover:rotate-180 transition-transform" />
-            </button>
-            <div className="absolute left-0 mt-0 w-48 bg-gray-950 border border-gray-800 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pt-2">
-              <Link href="/trading-signals" className="block px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-900 rounded-t-lg transition-colors">
-                Trading Signals
-              </Link>
-              <Link href="/market-analysis" className="block px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-900 transition-colors">
-                Market Analysis
-              </Link>
-              <Link href="/dashboard/signals" className="block px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-900 rounded-b-lg transition-colors">
-                Signal Dashboard
-              </Link>
-            </div>
-          </div>
-
-          {/* Investment Dropdown */}
-          <div className="relative group">
-            <button className="flex items-center gap-1 text-gray-300 hover:text-white font-medium text-sm transition-colors">
-              Investment
-              <ChevronDown className="w-4 h-4 group-hover:rotate-180 transition-transform" />
-            </button>
-            <div className="absolute left-0 mt-0 w-48 bg-gray-950 border border-gray-800 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pt-2">
-              <Link href="/investment-plans" className="block px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-900 rounded-t-lg transition-colors">
-                Investment Plans
-              </Link>
-              <Link href="/dashboard/investments" className="block px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-900 transition-colors">
-                My Investments
-              </Link>
-              <Link href="/dashboard/transactions" className="block px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-900 rounded-b-lg transition-colors">
-                Transactions
-              </Link>
-            </div>
-          </div>
-
-          <Link href="/services" className="text-gray-300 hover:text-white font-medium text-sm transition-colors">
-            Services
-          </Link>
-          <Link href="/about" className="text-gray-300 hover:text-white font-medium text-sm transition-colors">
-            About
-          </Link>
+            {isOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
-
-        {/* Auth Buttons */}
-        <div className="hidden md:flex space-x-3 items-center">
-          <Link href="/login" className="px-6 py-2 text-gray-300 hover:text-white font-medium text-sm transition-colors">
-            Login
-          </Link>
-          <Link href="/register" className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg transition-colors">
-            Get Started
-          </Link>
-        </div>
-
-        {/* Mobile Menu Button */}
-        <button className="md:hidden text-gray-300" onClick={() => setIsOpen(!isOpen)}>
-          {isOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
       </div>
 
-      {/* Mobile Menu — ✅ same max-width + padding as the navbar for alignment */}
-      {isOpen && (
-        <div className="md:hidden bg-black border-t border-gray-900">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-3">
-            <Link href="/" className="block text-gray-300 hover:text-white py-2">
-              Home
-            </Link>
-
-            {/* Trading Dropdown Mobile */}
-            <div>
-              <button
-                onClick={() => toggleDropdown('trading')}
-                className="flex items-center gap-2 text-gray-300 hover:text-white py-2 w-full"
-              >
-                Trading
-                <ChevronDown className={`w-4 h-4 transition-transform ${openDropdown === 'trading' ? 'rotate-180' : ''}`} />
-              </button>
-              {openDropdown === 'trading' && (
-                <div className="pl-4 space-y-2">
-                  <Link href="/trading-signals" className="block text-gray-400 hover:text-white py-2">Trading Signals</Link>
-                  <Link href="/market-analysis" className="block text-gray-400 hover:text-white py-2">Market Analysis</Link>
-                  <Link href="/dashboard/signals" className="block text-gray-400 hover:text-white py-2">Signal Dashboard</Link>
-                </div>
-              )}
+      {/* Mobile Sidebar */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="absolute top-full left-0 w-full bg-[#0a0a1a] border-b border-white/5 p-6 md:hidden"
+          >
+            <div className="space-y-4">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  className="block text-lg font-bold text-gray-300 hover:text-blue-400 py-2 border-b border-white/5"
+                  onClick={() => setIsOpen(false)}
+                >
+                  {link.name}
+                </Link>
+              ))}
+              <div className="pt-6 grid grid-cols-2 gap-4">
+                <Link
+                  href="/login"
+                  className="flex items-center justify-center p-4 rounded-2xl bg-white/5 text-white font-bold"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/register"
+                  className="flex items-center justify-center p-4 rounded-2xl bg-blue-600 text-white font-bold"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Sign Up
+                </Link>
+              </div>
             </div>
-
-            {/* Investment Dropdown Mobile */}
-            <div>
-              <button
-                onClick={() => toggleDropdown('investment')}
-                className="flex items-center gap-2 text-gray-300 hover:text-white py-2 w-full"
-              >
-                Investment
-                <ChevronDown className={`w-4 h-4 transition-transform ${openDropdown === 'investment' ? 'rotate-180' : ''}`} />
-              </button>
-              {openDropdown === 'investment' && (
-                <div className="pl-4 space-y-2">
-                  <Link href="/investment-plans" className="block text-gray-400 hover:text-white py-2">Investment Plans</Link>
-                  <Link href="/dashboard/investments" className="block text-gray-400 hover:text-white py-2">My Investments</Link>
-                  <Link href="/dashboard/transactions" className="block text-gray-400 hover:text-white py-2">Transactions</Link>
-                </div>
-              )}
-            </div>
-
-            <Link href="/services" className="block text-gray-300 hover:text-white py-2">Services</Link>
-            <Link href="/about" className="block text-gray-300 hover:text-white py-2">About</Link>
-
-            <div className="pt-4 space-y-3">
-              <Link href="/login" className="block text-gray-300 hover:text-white py-2">Login</Link>
-              <Link href="/register" className="block px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-center">
-                Get Started
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 }
