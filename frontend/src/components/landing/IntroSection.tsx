@@ -81,10 +81,14 @@ export default function IntroSection() {
           >
             {/* Floating Widgets Mockup */}
             <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/10 group">
-              <img 
-                src="/images/trading-hero.png" 
-                alt="Empire Trading Dashboard" 
-                className="w-full h-auto transform transition-transform duration-700 group-hover:scale-105"
+              <video 
+                src="../videos/trading-hero.mp4" 
+                
+                 
+                className="w-full h-100px transform transition-transform duration-700 group-hover:scale-105"
+                autoPlay 
+                loop 
+                muted 
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#020817] via-transparent to-transparent" />
             </div>

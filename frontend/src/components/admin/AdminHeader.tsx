@@ -1,58 +1,225 @@
 "use client";
 
-import React from "react";
-import { Search, Bell, User as UserIcon, Menu } from "lucide-react";
+import React, { useState } from "react";
+import Link from "next/link";
+import { Search, Bell, User as UserIcon, Menu, Home, ChevronDown, Check, LogOut, Settings, Shield } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
-import styles from "./admin-header.module.css";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface AdminHeaderProps {
   onMenuClick?: () => void;
 }
 
+const currencies = [
+  { code: "MMK", name: "Myanmar Kyat (K)", flag: "🇲🇲" },
+  { code: "USD", name: "US Dollar ($)", flag: "🇺🇸" },
+  { code: "EUR", name: "Euro (€)", flag: "🇪🇺" },
+  { code: "SGD", name: "Singapore Dollar ($)", flag: "🇸🇬" },
+  { code: "THB", name: "Thai Baht (฿)", flag: "🇹🇭" },
+];
+
 export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
-  const { user } = useAuthStore();
+  const { user, logout } = useAuthStore();
+  const [selectedCurrency, setSelectedCurrency] = useState(currencies[0]);
+  const [currencyOpen, setCurrencyOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   return (
-    <header className={`${styles.header} glass-morphism-header`}>
-      <div className={styles.leftSection}>
-        <button onClick={onMenuClick} className={`${styles.mobileMenuBtn} hover:bg-white/5 p-2 rounded-lg text-slate-400 hover:text-white transition-colors`}>
-          <Menu size={22} />
+    <header className="h-20 border-b border-white/5 bg-[#0C0B12]/80 backdrop-blur-xl sticky top-0 z-30 flex items-center justify-between px-6 sm:px-8">
+      {/* Left Section: Mobile Menu Trigger & Breadcrumbs */}
+      <div className="flex items-center gap-4">
+        <button
+          onClick={onMenuClick}
+          className="lg:hidden p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 border border-white/5 transition-all"
+        >
+          <Menu size={20} />
         </button>
-        <span className={`${styles.title} font-display text-white font-bold tracking-tight hidden sm:inline-block ml-2`}>
-          Empire of Forex <span className="text-purple-400">Admin</span>
-        </span>
-        <div className={`${styles.searchWrapper} bg-white/5 border border-white/5 rounded-xl ml-4`}>
-          <Search size={18} className="text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search anything..."
-            className={`${styles.searchInput} bg-transparent text-white placeholder:text-slate-500`}
-          />
-          <div className="hidden md:flex items-center gap-1 bg-white/5 px-2 py-1 rounded-md border border-white/10 mr-2">
-            <span className="text-[10px] text-slate-400 font-bold">SEARCH</span>
-          </div>
+
+        {/* Breadcrumb Navigation */}
+        <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-slate-400">
+          <Link href="/admin?tab=overview" className="flex items-center gap-1 hover:text-white transition-colors">
+            <Home size={14} className="text-purple-400" />
+            <span>Home</span>
+          </Link>
+          <span className="text-slate-600">/</span>
+          <span className="text-slate-200">Dashboard</span>
         </div>
       </div>
 
-      <div className={styles.rightSection}>
-        <button className={`${styles.iconBtn} hover:bg-white/5 p-2 rounded-xl text-slate-400 hover:text-white transition-all relative`}>
-          <Bell size={20} />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-purple-500 rounded-full border-2 border-[#0B0A10]" />
-        </button>
+      {/* Right Section: Currency Selector, Notifications, User Profile */}
+      <div className="flex items-center gap-4 sm:gap-6">
         
-        <div className={`${styles.profileSection} bg-white/5 border border-white/10 p-1 pl-4 rounded-2xl flex items-center gap-3`}>
-          <div className={`${styles.userInfo} hidden md:flex flex-col items-end`}>
-            <span className="text-xs font-bold text-white leading-tight">{user?.name || "Admin"}</span>
-            <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">{user?.role || "Administrator"}</span>
+        {/* Currency Type Selector */}
+        <div className="relative">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider hidden md:inline">
+              Currency Type
+            </span>
+            <button
+              onClick={() => {
+                setCurrencyOpen(!currencyOpen);
+                setProfileOpen(false);
+                setNotificationsOpen(false);
+              }}
+              className="flex items-center gap-2 bg-[#14121E] border border-white/5 rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-white/5 transition-all shadow-inner"
+            >
+              <span>{selectedCurrency.flag}</span>
+              <span className="font-display">{selectedCurrency.code}</span>
+              <ChevronDown size={14} className={cn("text-slate-400 transition-transform duration-200", currencyOpen && "transform rotate-180")} />
+            </button>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center shadow-lg shadow-purple-500/20">
-            {user?.avatar ? (
-              <img src={user.avatar} alt={user.name} className="w-full h-full object-cover rounded-xl" />
-            ) : (
-              <UserIcon size={20} className="text-white" />
+
+          <AnimatePresence>
+            {currencyOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="absolute right-0 mt-2 w-48 bg-[#111018] border border-white/5 rounded-2xl p-1.5 shadow-2xl z-50 overflow-hidden"
+              >
+                {currencies.map((currency) => (
+                  <button
+                    key={currency.code}
+                    onClick={() => {
+                      setSelectedCurrency(currency);
+                      setCurrencyOpen(false);
+                    }}
+                    className={cn(
+                      "w-full flex items-center justify-between px-3 py-2 text-xs sm:text-sm rounded-xl transition-all text-slate-300 hover:text-white hover:bg-white/5",
+                      selectedCurrency.code === currency.code && "bg-purple-600/10 text-purple-400 font-semibold"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span>{currency.flag}</span>
+                      <span>{currency.code}</span>
+                    </div>
+                    {selectedCurrency.code === currency.code && <Check size={14} className="text-purple-400" />}
+                  </button>
+                ))}
+              </motion.div>
             )}
-          </div>
+          </AnimatePresence>
         </div>
+
+        {/* Separator */}
+        <div className="w-[1px] h-6 bg-white/5 hidden sm:block" />
+
+        {/* Notifications Icon Button */}
+        <div className="relative">
+          <button
+            onClick={() => {
+              setNotificationsOpen(!notificationsOpen);
+              setProfileOpen(false);
+              setCurrencyOpen(false);
+            }}
+            className="p-2.5 rounded-xl bg-[#14121E] border border-white/5 text-slate-400 hover:text-white hover:bg-white/5 transition-all relative group"
+          >
+            <Bell size={18} className="group-hover:scale-115 transition-transform" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-purple-500 rounded-full border border-[#0C0B12] animate-pulse" />
+          </button>
+
+          <AnimatePresence>
+            {notificationsOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="absolute right-0 mt-2 w-80 bg-[#111018] border border-white/5 rounded-2xl p-4 shadow-2xl z-50 space-y-3"
+              >
+                <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                  <span className="font-display font-bold text-xs sm:text-sm text-white">Notifications</span>
+                  <span className="text-[10px] text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full font-bold">1 New</span>
+                </div>
+                <div className="space-y-2">
+                  <div className="p-2.5 bg-white/[0.02] border border-white/5 rounded-xl text-left">
+                    <p className="text-xs font-bold text-white leading-snug">New Deposit Request Approved</p>
+                    <p className="text-[10px] text-slate-400 mt-1 leading-normal">Myanmar Kyats (K50,000) was approved for member parvejm.</p>
+                    <span className="text-[8px] text-slate-500 block mt-2 font-semibold uppercase">2 mins ago</span>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* User Profile Section */}
+        <div className="relative">
+          <button
+            onClick={() => {
+              setProfileOpen(!profileOpen);
+              setCurrencyOpen(false);
+              setNotificationsOpen(false);
+            }}
+            className="bg-[#14121E] border border-white/5 hover:border-purple-500/30 p-1 pr-3 sm:pr-4 rounded-2xl flex items-center gap-3 transition-all cursor-pointer shadow-md group"
+          >
+            {/* Avatar */}
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/10 font-bold text-white text-xs sm:text-sm group-hover:scale-105 transition-transform">
+              {user?.name ? user.name[0].toUpperCase() : "P"}
+            </div>
+
+            {/* Profile Info */}
+            <div className="hidden md:flex flex-col items-start text-left">
+              <span className="text-xs font-bold text-slate-200 leading-none group-hover:text-white transition-colors">
+                {user?.name || "parvejm"}
+              </span>
+              <span className="text-[9px] font-bold text-purple-400 uppercase tracking-wider mt-0.5">
+                {user?.role || "Administrator"}
+              </span>
+            </div>
+            
+            <ChevronDown size={14} className={cn("text-slate-500 transition-transform duration-200", profileOpen && "transform rotate-180")} />
+          </button>
+
+          <AnimatePresence>
+            {profileOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="absolute right-0 mt-2 w-56 bg-[#111018] border border-white/5 rounded-2xl p-1.5 shadow-2xl z-50 space-y-1 overflow-hidden"
+              >
+                <div className="px-3 py-2 border-b border-white/5 mb-1.5">
+                  <p className="text-xs font-bold text-white">{user?.name || "parvejm"}</p>
+                  <p className="text-[10px] text-slate-400 truncate mt-0.5">{user?.email || "admin@empireforex.com"}</p>
+                </div>
+                
+                <Link
+                  href="/admin?tab=settings"
+                  onClick={() => setProfileOpen(false)}
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition-all"
+                >
+                  <Settings size={14} className="text-slate-400" />
+                  <span>Account Settings</span>
+                </Link>
+
+                <Link
+                  href="/admin?tab=overview"
+                  onClick={() => setProfileOpen(false)}
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition-all"
+                >
+                  <Shield size={14} className="text-slate-400" />
+                  <span>Security & Roles</span>
+                </Link>
+
+                <div className="h-[1px] bg-white/5 my-1" />
+
+                <button
+                  onClick={() => {
+                    logout();
+                    setProfileOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs sm:text-sm rounded-xl text-red-400 hover:bg-red-500/10 transition-all text-left"
+                >
+                  <LogOut size={14} />
+                  <span>Logout</span>
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
       </div>
     </header>
   );
