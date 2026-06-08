@@ -27,7 +27,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   return (
-    <header className="h-20 border-b border-white/5 bg-[#0C0B12]/80 backdrop-blur-xl sticky top-0 z-30 flex items-center justify-between px-6 sm:px-8">
+    <header className="h-20 border-b border-white/5 bg-background/80 backdrop-blur-xl sticky top-0 z-30 flex items-center justify-between px-6 sm:px-8">
       {/* Left Section: Mobile Menu Trigger & Breadcrumbs */}
       <div className="flex items-center gap-4">
         <button
@@ -40,7 +40,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
         {/* Breadcrumb Navigation */}
         <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-slate-400">
           <Link href="/admin?tab=overview" className="flex items-center gap-1 hover:text-white transition-colors">
-            <Home size={14} className="text-purple-400" />
+            <Home size={14} className="text-primary" />
             <span>Home</span>
           </Link>
           <span className="text-slate-600">/</span>
@@ -63,7 +63,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
                 setProfileOpen(false);
                 setNotificationsOpen(false);
               }}
-              className="flex items-center gap-2 bg-[#14121E] border border-white/5 rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-white/5 transition-all shadow-inner"
+              className="flex items-center gap-2 bg-background border border-white/5 rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-white/5 transition-all shadow-inner"
             >
               <span>{selectedCurrency.flag}</span>
               <span className="font-display">{selectedCurrency.code}</span>
@@ -77,7 +77,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
-                className="absolute right-0 mt-2 w-48 bg-[#111018] border border-white/5 rounded-2xl p-1.5 shadow-2xl z-50 overflow-hidden"
+                className="absolute right-0 mt-2 w-48 bg-background border border-white/5 rounded-2xl p-1.5 shadow-2xl z-50 overflow-hidden"
               >
                 {currencies.map((currency) => (
                   <button
@@ -88,14 +88,14 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
                     }}
                     className={cn(
                       "w-full flex items-center justify-between px-3 py-2 text-xs sm:text-sm rounded-xl transition-all text-slate-300 hover:text-white hover:bg-white/5",
-                      selectedCurrency.code === currency.code && "bg-purple-600/10 text-purple-400 font-semibold"
+                      selectedCurrency.code === currency.code && "bg-primary/10 text-primary font-semibold"
                     )}
                   >
                     <div className="flex items-center gap-2">
                       <span>{currency.flag}</span>
                       <span>{currency.code}</span>
                     </div>
-                    {selectedCurrency.code === currency.code && <Check size={14} className="text-purple-400" />}
+                    {selectedCurrency.code === currency.code && <Check size={14} className="text-primary" />}
                   </button>
                 ))}
               </motion.div>
@@ -114,10 +114,10 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
               setProfileOpen(false);
               setCurrencyOpen(false);
             }}
-            className="p-2.5 rounded-xl bg-[#14121E] border border-white/5 text-slate-400 hover:text-white hover:bg-white/5 transition-all relative group"
+            className="p-2.5 rounded-xl bg-background border border-white/5 text-slate-400 hover:text-white hover:bg-white/5 transition-all relative group"
           >
             <Bell size={18} className="group-hover:scale-115 transition-transform" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-purple-500 rounded-full border border-[#0C0B12] animate-pulse" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full border border-background animate-pulse" />
           </button>
 
           <AnimatePresence>
@@ -126,11 +126,11 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
-                className="absolute right-0 mt-2 w-80 bg-[#111018] border border-white/5 rounded-2xl p-4 shadow-2xl z-50 space-y-3"
+                className="absolute right-0 mt-2 w-80 bg-background border border-white/5 rounded-2xl p-4 shadow-2xl z-50 space-y-3"
               >
                 <div className="flex items-center justify-between border-b border-white/5 pb-2">
                   <span className="font-display font-bold text-xs sm:text-sm text-white">Notifications</span>
-                  <span className="text-[10px] text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full font-bold">1 New</span>
+                  <span className="text-[10px] text-primary bg-primary/10 px-2 py-0.5 rounded-full font-bold">1 New</span>
                 </div>
                 <div className="space-y-2">
                   <div className="p-2.5 bg-white/[0.02] border border-white/5 rounded-xl text-left">
@@ -152,10 +152,10 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
               setCurrencyOpen(false);
               setNotificationsOpen(false);
             }}
-            className="bg-[#14121E] border border-white/5 hover:border-purple-500/30 p-1 pr-3 sm:pr-4 rounded-2xl flex items-center gap-3 transition-all cursor-pointer shadow-md group"
+            className="bg-background border border-white/5 hover:border-primary/30 p-1 pr-3 sm:pr-4 rounded-2xl flex items-center gap-3 transition-all cursor-pointer shadow-md group"
           >
             {/* Avatar */}
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/10 font-bold text-white text-xs sm:text-sm group-hover:scale-105 transition-transform">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/10 font-bold text-white text-xs sm:text-sm group-hover:scale-105 transition-transform">
               {user?.name ? user.name[0].toUpperCase() : "P"}
             </div>
 
@@ -164,7 +164,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
               <span className="text-xs font-bold text-slate-200 leading-none group-hover:text-white transition-colors">
                 {user?.name || "parvejm"}
               </span>
-              <span className="text-[9px] font-bold text-purple-400 uppercase tracking-wider mt-0.5">
+              <span className="text-[9px] font-bold text-primary uppercase tracking-wider mt-0.5">
                 {user?.role || "Administrator"}
               </span>
             </div>
@@ -178,7 +178,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
-                className="absolute right-0 mt-2 w-56 bg-[#111018] border border-white/5 rounded-2xl p-1.5 shadow-2xl z-50 space-y-1 overflow-hidden"
+                className="absolute right-0 mt-2 w-56 bg-background border border-white/5 rounded-2xl p-1.5 shadow-2xl z-50 space-y-1 overflow-hidden"
               >
                 <div className="px-3 py-2 border-b border-white/5 mb-1.5">
                   <p className="text-xs font-bold text-white">{user?.name || "parvejm"}</p>

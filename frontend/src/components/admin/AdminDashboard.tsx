@@ -318,8 +318,8 @@ export default function AdminDashboard() {
             </div>
             
             <div className="flex items-center gap-3">
-              <div className="flex items-center bg-[#14121E] border border-white/5 rounded-xl px-3 py-2 gap-2 text-xs font-semibold text-slate-300">
-                <Calendar size={14} className="text-purple-400" />
+              <div className="flex items-center bg-background border border-white/5 rounded-xl px-3 py-2 gap-2 text-xs font-semibold text-slate-300 shadow-inner">
+                <Calendar size={14} className="text-primary" />
                 <span>May 26, 2026</span>
               </div>
             </div>
@@ -434,7 +434,7 @@ export default function AdminDashboard() {
           <div className="space-y-4">
             
             {/* Panel 1: DEPOSIT */}
-            <div className="bg-[#111018]/50 border border-white/5 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl">
+            <div className="bg-background/40 border border-white/10 rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-xl">
               <button 
                 onClick={() => togglePanel("deposit")}
                 className="w-full flex items-center justify-between px-6 py-4.5 bg-white/[0.01] hover:bg-white/[0.03] transition-colors border-b border-white/5 text-left"
@@ -471,7 +471,7 @@ export default function AdminDashboard() {
                   >
                     {/* Confirmed Banner Ribbon */}
                     <div className="absolute top-0 left-0 overflow-hidden w-24 h-24 pointer-events-none z-10">
-                      <div className="absolute top-4 -left-8 w-32 bg-purple-600/90 text-white font-bold text-[9px] uppercase tracking-widest text-center py-1.5 transform -rotate-45 shadow-lg shadow-purple-500/20">
+                      <div className="absolute top-4 -left-8 w-32 bg-primary/90 text-white font-bold text-[9px] uppercase tracking-widest text-center py-1.5 transform -rotate-45 shadow-lg shadow-primary/20">
                         Confirmed
                       </div>
                     </div>
@@ -509,7 +509,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Panel 2: WITHDRAWAL */}
-            <div className="bg-[#111018]/50 border border-white/5 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl">
+            <div className="bg-background/40 border border-white/10 rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-xl">
               <button 
                 onClick={() => togglePanel("withdrawal")}
                 className="w-full flex items-center justify-between px-6 py-4.5 bg-white/[0.01] hover:bg-white/[0.03] transition-colors border-b border-white/5 text-left"
@@ -544,7 +544,7 @@ export default function AdminDashboard() {
                     className="overflow-hidden relative"
                   >
                     <div className="absolute top-0 left-0 overflow-hidden w-24 h-24 pointer-events-none z-10">
-                      <div className="absolute top-4 -left-8 w-32 bg-purple-600/90 text-white font-bold text-[9px] uppercase tracking-widest text-center py-1.5 transform -rotate-45 shadow-lg shadow-purple-500/20">
+                      <div className="absolute top-4 -left-8 w-32 bg-primary/90 text-white font-bold text-[9px] uppercase tracking-widest text-center py-1.5 transform -rotate-45 shadow-lg shadow-primary/20">
                         Confirmed
                       </div>
                     </div>
@@ -582,7 +582,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Panel 3: REGISTERED USER */}
-            <div className="bg-[#111018]/50 border border-white/5 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl">
+            <div className="bg-background/40 border border-white/10 rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-xl">
               <button 
                 onClick={() => togglePanel("registeredUser")}
                 className="w-full flex items-center justify-between px-6 py-4.5 bg-white/[0.01] hover:bg-white/[0.03] transition-colors border-b border-white/5 text-left"
@@ -635,7 +635,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Panel 4: FIRST DEPOSIT */}
-            <div className="bg-[#111018]/50 border border-white/5 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl">
+            <div className="bg-background/40 border border-white/10 rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-xl">
               <button 
                 onClick={() => togglePanel("firstDeposit")}
                 className="w-full flex items-center justify-between px-6 py-4.5 bg-white/[0.01] hover:bg-white/[0.03] transition-colors border-b border-white/5 text-left"
@@ -690,7 +690,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Panel 5: BONUS */}
-            <div className="bg-[#111018]/50 border border-white/5 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl">
+            <div className="bg-background/40 border border-white/10 rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-xl">
               <button 
                 onClick={() => togglePanel("bonus")}
                 className="w-full flex items-center justify-between px-6 py-4.5 bg-white/[0.01] hover:bg-white/[0.03] transition-colors border-b border-white/5 text-left"
@@ -745,7 +745,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Panel 6: VIP POINT TO CASH */}
-            <div className="bg-[#111018]/50 border border-white/5 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl">
+            <div className="bg-background/40 border border-white/10 rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-xl">
               <button 
                 onClick={() => togglePanel("vipPoint")}
                 className="w-full flex items-center justify-between px-6 py-4.5 bg-white/[0.01] hover:bg-white/[0.03] transition-colors border-b border-white/5 text-left"
@@ -800,7 +800,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Panel 7: COMPANY WIN / LOSS */}
-            <div className="bg-[#111018]/50 border border-white/5 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl">
+            <div className="bg-background/40 border border-white/10 rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-xl">
               <button 
                 onClick={() => togglePanel("winLoss")}
                 className="w-full flex items-center justify-between px-6 py-4.5 bg-white/[0.01] hover:bg-white/[0.03] transition-colors border-b border-white/5 text-left"
@@ -855,7 +855,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Panel 8: TURNOVER */}
-            <div className="bg-[#111018]/50 border border-white/5 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl">
+            <div className="bg-background/40 border border-white/10 rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-xl">
               <button 
                 onClick={() => togglePanel("turnover")}
                 className="w-full flex items-center justify-between px-6 py-4.5 bg-white/[0.01] hover:bg-white/[0.03] transition-colors border-b border-white/5 text-left"
@@ -910,7 +910,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Panel 9: GROSS MARGIN */}
-            <div className="bg-[#111018]/50 border border-white/5 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl">
+            <div className="bg-background/40 border border-white/10 rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-xl">
               <button 
                 onClick={() => togglePanel("grossMargin")}
                 className="w-full flex items-center justify-between px-6 py-4.5 bg-white/[0.01] hover:bg-white/[0.03] transition-colors border-b border-white/5 text-left"

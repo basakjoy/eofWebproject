@@ -72,16 +72,16 @@ export const initNotificationsTables = async (runAsync: (sql: string, params?: a
   // Notifications table
   await runAsync(`
     CREATE TABLE IF NOT EXISTS notifications (
-      id TEXT PRIMARY KEY,
-      userId TEXT NOT NULL,
-      type TEXT NOT NULL,
-      title TEXT NOT NULL,
+      id VARCHAR(36) PRIMARY KEY,
+      userId VARCHAR(36) NOT NULL,
+      type VARCHAR(100) NOT NULL,
+      title VARCHAR(255) NOT NULL,
       message TEXT NOT NULL,
       data TEXT,
-      read BOOLEAN DEFAULT 0,
-      readAt DATETIME,
-      actionUrl TEXT,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      read BOOLEAN DEFAULT false,
+      readAt TIMESTAMP NULL,
+      actionUrl VARCHAR(500),
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
     )
   `);
@@ -89,16 +89,16 @@ export const initNotificationsTables = async (runAsync: (sql: string, params?: a
   // Notification Preferences table
   await runAsync(`
     CREATE TABLE IF NOT EXISTS notification_preferences (
-      id TEXT PRIMARY KEY,
-      userId TEXT UNIQUE NOT NULL,
-      emailNotifications BOOLEAN DEFAULT 1,
-      pushNotifications BOOLEAN DEFAULT 1,
-      smsNotifications BOOLEAN DEFAULT 0,
-      inAppNotifications BOOLEAN DEFAULT 1,
+      id VARCHAR(36) PRIMARY KEY,
+      userId VARCHAR(36) UNIQUE NOT NULL,
+      emailNotifications BOOLEAN DEFAULT true,
+      pushNotifications BOOLEAN DEFAULT true,
+      smsNotifications BOOLEAN DEFAULT false,
+      inAppNotifications BOOLEAN DEFAULT true,
       notificationTypes TEXT,
       quietHours TEXT,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
     )
   `);
@@ -106,12 +106,12 @@ export const initNotificationsTables = async (runAsync: (sql: string, params?: a
   // Notification History table
   await runAsync(`
     CREATE TABLE IF NOT EXISTS notification_history (
-      id TEXT PRIMARY KEY,
-      notificationId TEXT,
-      userId TEXT NOT NULL,
-      deliveryMethod TEXT NOT NULL,
-      status TEXT DEFAULT 'sent',
-      sentAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      id VARCHAR(36) PRIMARY KEY,
+      notificationId VARCHAR(36),
+      userId VARCHAR(36) NOT NULL,
+      deliveryMethod VARCHAR(100) NOT NULL,
+      status VARCHAR(50) DEFAULT 'sent',
+      sentAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       failureReason TEXT,
       FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (notificationId) REFERENCES notifications(id) ON DELETE SET NULL
@@ -121,32 +121,32 @@ export const initNotificationsTables = async (runAsync: (sql: string, params?: a
   // Notification Templates table
   await runAsync(`
     CREATE TABLE IF NOT EXISTS notification_templates (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      slug TEXT UNIQUE NOT NULL,
-      subject TEXT,
+      id VARCHAR(36) PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      slug VARCHAR(255) UNIQUE NOT NULL,
+      subject VARCHAR(255),
       template TEXT NOT NULL,
       variables TEXT,
-      category TEXT,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      category VARCHAR(100),
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
   // Bulk Notifications table
   await runAsync(`
     CREATE TABLE IF NOT EXISTS bulk_notifications (
-      id TEXT PRIMARY KEY,
-      title TEXT NOT NULL,
+      id VARCHAR(36) PRIMARY KEY,
+      title VARCHAR(255) NOT NULL,
       message TEXT NOT NULL,
-      recipientCount INTEGER DEFAULT 0,
-      sentCount INTEGER DEFAULT 0,
-      failedCount INTEGER DEFAULT 0,
-      status TEXT DEFAULT 'draft',
-      scheduledFor DATETIME,
-      sentAt DATETIME,
-      createdBy TEXT NOT NULL,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      recipientCount INT DEFAULT 0,
+      sentCount INT DEFAULT 0,
+      failedCount INT DEFAULT 0,
+      status VARCHAR(50) DEFAULT 'draft',
+      scheduledFor TIMESTAMP NULL,
+      sentAt TIMESTAMP NULL,
+      createdBy VARCHAR(36) NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (createdBy) REFERENCES users(id) ON DELETE CASCADE
     )
   `);

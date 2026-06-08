@@ -84,20 +84,20 @@ export const initSupportTables = async (runAsync: (sql: string, params?: any[]) 
   // Support Tickets table
   await runAsync(`
     CREATE TABLE IF NOT EXISTS support_tickets (
-      id TEXT PRIMARY KEY,
-      userId TEXT NOT NULL,
-      subject TEXT NOT NULL,
+      id VARCHAR(36) PRIMARY KEY,
+      userId VARCHAR(36) NOT NULL,
+      subject VARCHAR(255) NOT NULL,
       description TEXT NOT NULL,
-      category TEXT NOT NULL,
-      priority TEXT DEFAULT 'medium',
-      status TEXT DEFAULT 'open',
-      assignedTo TEXT,
+      category VARCHAR(100) NOT NULL,
+      priority VARCHAR(50) DEFAULT 'medium',
+      status VARCHAR(50) DEFAULT 'open',
+      assignedTo VARCHAR(36),
       attachments TEXT,
       resolution TEXT,
-      resolutionTime INTEGER,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-      closedAt DATETIME,
+      resolutionTime INT,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      closedAt TIMESTAMP NULL,
       FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (assignedTo) REFERENCES users(id) ON DELETE SET NULL
     )
@@ -106,13 +106,13 @@ export const initSupportTables = async (runAsync: (sql: string, params?: any[]) 
   // Support Messages table
   await runAsync(`
     CREATE TABLE IF NOT EXISTS support_messages (
-      id TEXT PRIMARY KEY,
-      ticketId TEXT NOT NULL,
-      userId TEXT NOT NULL,
+      id VARCHAR(36) PRIMARY KEY,
+      ticketId VARCHAR(36) NOT NULL,
+      userId VARCHAR(36) NOT NULL,
       message TEXT NOT NULL,
       attachments TEXT,
-      isInternal BOOLEAN DEFAULT 0,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      isInternal BOOLEAN DEFAULT false,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (ticketId) REFERENCES support_tickets(id) ON DELETE CASCADE,
       FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
     )
@@ -121,34 +121,34 @@ export const initSupportTables = async (runAsync: (sql: string, params?: any[]) 
   // Support Categories table
   await runAsync(`
     CREATE TABLE IF NOT EXISTS support_categories (
-      id TEXT PRIMARY KEY,
-      name TEXT UNIQUE NOT NULL,
-      slug TEXT UNIQUE NOT NULL,
+      id VARCHAR(36) PRIMARY KEY,
+      name VARCHAR(255) UNIQUE NOT NULL,
+      slug VARCHAR(255) UNIQUE NOT NULL,
       description TEXT,
-      icon TEXT,
-      responseTime INTEGER,
-      position INTEGER DEFAULT 0,
-      active BOOLEAN DEFAULT 1,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      icon VARCHAR(500),
+      responseTime INT,
+      position INT DEFAULT 0,
+      active BOOLEAN DEFAULT true,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
   // FAQ Articles table
   await runAsync(`
     CREATE TABLE IF NOT EXISTS faq_articles (
-      id TEXT PRIMARY KEY,
-      title TEXT NOT NULL,
-      slug TEXT UNIQUE NOT NULL,
-      category TEXT NOT NULL,
+      id VARCHAR(36) PRIMARY KEY,
+      title VARCHAR(255) NOT NULL,
+      slug VARCHAR(255) UNIQUE NOT NULL,
+      category VARCHAR(100) NOT NULL,
       content TEXT NOT NULL,
-      keywords TEXT,
-      viewCount INTEGER DEFAULT 0,
-      helpfulCount INTEGER DEFAULT 0,
-      unhelpfulCount INTEGER DEFAULT 0,
-      author TEXT NOT NULL,
-      published BOOLEAN DEFAULT 0,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      keywords VARCHAR(500),
+      viewCount INT DEFAULT 0,
+      helpfulCount INT DEFAULT 0,
+      unhelpfulCount INT DEFAULT 0,
+      author VARCHAR(36) NOT NULL,
+      published BOOLEAN DEFAULT false,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (author) REFERENCES users(id) ON DELETE CASCADE
     )
   `);
@@ -156,15 +156,15 @@ export const initSupportTables = async (runAsync: (sql: string, params?: any[]) 
   // Support Agents table
   await runAsync(`
     CREATE TABLE IF NOT EXISTS support_agents (
-      id TEXT PRIMARY KEY,
-      userId TEXT UNIQUE NOT NULL,
-      agentId TEXT UNIQUE NOT NULL,
-      department TEXT NOT NULL,
-      status TEXT DEFAULT 'offline',
-      ticketsAssigned INTEGER DEFAULT 0,
-      avgResolutionTime REAL,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      id VARCHAR(36) PRIMARY KEY,
+      userId VARCHAR(36) UNIQUE NOT NULL,
+      agentId VARCHAR(36) UNIQUE NOT NULL,
+      department VARCHAR(100) NOT NULL,
+      status VARCHAR(50) DEFAULT 'offline',
+      ticketsAssigned INT DEFAULT 0,
+      avgResolutionTime DECIMAL(10, 2),
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
     )
   `);
@@ -172,14 +172,14 @@ export const initSupportTables = async (runAsync: (sql: string, params?: any[]) 
   // Support Metrics table
   await runAsync(`
     CREATE TABLE IF NOT EXISTS support_metrics (
-      id TEXT PRIMARY KEY,
-      period TEXT NOT NULL,
-      totalTickets INTEGER DEFAULT 0,
-      resolvedTickets INTEGER DEFAULT 0,
-      averageResolutionTime REAL,
-      customerSatisfaction REAL,
-      avgFirstResponseTime REAL,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      id VARCHAR(36) PRIMARY KEY,
+      period VARCHAR(100) NOT NULL,
+      totalTickets INT DEFAULT 0,
+      resolvedTickets INT DEFAULT 0,
+      averageResolutionTime DECIMAL(10, 2),
+      customerSatisfaction DECIMAL(3, 2),
+      avgFirstResponseTime DECIMAL(10, 2),
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
 };

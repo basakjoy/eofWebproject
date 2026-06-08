@@ -60,38 +60,38 @@ export const initBrokersTables = async (runAsync: (sql: string, params?: any[]) 
   // Brokers table
   await runAsync(`
     CREATE TABLE IF NOT EXISTS brokers (
-      id TEXT PRIMARY KEY,
-      name TEXT UNIQUE NOT NULL,
-      code TEXT UNIQUE NOT NULL,
-      logo TEXT,
-      website TEXT,
-      email TEXT,
-      phone TEXT,
-      country TEXT,
-      status TEXT DEFAULT 'active',
-      rating REAL DEFAULT 0,
-      reviews INTEGER DEFAULT 0,
-      minimumDeposit REAL,
-      leverage TEXT,
-      spreads TEXT,
+      id VARCHAR(36) PRIMARY KEY,
+      name VARCHAR(255) UNIQUE NOT NULL,
+      code VARCHAR(50) UNIQUE NOT NULL,
+      logo VARCHAR(500),
+      website VARCHAR(500),
+      email VARCHAR(255),
+      phone VARCHAR(20),
+      country VARCHAR(100),
+      status VARCHAR(50) DEFAULT 'active',
+      rating DECIMAL(3, 2) DEFAULT 0,
+      reviews INT DEFAULT 0,
+      minimumDeposit DECIMAL(15, 2),
+      leverage VARCHAR(100),
+      spreads VARCHAR(100),
       features TEXT,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
   // Broker Reviews table
   await runAsync(`
     CREATE TABLE IF NOT EXISTS broker_reviews (
-      id TEXT PRIMARY KEY,
-      brokerId TEXT NOT NULL,
-      userId TEXT NOT NULL,
-      rating INTEGER NOT NULL,
+      id VARCHAR(36) PRIMARY KEY,
+      brokerId VARCHAR(36) NOT NULL,
+      userId VARCHAR(36) NOT NULL,
+      rating INT NOT NULL,
       comment TEXT,
-      verified BOOLEAN DEFAULT 0,
-      helpful INTEGER DEFAULT 0,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      verified BOOLEAN DEFAULT false,
+      helpful INT DEFAULT 0,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(brokerId, userId),
       FOREIGN KEY (brokerId) REFERENCES brokers(id) ON DELETE CASCADE,
       FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
@@ -101,15 +101,15 @@ export const initBrokersTables = async (runAsync: (sql: string, params?: any[]) 
   // Broker Accounts table
   await runAsync(`
     CREATE TABLE IF NOT EXISTS broker_accounts (
-      id TEXT PRIMARY KEY,
-      userId TEXT NOT NULL,
-      brokerId TEXT NOT NULL,
-      accountNumber TEXT,
-      accountType TEXT,
-      balance REAL DEFAULT 0,
-      currency TEXT DEFAULT 'USD',
-      status TEXT DEFAULT 'active',
-      connectedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      id VARCHAR(36) PRIMARY KEY,
+      userId VARCHAR(36) NOT NULL,
+      brokerId VARCHAR(36) NOT NULL,
+      accountNumber VARCHAR(100),
+      accountType VARCHAR(100),
+      balance DECIMAL(15, 2) DEFAULT 0,
+      currency VARCHAR(10) DEFAULT 'USD',
+      status VARCHAR(50) DEFAULT 'active',
+      connectedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(userId, brokerId),
       FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (brokerId) REFERENCES brokers(id) ON DELETE CASCADE
@@ -119,13 +119,13 @@ export const initBrokersTables = async (runAsync: (sql: string, params?: any[]) 
   // Broker Comparisons table
   await runAsync(`
     CREATE TABLE IF NOT EXISTS broker_comparisons (
-      id TEXT PRIMARY KEY,
-      title TEXT NOT NULL,
+      id VARCHAR(36) PRIMARY KEY,
+      title VARCHAR(255) NOT NULL,
       description TEXT,
       brokers TEXT,
       criteria TEXT,
-      createdBy TEXT NOT NULL,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      createdBy VARCHAR(36) NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (createdBy) REFERENCES users(id) ON DELETE CASCADE
     )
   `);

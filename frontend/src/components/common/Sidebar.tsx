@@ -240,14 +240,14 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     <aside
       className={cn(
         "h-screen glass-morphism-sidebar transition-all duration-300 flex flex-col z-40 md:sticky md:top-0",
-        "fixed left-0 top-0 border-r border-white/5 bg-[#0C0B12]/90 backdrop-blur-xl shadow-2xl",
+        "fixed left-0 top-0 border-r border-white/5 bg-background/90 backdrop-blur-xl shadow-2xl",
         collapsed ? "w-16 sm:w-20" : "w-64 sm:w-72"
       )}
     >
       {/* Logo Section */}
       <div className="flex h-16 sm:h-20 items-center justify-between px-4 sm:px-5 border-b border-white/5 bg-white/[0.01]">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center flex-shrink-0 bg-gradient-to-tr from-purple-600/30 to-blue-500/10 rounded-xl p-[1px] border border-purple-500/20">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center flex-shrink-0 bg-gradient-to-tr from-primary/30 to-primary/10 rounded-xl p-[1px] border border-primary/20">
             <LogoIcon size={36} rounded />
           </div>
           {!collapsed && (
@@ -259,7 +259,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               <p className="font-display font-bold text-sm tracking-tight text-white leading-tight">
                 EMPIRE OF
               </p>
-              <p className="font-display font-black text-sm bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">
+              <p className="font-display font-black text-sm text-primary">
                 FOREX
               </p>
             </motion.div>
@@ -272,7 +272,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           aria-label="Toggle sidebar"
         >
           {collapsed ? (
-            <Grid3x3 className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
+            <Grid3x3 className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
           ) : (
             <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           )}
@@ -302,7 +302,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   <menu.icon
                     className={cn(
                       "w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 transition-transform duration-300 group-hover:scale-110",
-                      isGroupActive ? "text-purple-400" : "text-slate-400"
+                      isGroupActive ? "text-primary" : "text-slate-400"
                     )}
                   />
                   {!collapsed && (
@@ -351,7 +351,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                             "flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm transition-all duration-200",
                             "text-slate-400 hover:text-white hover:bg-white/[0.02]",
                             active &&
-                              "text-purple-400 bg-purple-500/10 border-l-2 border-purple-500 font-medium pl-3 shadow-inner shadow-purple-500/5"
+                              "text-primary bg-primary/10 border-l-2 border-primary font-medium pl-3 shadow-inner shadow-primary/5"
                           )}
                         >
                           <span className="truncate">{sub.label}</span>
@@ -369,8 +369,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       {/* User Footer / Profile area */}
       {!collapsed && user && (
         <div className="p-4 sm:p-5 border-t border-white/5 bg-white/[0.01] space-y-3 sm:space-y-4">
-          <div className="bg-[#111018] rounded-2xl p-3 sm:p-4 border border-white/5 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-purple-500/20">
+          <div className="bg-background rounded-2xl p-3 sm:p-4 border border-white/5 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary/20">
               <Shield className="w-5 h-5 text-white" />
             </div>
             <div className="min-w-0">

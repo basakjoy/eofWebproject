@@ -72,21 +72,21 @@ export const initWithdrawalsTables = async (runAsync: (sql: string, params?: any
   // Withdrawals table
   await runAsync(`
     CREATE TABLE IF NOT EXISTS withdrawals (
-      id TEXT PRIMARY KEY,
-      userId TEXT NOT NULL,
-      amount REAL NOT NULL,
-      currency TEXT DEFAULT 'USD',
-      method TEXT NOT NULL,
-      status TEXT DEFAULT 'pending',
+      id VARCHAR(36) PRIMARY KEY,
+      userId VARCHAR(36) NOT NULL,
+      amount DECIMAL(15, 2) NOT NULL,
+      currency VARCHAR(10) DEFAULT 'USD',
+      method VARCHAR(100) NOT NULL,
+      status VARCHAR(50) DEFAULT 'pending',
       destinationDetails TEXT,
-      transactionId TEXT,
+      transactionId VARCHAR(255),
       reason TEXT,
       rejectionReason TEXT,
-      approvedBy TEXT,
-      approvedAt DATETIME,
-      completedAt DATETIME,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      approvedBy VARCHAR(36),
+      approvedAt TIMESTAMP NULL,
+      completedAt TIMESTAMP NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (approvedBy) REFERENCES users(id) ON DELETE SET NULL
     )
@@ -95,32 +95,32 @@ export const initWithdrawalsTables = async (runAsync: (sql: string, params?: any
   // Withdrawal Methods table
   await runAsync(`
     CREATE TABLE IF NOT EXISTS withdrawal_methods (
-      id TEXT PRIMARY KEY,
-      name TEXT UNIQUE NOT NULL,
-      code TEXT UNIQUE NOT NULL,
+      id VARCHAR(36) PRIMARY KEY,
+      name VARCHAR(255) UNIQUE NOT NULL,
+      code VARCHAR(50) UNIQUE NOT NULL,
       description TEXT,
-      icon TEXT,
-      minAmount REAL,
-      maxAmount REAL,
-      fee REAL DEFAULT 0,
-      processingTime TEXT,
-      available BOOLEAN DEFAULT 1,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      icon VARCHAR(500),
+      minAmount DECIMAL(15, 2),
+      maxAmount DECIMAL(15, 2),
+      fee DECIMAL(5, 2) DEFAULT 0,
+      processingTime VARCHAR(100),
+      available BOOLEAN DEFAULT true,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
   // User Withdrawal Accounts table
   await runAsync(`
     CREATE TABLE IF NOT EXISTS user_withdrawal_accounts (
-      id TEXT PRIMARY KEY,
-      userId TEXT NOT NULL,
-      methodId TEXT NOT NULL,
-      accountName TEXT NOT NULL,
+      id VARCHAR(36) PRIMARY KEY,
+      userId VARCHAR(36) NOT NULL,
+      methodId VARCHAR(36) NOT NULL,
+      accountName VARCHAR(255) NOT NULL,
       accountDetails TEXT,
-      isDefault BOOLEAN DEFAULT 0,
-      verified BOOLEAN DEFAULT 0,
-      verificationCode TEXT,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      isDefault BOOLEAN DEFAULT false,
+      verified BOOLEAN DEFAULT false,
+      verificationCode VARCHAR(100),
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (methodId) REFERENCES withdrawal_methods(id) ON DELETE CASCADE
     )
@@ -129,28 +129,28 @@ export const initWithdrawalsTables = async (runAsync: (sql: string, params?: any
   // Withdrawal Reports table
   await runAsync(`
     CREATE TABLE IF NOT EXISTS withdrawal_reports (
-      id TEXT PRIMARY KEY,
-      period TEXT NOT NULL,
-      totalRequests INTEGER DEFAULT 0,
-      totalAmount REAL DEFAULT 0,
-      approvedAmount REAL DEFAULT 0,
-      rejectedAmount REAL DEFAULT 0,
-      averageProcessingTime REAL,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      id VARCHAR(36) PRIMARY KEY,
+      period VARCHAR(100) NOT NULL,
+      totalRequests INT DEFAULT 0,
+      totalAmount DECIMAL(15, 2) DEFAULT 0,
+      approvedAmount DECIMAL(15, 2) DEFAULT 0,
+      rejectedAmount DECIMAL(15, 2) DEFAULT 0,
+      averageProcessingTime DECIMAL(10, 2),
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
   // Withdrawal Limits table
   await runAsync(`
     CREATE TABLE IF NOT EXISTS withdrawal_limits (
-      id TEXT PRIMARY KEY,
-      userId TEXT UNIQUE NOT NULL,
-      dailyLimit REAL,
-      monthlyLimit REAL,
-      remainingDaily REAL,
-      remainingMonthly REAL,
-      resetDate DATETIME,
-      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      id VARCHAR(36) PRIMARY KEY,
+      userId VARCHAR(36) UNIQUE NOT NULL,
+      dailyLimit DECIMAL(15, 2),
+      monthlyLimit DECIMAL(15, 2),
+      remainingDaily DECIMAL(15, 2),
+      remainingMonthly DECIMAL(15, 2),
+      resetDate TIMESTAMP NULL,
+      updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
     )
   `);

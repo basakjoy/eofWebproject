@@ -37,12 +37,12 @@ export const initAdminTables = async (runAsync: (sql: string, params?: any[]) =>
   // Admin Users table
   await runAsync(`
     CREATE TABLE IF NOT EXISTS admin_users (
-      id TEXT PRIMARY KEY,
-      userId TEXT UNIQUE NOT NULL,
-      status TEXT DEFAULT 'active',
+      id VARCHAR(36) PRIMARY KEY,
+      userId VARCHAR(36) UNIQUE NOT NULL,
+      status VARCHAR(50) DEFAULT 'active',
       permissions TEXT,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
     )
   `);
@@ -50,16 +50,16 @@ export const initAdminTables = async (runAsync: (sql: string, params?: any[]) =>
   // Admin Actions Log table
   await runAsync(`
     CREATE TABLE IF NOT EXISTS admin_actions (
-      id TEXT PRIMARY KEY,
-      adminId TEXT NOT NULL,
-      action TEXT NOT NULL,
-      targetId TEXT,
-      targetType TEXT,
+      id VARCHAR(36) PRIMARY KEY,
+      adminId VARCHAR(36) NOT NULL,
+      action VARCHAR(255) NOT NULL,
+      targetId VARCHAR(36),
+      targetType VARCHAR(100),
       changes TEXT,
       reason TEXT,
-      ipAddress TEXT,
-      status TEXT DEFAULT 'success',
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      ipAddress VARCHAR(45),
+      status VARCHAR(50) DEFAULT 'success',
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (adminId) REFERENCES admin_users(id) ON DELETE CASCADE
     )
   `);
@@ -67,12 +67,12 @@ export const initAdminTables = async (runAsync: (sql: string, params?: any[]) =>
   // Admin Roles table
   await runAsync(`
     CREATE TABLE IF NOT EXISTS admin_roles (
-      id TEXT PRIMARY KEY,
-      name TEXT UNIQUE NOT NULL,
+      id VARCHAR(36) PRIMARY KEY,
+      name VARCHAR(255) UNIQUE NOT NULL,
       description TEXT,
       permissions TEXT,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
 };

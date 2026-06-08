@@ -49,17 +49,17 @@ export const initAnalysisTables = async (runAsync: (sql: string, params?: any[])
   // Analysis table
   await runAsync(`
     CREATE TABLE IF NOT EXISTS analysis (
-      id TEXT PRIMARY KEY,
-      title TEXT NOT NULL,
-      type TEXT NOT NULL,
-      symbol TEXT,
+      id VARCHAR(36) PRIMARY KEY,
+      title VARCHAR(255) NOT NULL,
+      type VARCHAR(100) NOT NULL,
+      symbol VARCHAR(50),
       content TEXT NOT NULL,
       metrics TEXT,
-      createdBy TEXT NOT NULL,
-      status TEXT DEFAULT 'draft',
-      viewCount INTEGER DEFAULT 0,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      createdBy VARCHAR(36) NOT NULL,
+      status VARCHAR(50) DEFAULT 'draft',
+      viewCount INT DEFAULT 0,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (createdBy) REFERENCES users(id) ON DELETE CASCADE
     )
   `);
@@ -67,12 +67,12 @@ export const initAnalysisTables = async (runAsync: (sql: string, params?: any[])
   // Analysis Metrics table
   await runAsync(`
     CREATE TABLE IF NOT EXISTS analysis_metrics (
-      id TEXT PRIMARY KEY,
-      analysisId TEXT NOT NULL,
-      metricName TEXT NOT NULL,
+      id VARCHAR(36) PRIMARY KEY,
+      analysisId VARCHAR(36) NOT NULL,
+      metricName VARCHAR(255) NOT NULL,
       metricValue TEXT,
-      unit TEXT,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      unit VARCHAR(100),
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (analysisId) REFERENCES analysis(id) ON DELETE CASCADE
     )
   `);
@@ -80,13 +80,13 @@ export const initAnalysisTables = async (runAsync: (sql: string, params?: any[])
   // Analysis Comments table
   await runAsync(`
     CREATE TABLE IF NOT EXISTS analysis_comments (
-      id TEXT PRIMARY KEY,
-      analysisId TEXT NOT NULL,
-      userId TEXT NOT NULL,
+      id VARCHAR(36) PRIMARY KEY,
+      analysisId VARCHAR(36) NOT NULL,
+      userId VARCHAR(36) NOT NULL,
       comment TEXT NOT NULL,
-      rating INTEGER,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      rating INT,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (analysisId) REFERENCES analysis(id) ON DELETE CASCADE,
       FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
     )
@@ -95,13 +95,13 @@ export const initAnalysisTables = async (runAsync: (sql: string, params?: any[])
   // Analysis Reports table
   await runAsync(`
     CREATE TABLE IF NOT EXISTS analysis_reports (
-      id TEXT PRIMARY KEY,
-      title TEXT NOT NULL,
-      period TEXT NOT NULL,
+      id VARCHAR(36) PRIMARY KEY,
+      title VARCHAR(255) NOT NULL,
+      period VARCHAR(100) NOT NULL,
       summary TEXT,
       statistics TEXT,
-      createdBy TEXT NOT NULL,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      createdBy VARCHAR(36) NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (createdBy) REFERENCES users(id) ON DELETE CASCADE
     )
   `);

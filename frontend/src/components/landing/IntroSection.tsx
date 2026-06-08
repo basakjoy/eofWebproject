@@ -80,7 +80,7 @@ export default function IntroSection() {
             className="hidden lg:block relative"
           >
             {/* Floating Widgets Mockup */}
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/10 group">
+            <div className="relative rounded-3xl overflow-hidden  group">
               <video 
                 src="../videos/trading-hero.mp4" 
                 

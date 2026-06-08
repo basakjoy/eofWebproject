@@ -14,7 +14,7 @@ const config: Config = {
     extend: {
       colors: {
         primary: '#0D73ED',
-        secondary: '#1A5631',
+        secondary: '#10b981',
         foreground: 'var(--text-primary)',
         background: 'var(--bg-primary)',
         'muted-foreground': 'var(--text-secondary)',
