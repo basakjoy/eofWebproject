@@ -7,16 +7,16 @@ import { useAuthStore } from "@/store/authStore";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
+
 interface AdminHeaderProps {
   onMenuClick?: () => void;
 }
 
 const currencies = [
-  { code: "MMK", name: "Myanmar Kyat (K)", flag: "🇲🇲" },
+  { code: "BDT", name: "Bangladeshi Take (BDT)", flag: "🇧🇩" },
   { code: "USD", name: "US Dollar ($)", flag: "🇺🇸" },
   { code: "EUR", name: "Euro (€)", flag: "🇪🇺" },
-  { code: "SGD", name: "Singapore Dollar ($)", flag: "🇸🇬" },
-  { code: "THB", name: "Thai Baht (฿)", flag: "🇹🇭" },
+  
 ];
 
 export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
@@ -133,10 +133,17 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
                   <span className="text-[10px] text-primary bg-primary/10 px-2 py-0.5 rounded-full font-bold">1 New</span>
                 </div>
                 <div className="space-y-2">
-                  <div className="p-2.5 bg-white/[0.02] border border-white/5 rounded-xl text-left">
+                  <div className="p-2.5 bg-black border border-white/5 rounded-xl text-left">
                     <p className="text-xs font-bold text-white leading-snug">New Deposit Request Approved</p>
                     <p className="text-[10px] text-slate-400 mt-1 leading-normal">Myanmar Kyats (K50,000) was approved for member parvejm.</p>
                     <span className="text-[8px] text-slate-500 block mt-2 font-semibold uppercase">2 mins ago</span>
+                  </div>
+                </div>
+                 <div className="space-y-2">
+                  <div className="p-2.5 bg-black border border-white/5 rounded-xl text-left">
+                    <p className="text-xs font-bold text-white leading-snug">New Withdrawal Request Rejected</p>
+                    <p className="text-[10px] text-slate-400 mt-1 leading-normal">Your withdrawal request for USD 100.00 has been rejected.</p>
+                    <span className="text-[8px] text-slate-500 block mt-2 font-semibold uppercase">5 mins ago</span>
                   </div>
                 </div>
               </motion.div>
@@ -175,7 +182,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
           <AnimatePresence>
             {profileOpen && (
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 3, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
                 className="absolute right-0 mt-2 w-56 bg-background border border-white/5 rounded-2xl p-1.5 shadow-2xl z-50 space-y-1 overflow-hidden"

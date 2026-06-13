@@ -320,7 +320,7 @@ export default function AdminDashboard() {
             <div className="flex items-center gap-3">
               <div className="flex items-center bg-background border border-white/5 rounded-xl px-3 py-2 gap-2 text-xs font-semibold text-slate-300 shadow-inner">
                 <Calendar size={14} className="text-primary" />
-                <span>May 26, 2026</span>
+                <span> {new Date().toLocaleDateString("en-US", {month: "short" , day: "numeric", year: "numeric"})} </span>
               </div>
             </div>
           </div>
@@ -338,7 +338,7 @@ export default function AdminDashboard() {
                     Bonus
                   </p>
                   <h3 className="text-2xl sm:text-3xl font-black text-white font-display mt-3 leading-none">
-                    K0.00
+                    USD 0.00
                   </h3>
                 </div>
                 <div className="p-3 bg-cyan-500/10 text-cyan-400 rounded-xl border border-cyan-500/15 group-hover:scale-110 transition-transform">
@@ -416,7 +416,7 @@ export default function AdminDashboard() {
                     Company Total Win Loss
                   </p>
                   <h3 className="text-2xl sm:text-3xl font-black text-white font-display mt-3 leading-none">
-                    K0.00
+                    USD 0.00
                   </h3>
                 </div>
                 <div className="p-3 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/15 group-hover:scale-110 transition-transform">
@@ -440,7 +440,7 @@ export default function AdminDashboard() {
                 className="w-full flex items-center justify-between px-6 py-4.5 bg-white/[0.01] hover:bg-white/[0.03] transition-colors border-b border-white/5 text-left"
               >
                 <div className="flex items-center gap-3">
-                  <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-md shadow-cyan-400/30" />
+                 
                   <span className="font-display font-black text-sm uppercase tracking-wider text-slate-100">
                     Deposit
                   </span>
@@ -451,7 +451,7 @@ export default function AdminDashboard() {
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-black text-slate-400 uppercase">Pending:</span>
                     <span className="text-[10px] font-bold bg-cyan-600/10 text-cyan-400 border border-cyan-500/20 px-2 py-0.5 rounded-md">
-                      K0.00
+                      USD 0.00
                     </span>
                     <span className="text-[10px] font-bold bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded-md">
                       0
@@ -515,7 +515,7 @@ export default function AdminDashboard() {
                 className="w-full flex items-center justify-between px-6 py-4.5 bg-white/[0.01] hover:bg-white/[0.03] transition-colors border-b border-white/5 text-left"
               >
                 <div className="flex items-center gap-3">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rose-400 shadow-md shadow-rose-400/30" />
+                 
                   <span className="font-display font-black text-sm uppercase tracking-wider text-slate-100">
                     Withdrawal
                   </span>
@@ -525,7 +525,7 @@ export default function AdminDashboard() {
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-black text-slate-400 uppercase">Pending:</span>
                     <span className="text-[10px] font-bold bg-rose-600/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded-md">
-                      K0.00
+                      USD 0.00
                     </span>
                     <span className="text-[10px] font-bold bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded-md">
                       0
@@ -588,7 +588,7 @@ export default function AdminDashboard() {
                 className="w-full flex items-center justify-between px-6 py-4.5 bg-white/[0.01] hover:bg-white/[0.03] transition-colors border-b border-white/5 text-left"
               >
                 <div className="flex items-center gap-3">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-md shadow-emerald-400/30" />
+                  
                   <span className="font-display font-black text-sm uppercase tracking-wider text-slate-100">
                     Registered User
                   </span>
@@ -641,7 +641,7 @@ export default function AdminDashboard() {
                 className="w-full flex items-center justify-between px-6 py-4.5 bg-white/[0.01] hover:bg-white/[0.03] transition-colors border-b border-white/5 text-left"
               >
                 <div className="flex items-center gap-3">
-                  <span className="w-2.5 h-2.5 rounded-full bg-blue-400 shadow-md shadow-blue-400/30" />
+                 
                   <span className="font-display font-black text-sm uppercase tracking-wider text-slate-100">
                     First Deposit
                   </span>
@@ -696,7 +696,7 @@ export default function AdminDashboard() {
                 className="w-full flex items-center justify-between px-6 py-4.5 bg-white/[0.01] hover:bg-white/[0.03] transition-colors border-b border-white/5 text-left"
               >
                 <div className="flex items-center gap-3">
-                  <span className="w-2.5 h-2.5 rounded-full bg-purple-400 shadow-md shadow-purple-400/30" />
+                  
                   <span className="font-display font-black text-sm uppercase tracking-wider text-slate-100">
                     Bonus
                   </span>
@@ -751,7 +751,7 @@ export default function AdminDashboard() {
                 className="w-full flex items-center justify-between px-6 py-4.5 bg-white/[0.01] hover:bg-white/[0.03] transition-colors border-b border-white/5 text-left"
               >
                 <div className="flex items-center gap-3">
-                  <span className="w-2.5 h-2.5 rounded-full bg-violet-400 shadow-md shadow-violet-400/30" />
+                 
                   <span className="font-display font-black text-sm uppercase tracking-wider text-slate-100">
                     VIP Point To Cash
                   </span>
@@ -806,7 +806,7 @@ export default function AdminDashboard() {
                 className="w-full flex items-center justify-between px-6 py-4.5 bg-white/[0.01] hover:bg-white/[0.03] transition-colors border-b border-white/5 text-left"
               >
                 <div className="flex items-center gap-3">
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-md shadow-amber-400/30" />
+                 
                   <span className="font-display font-black text-sm uppercase tracking-wider text-slate-100">
                     Company Win / Loss
                   </span>
@@ -861,7 +861,7 @@ export default function AdminDashboard() {
                 className="w-full flex items-center justify-between px-6 py-4.5 bg-white/[0.01] hover:bg-white/[0.03] transition-colors border-b border-white/5 text-left"
               >
                 <div className="flex items-center gap-3">
-                  <span className="w-2.5 h-2.5 rounded-full bg-orange-400 shadow-md shadow-orange-400/30" />
+                 
                   <span className="font-display font-black text-sm uppercase tracking-wider text-slate-100">
                     Turnover
                   </span>
@@ -916,7 +916,7 @@ export default function AdminDashboard() {
                 className="w-full flex items-center justify-between px-6 py-4.5 bg-white/[0.01] hover:bg-white/[0.03] transition-colors border-b border-white/5 text-left"
               >
                 <div className="flex items-center gap-3">
-                  <span className="w-2.5 h-2.5 rounded-full bg-pink-400 shadow-md shadow-pink-400/30" />
+                    
                   <span className="font-display font-black text-sm uppercase tracking-wider text-slate-100">
                     Gross Margin
                   </span>

@@ -10,6 +10,7 @@ import { useAuthStore } from '@/store/authStore';
 import { authApi } from '@/lib/authApi';
 
 const COUNTRY_CODES = [
+  { code: '+880', country: '🇧🇩 Bangladesh' },
   { code: '+1', country: '🇺🇸 USA' },
   { code: '+44', country: '🇬🇧 UK' },
   { code: '+91', country: '🇮🇳 India' },

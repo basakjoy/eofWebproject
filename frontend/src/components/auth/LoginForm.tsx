@@ -175,7 +175,7 @@ export default function LoginForm() {
         </Button>
 
         <div className="text-center mt-4">
-          <Link href="/forgot-password" className="text-sm font-bold text-[#0c243c] border-b border-[#0c243c]">
+          <Link href="/forgot-password" className="text-sm font-bold text-[#0c243c]  border-[#0c243c]">
              Forgot Password?
           </Link>
         </div>
