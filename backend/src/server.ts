@@ -2,7 +2,6 @@
 import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { initializeTables, seedInitialData, runAsync } from './database';
 import authRoutes from './routes/auth';
 import investmentRoutes from './routes/investments';
 import transactionsRoutes from './routes/transactions';
@@ -13,17 +12,12 @@ import brokersRoutes from './routes/brokers';
 import withdrawalsRoutes from './routes/withdrawals';
 import notificationsRoutes from './routes/notifications';
 import supportRoutes from './routes/support';
-import { initAdminTables } from './models/admin.model';
-import { initAnalysisTables } from './models/analysis.model';
-import { initBrokersTables } from './models/brokers.model';
-import { initWithdrawalsTables } from './models/withdrawals.model';
-import { initNotificationsTables } from './models/notifications.model';
-import { initSupportTables } from './models/support.model';
+import usersRoutes from './routes/users';
 
 dotenv.config();
 
 const app: Express = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
@@ -51,39 +45,10 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-// Initialize database and start server
+// Start server
 const startServer = async () => {
   try {
     console.log('\n Starting server...\n');
-    
-    // Initialize tables first
-    await initializeTables();
-    console.log('');
-    
-    // Initialize new module tables
-    console.log('Initializing new module tables...');
-    await initAdminTables(runAsync);
-    console.log('✓ Admin tables ready');
-    
-    await initAnalysisTables(runAsync);
-    console.log('✓ Analysis tables ready');
-    
-    await initBrokersTables(runAsync);
-    console.log('✓ Brokers tables ready');
-    
-    await initWithdrawalsTables(runAsync);
-    console.log('✓ Withdrawals tables ready');
-    
-    await initNotificationsTables(runAsync);
-    console.log('✓ Notifications tables ready');
-    
-    await initSupportTables(runAsync);
-    console.log('✓ Support tables ready');
-    console.log('');
-    
-    // Seed initial data
-    await seedInitialData();
-    console.log('');
 
     // Register routes
     app.use('/api/auth', authRoutes);
@@ -96,6 +61,7 @@ const startServer = async () => {
     app.use('/api/withdrawals', withdrawalsRoutes);
     app.use('/api/notifications', notificationsRoutes);
     app.use('/api/support', supportRoutes);
+    app.use('/api/users', usersRoutes);
 
     // 404 handler
     app.use((req: Request, res: Response) => {

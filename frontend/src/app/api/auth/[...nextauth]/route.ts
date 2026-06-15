@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import axios from "axios";
+import { getApiBaseUrl } from "@/lib/apiUrl";
 
 const handler = NextAuth({
   providers: [
@@ -22,22 +23,22 @@ const handler = NextAuth({
 
         try {
           const response = await axios.post(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`,
+            `${getApiBaseUrl()}/auth/login`,
             {
               email: credentials.email,
               password: credentials.password,
             }
           );
 
-          const { data } = response;
+          const { data } = response.data;
           const { token, ...user } = data;
 
           return {
-            id: user.id,
+            id: user.id || user.userId,
             email: user.email,
             name: user.name,
             role: user.role,
-            token: token,
+            token,
           };
         } catch (error) {
           throw new Error("Invalid email or password");
@@ -57,7 +58,7 @@ const handler = NextAuth({
       if (account?.provider === "google" && user?.email) {
         try {
           const response = await axios.post(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/auth/google`,
+            `${getApiBaseUrl()}/auth/google`,
             {
               email: user.email,
               name: user.name,
@@ -65,11 +66,11 @@ const handler = NextAuth({
             }
           );
 
-          const { data } = response;
+          const { data } = response.data;
           const { token: backendToken, ...userData } = data;
 
           token.role = userData.role;
-          token.id = userData.id;
+          token.id = userData.id || userData.userId;
           token.accessToken = backendToken;
         } catch (error) {
           console.error("Failed to authenticate with backend:", error);

@@ -55,17 +55,18 @@ export default function UserDashboard() {
         const user = localStorage.getItem('user');
         if (user) {
           const userData = JSON.parse(user);
-          setUserId(userData.id);
-          setUserName(userData.firstName || 'User');
+          const userId = userData.id || userData.userId;
+          setUserId(userId);
+          setUserName(userData.name || 'User');
           setUserEmail(userData.email || 'user@example.com');
 
-          const portfolioData = await investmentApi.getPortfolioOverview(userData.id);
+          const portfolioData = await investmentApi.getPortfolioOverview(userId);
           setPortfolio(portfolioData.data);
 
-          const statsData = await investmentApi.getInvestmentStats(userData.id);
+          const statsData = await investmentApi.getInvestmentStats(userId);
           setStats(statsData.data);
 
-          const txData = await investmentApi.getUserTransactions(userData.id, { limit: 10 });
+          const txData = await investmentApi.getUserTransactions(userId, { limit: 10 });
           setTransactions(txData.data);
         }
       } catch (error) {

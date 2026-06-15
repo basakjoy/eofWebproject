@@ -1,4 +1,6 @@
 import apiClient from './api';
+import { normalizeAuthUser, persistAuthSession, clearAuthSession } from './authUtils';
+import { User } from '@/types';
 
 export const authApi = {
   // Register new user
@@ -30,19 +32,23 @@ export const authApi = {
 
   // Logout user (client-side)
   logout: () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    clearAuthSession();
   },
 
   // Get current user from storage
-  getCurrentUser: () => {
+  getCurrentUser: (): User | null => {
     const user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
+    return user ? normalizeAuthUser(JSON.parse(user)) : null;
   },
 
   // Set user data after login
-  setUserData: (userData: any) => {
-    localStorage.setItem('user', JSON.stringify(userData));
+  setUserData: (userData: Record<string, unknown>) => {
+    localStorage.setItem('user', JSON.stringify(normalizeAuthUser(userData)));
+  },
+
+  // Save token and normalized user together
+  saveSession: (token: string, userData: Record<string, unknown>) => {
+    persistAuthSession(token, normalizeAuthUser(userData));
   },
 
   // Get stored token

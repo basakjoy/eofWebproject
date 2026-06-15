@@ -1,10 +1,10 @@
 'use client';
-'use client';
 
 import { useState, useEffect } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { LogoIcon } from '@/components/common/LogoIcon';
 import { useAuthStore } from '@/store/authStore';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
 import Link from "next/link";
 import {
   LayoutDashboard,
@@ -43,14 +43,6 @@ const MENU_GROUPS = {
   ]
 };
 
-/* ============== Mock Data ============== */
-// Replacing external store/auth logic with mock state for the preview
-const mockUser = {
-  name: 'Alex Carter',
-  email: 'alex.carter@empireofforex.com',
-  avatar: 'https://i.pravatar.cc/150?u=alex'
-};
-
 /* ============== Main Component ============== */
 
 export default function DashboardLayout({
@@ -59,10 +51,18 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const { user } = useRequireAuth();
+  const { logout } = useAuthStore();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
-  const userInitials = mockUser.name
+  const displayUser = {
+    name: user?.name || 'User',
+    email: user?.email || '',
+    avatar: user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=0c243c&color=fff`,
+  };
+
+  const userInitials = displayUser.name
     .split(' ')
     .map((n) => n[0])
     .join('')
@@ -167,16 +167,16 @@ export default function DashboardLayout({
           >
             <div className="flex items-center gap-3 overflow-hidden">
               <div className="flex-shrink-0 w-9 h-9 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm">
-                <img src={mockUser.avatar} alt="User" className="w-full h-full object-cover" />
+                <img src={displayUser.avatar} alt="User" className="w-full h-full object-cover" />
               </div>
               
               {!isCollapsed && (
                 <div className="flex flex-col text-left whitespace-nowrap animate-in fade-in">
                   <span className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
-                    {mockUser.name}
+                    {displayUser.name}
                   </span>
                   <span className="text-[10px] text-slate-500 font-medium truncate">
-                    {mockUser.email}
+                    {displayUser.email}
                   </span>
                 </div>
               )}

@@ -90,6 +90,7 @@ model User {
   withdrawalsApproved       Withdrawal[]  @relation("approvedBy")
   withdrawalAccounts        UserWithdrawalAccount[]
   withdrawalLimits          WithdrawalLimit?
+  transactions              Transaction[]
 
   @@map("users")
 }
@@ -112,24 +113,48 @@ model Investment {
 
 // ========== SIGNALS ==========
 model Signal {
-  id        String   @id @default(cuid())
-  name      String
-  type      String
-  strength  String
-  source    String
+  id          String   @id @default(cuid())
+  name        String?
+  pair        String?
+  type        String
+  direction   String?
+  strength    String?
+  source      String?
+  entryPrice  String?
+  entryPoint  String?
+  stopLoss    String?
+  takeProfit  String?
   takeProfit1 String?
   takeProfit2 String?
   takeProfit3 String?
-  entryPoint  String?
-  accuracy  String   @default("0%")
-  status    String   @default("active")
-  createdBy String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  accuracy    String   @default("0%")
+  reliability String?
+  timeframe   String?
+  status      String   @default("active")
+  createdBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   creator User? @relation("createdBy", fields: [createdBy], references: [id], onDelete: SetNull)
 
   @@map("signals")
+}
+
+// ========== TRANSACTIONS ==========
+model Transaction {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String
+  amount      Decimal  @db.Decimal(15, 2)
+  description String?  @db.Text
+  status      String   @default("pending")
+  metadata    String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("transactions")
 }
 
 // ========== CAMPAIGNS ==========

@@ -8,6 +8,7 @@ import Button from '@/components/common/Button';
 import Alert from '@/components/common/Alert';
 import { useAuthStore } from '@/store/authStore';
 import { authApi } from '@/lib/authApi';
+import { normalizeAuthUser } from '@/lib/authUtils';
 import { signIn, useSession } from "next-auth/react";
 
 export default function LoginForm() {
@@ -30,17 +31,15 @@ export default function LoginForm() {
 
       // Save token to localStorage
       if (user.accessToken) {
-        localStorage.setItem('token', user.accessToken);
-        authApi.setUserData(user);
-        setToken(user.accessToken);
-        setUser({
+        const normalizedUser = normalizeAuthUser({
           id: user.id,
           email: user.email,
           name: user.name,
-          role: 'user',
-          createdAt: '',
-          updatedAt: ''
+          role: user.role,
         });
+        authApi.saveSession(user.accessToken, normalizedUser);
+        setToken(user.accessToken);
+        setUser(normalizedUser);
       }
 
       // Redirect based on role
@@ -67,11 +66,10 @@ export default function LoginForm() {
     try {
       const response = await authApi.login(formData);
       const { data } = response;
-      const { token, ...user } = data;
+      const { token, ...userData } = data;
+      const user = normalizeAuthUser(userData);
 
-      // Save token to localStorage
-      localStorage.setItem('token', token);
-      authApi.setUserData(user);
+      authApi.saveSession(token, userData);
 
       // Save remember me preference
       if (rememberMe) {

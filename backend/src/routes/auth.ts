@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
-import { getAsync, runAsync } from '../database';
+import { prisma } from '../database';
 
 const router = express.Router();
 
@@ -39,7 +39,9 @@ router.post('/register', async (req: Request, res: Response) => {
     }
 
     // Check if user already exists
-    const existingUser = await getAsync('SELECT id FROM users WHERE email = ?', [email]);
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
 
     if (existingUser) {
       return res.status(400).json({
@@ -52,16 +54,20 @@ router.post('/register', async (req: Request, res: Response) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create user
-    const userId = uuidv4();
-    await runAsync(
-      `INSERT INTO users (id, name, email, password, role, status) 
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [userId, name, email, hashedPassword, userType, 'active']
-    );
+    const user = await prisma.user.create({
+      data: {
+        id: uuidv4(),
+        name,
+        email,
+        password: hashedPassword,
+        role: userType,
+        status: 'active',
+      },
+    });
 
     // Create JWT token
     const token = jwt.sign(
-      { userId, email, role: userType },
+      { userId: user.id, email: user.email, role: user.role },
       process.env.JWT_SECRET || 'secret',
       { expiresIn: '7d' }
     );
@@ -70,10 +76,10 @@ router.post('/register', async (req: Request, res: Response) => {
       success: true,
       message: 'User registered successfully',
       data: {
-        userId,
-        name,
-        email,
-        role: userType,
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
         token,
       },
     });
@@ -100,7 +106,9 @@ router.post('/login', async (req: Request, res: Response) => {
     }
 
     // Find user
-    const user = await getAsync('SELECT * FROM users WHERE email = ?', [email]);
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
 
     if (!user) {
       return res.status(401).json({
@@ -138,7 +146,7 @@ router.post('/login', async (req: Request, res: Response) => {
       success: true,
       message: 'Login successful',
       data: {
-        userId: user.id,
+        id: user.id,
         name: user.name,
         email: user.email,
         role: user.role,
@@ -167,7 +175,10 @@ router.get('/verify', async (req: AuthRequest, res: Response) => {
     }
 
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-    const user = await getAsync('SELECT id, name, email, role FROM users WHERE id = ?', [decoded.userId]);
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: { id: true, name: true, email: true, role: true },
+    });
 
     if (!user) {
       return res.status(401).json({
@@ -202,7 +213,10 @@ router.get('/me', async (req: AuthRequest, res: Response) => {
     }
 
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-    const user = await getAsync('SELECT id, name, email, role, status FROM users WHERE id = ?', [decoded.userId]);
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: { id: true, name: true, email: true, role: true, status: true },
+    });
 
     if (!user) {
       return res.status(401).json({
@@ -238,21 +252,24 @@ router.post('/google', async (req: Request, res: Response) => {
     }
 
     // Check if user exists
-    let user = await getAsync('SELECT id, name, email, role, status FROM users WHERE email = ?', [email]);
+    let user = await prisma.user.findUnique({
+      where: { email },
+    });
 
     // If user doesn't exist, create one
     if (!user) {
-      const userId = uuidv4();
-      // For Google users, we don't need a password, use googleId as placeholder
       const hashedPassword = await bcrypt.hash(googleId || 'google-auth', 10);
       
-      await runAsync(
-        `INSERT INTO users (id, name, email, password, role, status) 
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [userId, name || email.split('@')[0], email, hashedPassword, 'user', 'active']
-      );
-
-      user = await getAsync('SELECT id, name, email, role, status FROM users WHERE id = ?', [userId]);
+      user = await prisma.user.create({
+        data: {
+          id: uuidv4(),
+          name: name || email.split('@')[0],
+          email,
+          password: hashedPassword,
+          role: 'user',
+          status: 'active',
+        },
+      });
     }
 
     // Generate JWT token

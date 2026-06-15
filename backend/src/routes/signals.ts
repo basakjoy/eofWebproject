@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { allAsync, getAsync, runAsync } from '../database';
+import { prisma } from '../database';
 import { v4 as uuidv4 } from 'uuid';
 
 const router = express.Router();
@@ -11,38 +11,29 @@ interface AuthRequest extends Request {
 // Get all signals with filtering
 router.get('/', async (req: AuthRequest, res: Response) => {
   try {
-    const { status, pair, type, limit = 50, offset = 0 } = req.query;
+    const { status, pair, type, limit = '50', offset = '0' } = req.query;
 
-    let query = 'SELECT * FROM signals WHERE 1=1';
-    const params: any[] = [];
+    const where: any = {};
+    if (status) where.status = String(status);
+    if (pair) where.pair = { contains: String(pair), mode: 'insensitive' };
+    if (type) where.type = String(type);
 
-    if (status) {
-      query += ' AND status = ?';
-      params.push(status);
-    }
-
-    if (pair) {
-      query += ' AND pair LIKE ?';
-      params.push(`%${pair}%`);
-    }
-
-    if (type) {
-      query += ' AND type = ?';
-      params.push(type);
-    }
-
-    query += ' ORDER BY createdAt DESC LIMIT ? OFFSET ?';
-    params.push(parseInt(limit as string), parseInt(offset as string));
-
-    const signals = await allAsync(query, params);
-    const countResult = await getAsync('SELECT COUNT(*) as total FROM signals WHERE 1=1' + (status ? ' AND status = ?' : '') + (pair ? ' AND pair LIKE ?' : '') + (type ? ' AND type = ?' : ''), params.slice(0, params.length - 2));
+    const [signals, total] = await Promise.all([
+      prisma.signal.findMany({
+        where,
+        take: parseInt(String(limit)),
+        skip: parseInt(String(offset)),
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.signal.count({ where }),
+    ]);
 
     res.json({
       success: true,
       data: signals,
-      total: countResult?.total || 0,
-      limit: parseInt(limit as string),
-      offset: parseInt(offset as string),
+      total,
+      limit: parseInt(String(limit)),
+      offset: parseInt(String(offset)),
     });
   } catch (error: any) {
     res.status(500).json({
@@ -55,7 +46,9 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 // Get signal by ID
 router.get('/:id', async (req: AuthRequest, res: Response) => {
   try {
-    const signal = await getAsync('SELECT * FROM signals WHERE id = ?', [req.params.id]);
+    const signal = await prisma.signal.findUnique({
+      where: { id: req.params.id },
+    });
 
     if (!signal) {
       return res.status(404).json({
@@ -101,42 +94,41 @@ router.post('/', async (req: AuthRequest, res: Response) => {
     }
 
     const signalId = uuidv4();
-    const takeProfitValue = takeProfit || (Array.isArray(takeProfits) ? takeProfits[0] : takeProfits);
     
-    await runAsync(
-      `INSERT INTO signals (
-        id, pair, type, direction, entryPrice, stopLoss, takeProfit, 
-        accuracy, reliability, timeframe, status, createdAt, updatedAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
-      [
-        signalId,
-        pair,
-        type,
-        direction || 'BUY',
-        entryPrice,
-        stopLoss,
-        takeProfitValue,
-        accuracy || 0,
-        reliability || 0.85,
-        timeframe || '4H',
-        status
-      ]
-    );
-
-    res.status(201).json({
-      success: true,
-      message: 'Signal created successfully',
+    // Handle multiple take profits if provided
+    let tp1 = takeProfit || null;
+    let tp2 = null;
+    let tp3 = null;
+    
+    if (Array.isArray(takeProfits)) {
+      tp1 = takeProfits[0] || tp1;
+      tp2 = takeProfits[1] || null;
+      tp3 = takeProfits[2] || null;
+    }
+    
+    const signal = await prisma.signal.create({
       data: {
         id: signalId,
         pair,
         type,
         direction: direction || 'BUY',
-        entryPrice,
-        stopLoss,
-        takeProfit: takeProfitValue,
-        reliability: reliability || 0.85,
-        status
+        entryPrice: String(entryPrice),
+        stopLoss: String(stopLoss),
+        takeProfit: tp1 ? String(tp1) : null,
+        takeProfit1: tp1 ? String(tp1) : null,
+        takeProfit2: tp2 ? String(tp2) : null,
+        takeProfit3: tp3 ? String(tp3) : null,
+        accuracy: String(accuracy || 0),
+        reliability: String(reliability || 0.85),
+        timeframe: String(timeframe || '4H'),
+        status,
       },
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Signal created successfully',
+      data: signal,
     });
   } catch (error: any) {
     res.status(500).json({
@@ -149,9 +141,14 @@ router.post('/', async (req: AuthRequest, res: Response) => {
 // Update signal
 router.put('/:id', async (req: AuthRequest, res: Response) => {
   try {
-    const { status, reliability, accuracy, direction } = req.body;
+    const { 
+      status, reliability, accuracy, direction, 
+      pair, type, entryPrice, stopLoss, takeProfit, takeProfits, timeframe 
+    } = req.body;
 
-    const signal = await getAsync('SELECT * FROM signals WHERE id = ?', [req.params.id]);
+    const signal = await prisma.signal.findUnique({
+      where: { id: req.params.id },
+    });
 
     if (!signal) {
       return res.status(404).json({
@@ -160,43 +157,41 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const updateFields = [];
-    const updateParams: any[] = [];
-
-    if (status !== undefined) {
-      updateFields.push('status = ?');
-      updateParams.push(status);
+    const data: any = {};
+    if (status !== undefined) data.status = status;
+    if (reliability !== undefined) data.reliability = String(reliability);
+    if (accuracy !== undefined) data.accuracy = String(accuracy);
+    if (direction !== undefined) data.direction = direction;
+    if (pair !== undefined) data.pair = pair;
+    if (type !== undefined) data.type = type;
+    if (entryPrice !== undefined) data.entryPrice = String(entryPrice);
+    if (stopLoss !== undefined) data.stopLoss = String(stopLoss);
+    if (timeframe !== undefined) data.timeframe = String(timeframe);
+    
+    // Handle multiple take profits if provided
+    if (takeProfits !== undefined && Array.isArray(takeProfits)) {
+      if (takeProfits[0]) {
+        data.takeProfit = String(takeProfits[0]);
+        data.takeProfit1 = String(takeProfits[0]);
+      }
+      if (takeProfits[1]) data.takeProfit2 = String(takeProfits[1]);
+      if (takeProfits[2]) data.takeProfit3 = String(takeProfits[2]);
+    } else if (takeProfit !== undefined) {
+      data.takeProfit = String(takeProfit);
+      data.takeProfit1 = String(takeProfit);
     }
 
-    if (reliability !== undefined) {
-      updateFields.push('reliability = ?');
-      updateParams.push(reliability);
-    }
-
-    if (accuracy !== undefined) {
-      updateFields.push('accuracy = ?');
-      updateParams.push(accuracy);
-    }
-
-    if (direction !== undefined) {
-      updateFields.push('direction = ?');
-      updateParams.push(direction);
-    }
-
-    if (updateFields.length === 0) {
+    if (Object.keys(data).length === 0) {
       return res.status(400).json({
         success: false,
         message: 'No fields to update',
       });
     }
 
-    updateFields.push('updatedAt = datetime("now")');
-    updateParams.push(req.params.id);
-
-    await runAsync(
-      `UPDATE signals SET ${updateFields.join(', ')} WHERE id = ?`,
-      updateParams
-    );
+    await prisma.signal.update({
+      where: { id: req.params.id },
+      data,
+    });
 
     res.json({
       success: true,
@@ -213,7 +208,9 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
 // Delete signal
 router.delete('/:id', async (req: AuthRequest, res: Response) => {
   try {
-    const signal = await getAsync('SELECT * FROM signals WHERE id = ?', [req.params.id]);
+    const signal = await prisma.signal.findUnique({
+      where: { id: req.params.id },
+    });
 
     if (!signal) {
       return res.status(404).json({
@@ -222,7 +219,9 @@ router.delete('/:id', async (req: AuthRequest, res: Response) => {
       });
     }
 
-    await runAsync('DELETE FROM signals WHERE id = ?', [req.params.id]);
+    await prisma.signal.delete({
+      where: { id: req.params.id },
+    });
 
     res.json({
       success: true,

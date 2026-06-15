@@ -1,5 +1,5 @@
-import express, { Request, Response } from 'express';
-import { allAsync, getAsync, runAsync } from '../database';
+ import express, { Request, Response } from 'express';
+import { prisma } from '../database';
 import { v4 as uuidv4 } from 'uuid';
 
 const router = express.Router();
@@ -12,42 +12,28 @@ interface AuthRequest extends Request {
 router.get('/user/:userId', async (req: AuthRequest, res: Response) => {
   try {
     const { userId } = req.params;
-    const { type, status, limit = 50, offset = 0 } = req.query;
+    const { type, status, limit = '50', offset = '0' } = req.query;
 
-    let query = 'SELECT * FROM transactions WHERE userId = ?';
-    const params: any[] = [userId];
+    const where: any = { userId };
+    if (type) where.type = String(type);
+    if (status) where.status = String(status);
 
-    if (type) {
-      query += ' AND type = ?';
-      params.push(type);
-    }
-
-    if (status) {
-      query += ' AND status = ?';
-      params.push(status);
-    }
-
-    query += ' ORDER BY createdAt DESC LIMIT ? OFFSET ?';
-    params.push(parseInt(limit as string), parseInt(offset as string));
-
-    const transactions = await allAsync(query, params);
-
-    // Get count
-    const countQuery = 'SELECT COUNT(*) as total FROM transactions WHERE userId = ?' +
-      (type ? ' AND type = ?' : '') +
-      (status ? ' AND status = ?' : '');
-    const countParams = [userId];
-    if (type) countParams.push(type as string);
-    if (status) countParams.push(status as string);
-
-    const countResult = await getAsync(countQuery, countParams);
+    const [transactions, total] = await Promise.all([
+      prisma.transaction.findMany({
+        where,
+        take: parseInt(String(limit)),
+        skip: parseInt(String(offset)),
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.transaction.count({ where }),
+    ]);
 
     res.json({
       success: true,
       data: transactions,
-      total: countResult?.total || 0,
-      limit: parseInt(limit as string),
-      offset: parseInt(offset as string),
+      total,
+      limit: parseInt(String(limit)),
+      offset: parseInt(String(offset)),
     });
   } catch (error: any) {
     res.status(500).json({
@@ -60,36 +46,33 @@ router.get('/user/:userId', async (req: AuthRequest, res: Response) => {
 // Get all transactions (admin)
 router.get('/', async (req: AuthRequest, res: Response) => {
   try {
-    const { userId, type, status, limit = 50, offset = 0 } = req.query;
+    const { userId, type, status, limit = '50', offset = '0' } = req.query;
 
-    let query = 'SELECT * FROM transactions WHERE 1=1';
-    const params: any[] = [];
+    const where: any = {};
+    if (userId) where.userId = String(userId);
+    if (type) where.type = String(type);
+    if (status) where.status = String(status);
 
-    if (userId) {
-      query += ' AND userId = ?';
-      params.push(userId);
-    }
-
-    if (type) {
-      query += ' AND type = ?';
-      params.push(type);
-    }
-
-    if (status) {
-      query += ' AND status = ?';
-      params.push(status);
-    }
-
-    query += ' ORDER BY createdAt DESC LIMIT ? OFFSET ?';
-    params.push(parseInt(limit as string), parseInt(offset as string));
-
-    const transactions = await allAsync(query, params);
+    const transactions = await prisma.transaction.findMany({
+      where,
+      take: parseInt(String(limit)),
+      skip: parseInt(String(offset)),
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: {
+          select: {
+            name: true,
+            email: true,
+          }
+        }
+      }
+    });
 
     res.json({
       success: true,
       data: transactions,
-      limit: parseInt(limit as string),
-      offset: parseInt(offset as string),
+      limit: parseInt(String(limit)),
+      offset: parseInt(String(offset)),
     });
   } catch (error: any) {
     res.status(500).json({
@@ -113,31 +96,22 @@ router.post('/', async (req: AuthRequest, res: Response) => {
 
     const transactionId = uuidv4();
 
-    await runAsync(
-      `INSERT INTO transactions (
-        id, userId, type, amount, description, status, metadata, createdAt, updatedAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
-      [
-        transactionId,
-        userId,
-        type,
-        amount,
-        description || '',
-        status,
-        metadata ? JSON.stringify(metadata) : null,
-      ]
-    );
-
-    res.status(201).json({
-      success: true,
-      message: 'Transaction created successfully',
+    const transaction = await prisma.transaction.create({
       data: {
         id: transactionId,
         userId,
         type,
         amount,
+        description: description || '',
         status,
+        metadata: metadata ? JSON.stringify(metadata) : null,
       },
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Transaction created successfully',
+      data: transaction,
     });
   } catch (error: any) {
     res.status(500).json({
@@ -150,7 +124,9 @@ router.post('/', async (req: AuthRequest, res: Response) => {
 // Get transaction by ID
 router.get('/:id', async (req: AuthRequest, res: Response) => {
   try {
-    const transaction = await getAsync('SELECT * FROM transactions WHERE id = ?', [req.params.id]);
+    const transaction = await prisma.transaction.findUnique({
+      where: { id: req.params.id },
+    });
 
     if (!transaction) {
       return res.status(404).json({
@@ -176,7 +152,9 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
   try {
     const { status, notes } = req.body;
 
-    const transaction = await getAsync('SELECT * FROM transactions WHERE id = ?', [req.params.id]);
+    const transaction = await prisma.transaction.findUnique({
+      where: { id: req.params.id },
+    });
 
     if (!transaction) {
       return res.status(404).json({
@@ -185,33 +163,14 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const updates: string[] = [];
-    const params: any[] = [];
+    const data: any = {};
+    if (status) data.status = status;
+    if (notes) data.metadata = JSON.stringify({ notes }); // Hack: update metadata with notes if it doesn't exist natively.
 
-    if (status) {
-      updates.push('status = ?');
-      params.push(status);
-    }
-
-    if (notes) {
-      updates.push('notes = ?');
-      params.push(notes);
-    }
-
-    if (updates.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'No updates provided',
-      });
-    }
-
-    updates.push('updatedAt = datetime("now")');
-    params.push(req.params.id);
-
-    await runAsync(
-      `UPDATE transactions SET ${updates.join(', ')} WHERE id = ?`,
-      params
-    );
+    await prisma.transaction.update({
+      where: { id: req.params.id },
+      data,
+    });
 
     res.json({
       success: true,
@@ -230,27 +189,36 @@ router.get('/stats/:userId', async (req: AuthRequest, res: Response) => {
   try {
     const { userId } = req.params;
 
-    const stats = await getAsync(
-      `SELECT 
-        COUNT(*) as totalTransactions,
-        SUM(CASE WHEN type = 'deposit' THEN amount ELSE 0 END) as totalDeposits,
-        SUM(CASE WHEN type = 'withdrawal' THEN amount ELSE 0 END) as totalWithdrawals,
-        SUM(CASE WHEN type = 'investment' THEN amount ELSE 0 END) as totalInvested,
-        SUM(CASE WHEN type = 'profit' THEN amount ELSE 0 END) as totalProfit,
-        SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END) as pendingAmount
-      FROM transactions WHERE userId = ?`,
-      [userId]
-    );
+    const transactions = await prisma.transaction.findMany({
+      where: { userId },
+    });
+
+    const totalTransactions = transactions.length;
+    let totalDeposits = 0;
+    let totalWithdrawals = 0;
+    let totalInvested = 0;
+    let totalProfit = 0;
+    let pendingAmount = 0;
+
+    for (const t of transactions) {
+      const amt = Number(t.amount);
+      if (t.type === 'deposit') totalDeposits += amt;
+      else if (t.type === 'withdrawal') totalWithdrawals += amt;
+      else if (t.type === 'investment') totalInvested += amt;
+      else if (t.type === 'profit') totalProfit += amt;
+
+      if (t.status === 'pending') pendingAmount += amt;
+    }
 
     res.json({
       success: true,
-      data: stats || {
-        totalTransactions: 0,
-        totalDeposits: 0,
-        totalWithdrawals: 0,
-        totalInvested: 0,
-        totalProfit: 0,
-        pendingAmount: 0,
+      data: {
+        totalTransactions,
+        totalDeposits,
+        totalWithdrawals,
+        totalInvested,
+        totalProfit,
+        pendingAmount,
       },
     });
   } catch (error: any) {

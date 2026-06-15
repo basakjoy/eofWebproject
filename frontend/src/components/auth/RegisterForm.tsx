@@ -8,6 +8,7 @@ import Button from '@/components/common/Button';
 import Alert from '@/components/common/Alert';
 import { useAuthStore } from '@/store/authStore';
 import { authApi } from '@/lib/authApi';
+import { normalizeAuthUser } from '@/lib/authUtils';
 
 const COUNTRY_CODES = [
   { code: '+880', country: '🇧🇩 Bangladesh' },
@@ -76,11 +77,10 @@ export default function RegisterForm() {
       });
 
       const { data } = response;
-      const { token, ...user } = data;
+      const { token, ...userData } = data;
+      const user = normalizeAuthUser(userData);
 
-      // Save token and user
-      localStorage.setItem('token', token);
-      authApi.setUserData(user);
+      authApi.saveSession(token, userData);
       setToken(token);
       setUser(user);
 

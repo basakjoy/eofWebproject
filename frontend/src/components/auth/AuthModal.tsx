@@ -8,6 +8,8 @@ import Button from '@/components/common/Button';
 import Alert from '@/components/common/Alert';
 import { useAuthStore } from '@/store/authStore';
 import apiClient from '@/lib/api';
+import { normalizeAuthUser } from '@/lib/authUtils';
+import { authApi } from '@/lib/authApi';
 
 const COUNTRY_CODES = [
   { code: '+1', country: '🇺🇸 USA' },
@@ -94,9 +96,10 @@ export default function AuthModal({ initialTab = 'signup', onClose }: AuthModalP
       });
 
       const { data } = response.data;
-      const { token, ...user } = data;
+      const { token, ...userData } = data;
+      const user = normalizeAuthUser(userData);
 
-      localStorage.setItem('token', token);
+      authApi.saveSession(token, userData);
       setToken(token);
       setUser(user);
 
@@ -120,9 +123,10 @@ export default function AuthModal({ initialTab = 'signup', onClose }: AuthModalP
     try {
       const response = await apiClient.post('/auth/login', loginData);
       const { data } = response.data;
-      const { token, ...user } = data;
+      const { token, ...userData } = data;
+      const user = normalizeAuthUser(userData);
 
-      localStorage.setItem('token', token);
+      authApi.saveSession(token, userData);
       
       if (rememberMe) {
         localStorage.setItem('rememberEmail', loginData.email);

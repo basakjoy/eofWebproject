@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { getAsync, allAsync } from '../database';
+import { prisma } from '../database';
 import { getPermissionsForRole, Permission } from '../types/roles';
 
 export interface AuthRequest extends Request {
@@ -35,34 +35,43 @@ export const verifyToken = async (
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'secret');
 
     // Get user from database
-    const user = await getAsync(
-      'SELECT id, email, name, role, roleId, status FROM users WHERE id = ? AND status = ?',
-      [decoded.userId, 'active']
-    );
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      include: {
+        userRole: {
+          include: {
+            rolePermissions: {
+              include: {
+                permission: true
+              }
+            }
+          }
+        }
+      }
+    });
 
-    if (!user) {
+    if (!user || user.status !== 'active') {
       return res.status(401).json({
         success: false,
         message: 'User not found or inactive'
       });
     }
 
-    // Get user's permissions through role_permissions table
-    const rolePermissions = await allAsync(
-      `SELECT p.name as permission FROM permissions p
-       INNER JOIN role_permissions rp ON p.id = rp.permissionId
-       WHERE rp.roleId = ?`,
-      [user.roleId]
-    );
-
-    const permissions = rolePermissions.map((rp: any) => rp.permission) as Permission[];
+    // Extract permissions
+    let permissions: Permission[] = [];
+    if (user.userRole && user.userRole.rolePermissions) {
+      permissions = user.userRole.rolePermissions.map((rp: any) => rp.permission.name as Permission);
+    } else {
+      // Fallback if role is predefined or role relation is missing
+      permissions = getPermissionsForRole(user.role as any);
+    }
 
     req.user = {
       userId: user.id,
       email: user.email,
       name: user.name,
       role: user.role,
-      roleId: user.roleId,
+      roleId: user.roleId || '',
       permissions
     };
 

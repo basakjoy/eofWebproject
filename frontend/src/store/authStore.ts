@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User } from '@/types';
+import { clearAuthSession } from '@/lib/authUtils';
 
 interface AuthState {
   user: User | null;
@@ -18,10 +19,15 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       isAuthenticated: false,
       setUser: (user) => set({ user, isAuthenticated: !!user }),
-      setToken: (token) => set({ token }),
+      setToken: (token) => {
+        set({ token });
+        if (typeof window !== 'undefined' && token) {
+          localStorage.setItem('token', token);
+        }
+      },
       logout: () => {
         set({ user: null, token: null, isAuthenticated: false });
-        localStorage.removeItem('authStore');
+        clearAuthSession();
       },
     }),
     {
