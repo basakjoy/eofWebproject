@@ -1,5 +1,11 @@
 import apiClient from './api';
-import { normalizeAuthUser, persistAuthSession, clearAuthSession } from './authUtils';
+import {
+  AuthUserInput,
+  normalizeAuthUser,
+  persistAuthSession,
+  clearAuthSession,
+  toAuthUser,
+} from './authUtils';
 import { User } from '@/types';
 
 export const authApi = {
@@ -47,8 +53,8 @@ export const authApi = {
   },
 
   // Save token and normalized user together
-  saveSession: (token: string, userData: Record<string, unknown>) => {
-    persistAuthSession(token, normalizeAuthUser(userData));
+  saveSession: (token: string, userData: AuthUserInput) => {
+    persistAuthSession(token, toAuthUser(userData));
   },
 
   // Get stored token
