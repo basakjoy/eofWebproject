@@ -409,7 +409,7 @@ export default function SignalManager() {
                             </div>
                           </div>
                         </div>
-                      </div>
+                      </div> 
 
                       <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
                         <button 

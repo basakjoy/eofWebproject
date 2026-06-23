@@ -1,89 +1,114 @@
 "use client";
-import { ArrowUpRight, ArrowDownRight, Clock } from "lucide-react";
+
+import { useState, useEffect } from "react";
+import { ArrowUpRight, ArrowDownRight, Clock, Loader2, Zap, ExternalLink } from "lucide-react";
+import { signalsApi } from "@/lib/signalsApi";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-interface Signal {
+interface TradingSignal {
   id: string;
   pair: string;
-  type: "buy" | "sell";
-  entry: number;
-  target: number;
+  type: string;
+  entryPrice: number;
   stopLoss: number;
-  confidence: "high" | "medium" | "low";
+  takeProfit: number | null;
+  takeProfits: number[];
+  accuracy: number;
   timeframe: string;
-  isActive: boolean;
+  status: string;
+  createdAt: string;
 }
 
-const mockSignals: Signal[] = [
-  { id: "1", pair: "EUR/USD", type: "buy", entry: 1.0842, target: 1.0920, stopLoss: 1.0780, confidence: "high", timeframe: "4H", isActive: true },
-  { id: "2", pair: "GBP/JPY", type: "sell", entry: 188.450, target: 186.800, stopLoss: 189.200, confidence: "medium", timeframe: "1D", isActive: true },
-  { id: "3", pair: "USD/CHF", type: "buy", entry: 0.8825, target: 0.8920, stopLoss: 0.8760, confidence: "high", timeframe: "1H", isActive: true },
-  { id: "4", pair: "AUD/USD", type: "sell", entry: 0.6542, target: 0.6480, stopLoss: 0.6590, confidence: "low", timeframe: "4H", isActive: false },
-];
-
 export function SignalsCard() {
+  const [signals, setSignals] = useState<TradingSignal[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await signalsApi.getAllSignals({ status: 'active', limit: 4 });
+        const data = Array.isArray(res.data) ? res.data : [];
+        setSignals(data.slice(0, 4));
+      } catch {
+        setSignals([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
   return (
     <div className="glass-card rounded-xl p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="section-title mb-0">Active Signals</h3>
-        <button className="text-sm text-primary hover:underline">View All</button>
+        <h3 className="section-title mb-0 flex items-center gap-2">
+          <Zap className="w-4 h-4 text-primary" /> Active Signals
+        </h3>
+        <Link href="/signals" className="text-sm text-primary hover:underline flex items-center gap-1">
+          View All <ExternalLink className="w-3 h-3" />
+        </Link>
       </div>
 
-      <div className="space-y-4">
-        {mockSignals.slice(0, 4).map((signal) => (
-          <div
-            key={signal.id}
-            className={cn(
-              "flex items-center justify-between p-4 rounded-lg bg-secondary/30 border border-transparent transition-all hover:border-primary/20",
-              !signal.isActive && "opacity-50"
-            )}
-          >
-            <div className="flex items-center gap-4">
+      {loading ? (
+        <div className="flex items-center justify-center py-10">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        </div>
+      ) : signals.length === 0 ? (
+        <div className="text-center py-8 text-sm text-muted-foreground">
+          No active signals at this time
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {signals.map(signal => {
+            const isBuy = signal.type?.toUpperCase() === 'BUY';
+            const tp = signal.takeProfits?.[0] ?? signal.takeProfit;
+            return (
               <div
-                className={cn(
-                  "w-10 h-10 rounded-lg flex items-center justify-center",
-                  signal.type === "buy" ? "bg-success/20" : "bg-destructive/20"
-                )}
+                key={signal.id}
+                className="flex items-center justify-between p-4 rounded-lg bg-secondary/30 border border-transparent transition-all hover:border-primary/20"
               >
-                {signal.type === "buy" ? (
-                  <ArrowUpRight className="w-5 h-5 text-success" />
-                ) : (
-                  <ArrowDownRight className="w-5 h-5 text-destructive" />
-                )}
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-foreground">{signal.pair}</span>
-                  <span className={cn("signal-badge", signal.type === "buy" ? "signal-buy" : "signal-sell")}>
-                    {signal.type.toUpperCase()}
+                <div className="flex items-center gap-4">
+                  <div className={cn(
+                    "w-10 h-10 rounded-lg flex items-center justify-center",
+                    isBuy ? "bg-success/20" : "bg-destructive/20"
+                  )}>
+                    {isBuy
+                      ? <ArrowUpRight className="w-5 h-5 text-success" />
+                      : <ArrowDownRight className="w-5 h-5 text-destructive" />
+                    }
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-foreground">{signal.pair}</span>
+                      <span className={cn(
+                        "text-[10px] font-black px-1.5 py-0.5 rounded",
+                        isBuy ? "bg-success/20 text-success" : "bg-destructive/20 text-destructive"
+                      )}>
+                        {signal.type?.toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                      <span>Entry: {signal.entryPrice}</span>
+                      {tp && <span>TP: {tp}</span>}
+                      <span>SL: {signal.stopLoss}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-xs font-medium px-2 py-1 rounded bg-success/20 text-success">
+                    {signal.accuracy?.toFixed(0) ?? 85}%
                   </span>
-                </div>
-                <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                  <span>Entry: {signal.entry}</span>
-                  <span>TP: {signal.target}</span>
-                  <span>SL: {signal.stopLoss}</span>
+                  <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground justify-end">
+                    <Clock className="w-3 h-3" />
+                    {signal.timeframe}
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="text-right">
-              <span
-                className={cn(
-                  "text-xs font-medium px-2 py-1 rounded",
-                  signal.confidence === "high" && "bg-success/20 text-success",
-                  signal.confidence === "medium" && "bg-warning/20 text-warning",
-                  signal.confidence === "low" && "bg-muted text-muted-foreground"
-                )}
-              >
-                {signal.confidence.toUpperCase()}
-              </span>
-              <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground justify-end">
-                <Clock className="w-3 h-3" />
-                {signal.timeframe}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

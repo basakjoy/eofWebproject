@@ -185,7 +185,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
                 initial={{ opacity: 3, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
-                className="absolute right-0 mt-2 w-56 bg-background border border-white/5 rounded-2xl p-1.5 shadow-2xl z-50 space-y-1 overflow-hidden"
+                className="absolute right-0 mt-2 w-56 bg-black border border-white/5 rounded-2xl p-1.5 shadow-2xl z-50 space-y-1 overflow-hidden"
               >
                 <div className="px-3 py-2 border-b border-white/5 mb-1.5">
                   <p className="text-xs font-bold text-white">{user?.name || "parvejm"}</p>

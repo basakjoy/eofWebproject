@@ -236,4 +236,78 @@ router.get('/stats/:userId', async (req: AuthRequest, res: Response) => {
   }
 });
 
+// ─── Distribute monthly profit (Admin action) ────────────────────────────────
+// POST /api/investments/distribute-profit
+// Body: { profitPercent: number (default 50), adminId: string, note?: string }
+router.post('/distribute-profit', async (req: AuthRequest, res: Response) => {
+  try {
+    const { profitPercent = 50, adminId, note } = req.body;
+
+    if (!adminId) {
+      return res.status(400).json({ success: false, message: 'adminId is required' });
+    }
+
+    const pct = Number(profitPercent);
+    if (isNaN(pct) || pct <= 0 || pct > 100) {
+      return res.status(400).json({ success: false, message: 'profitPercent must be between 1 and 100' });
+    }
+
+    // Fetch all active investments
+    const activeInvestments = await prisma.investment.findMany({
+      where: { status: 'active' },
+      include: { user: true },
+    });
+
+    if (activeInvestments.length === 0) {
+      return res.json({ success: true, message: 'No active investments to distribute profit to', data: { distributed: 0 } });
+    }
+
+    const month = new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' });
+    const distributions: { userId: string; investmentId: string; amount: number }[] = [];
+
+    // Process each investment in a transaction
+    await prisma.$transaction(async (tx) => {
+      for (const inv of activeInvestments) {
+        const profitAmount = Number(inv.amount) * (pct / 100);
+
+        // Update investment roi
+        await tx.investment.update({
+          where: { id: inv.id },
+          data: { roi: { increment: profitAmount } },
+        });
+
+        // Create a profit transaction record
+        await tx.transaction.create({
+          data: {
+            id: uuidv4(),
+            userId: inv.userId,
+            type: 'profit',
+            amount: profitAmount,
+            description: `${pct}% monthly profit share for ${month}${note ? ` — ${note}` : ''}`,
+            status: 'completed',
+          },
+        });
+
+        distributions.push({ userId: inv.userId, investmentId: inv.id, amount: profitAmount });
+      }
+    });
+
+    const totalDistributed = distributions.reduce((s, d) => s + d.amount, 0);
+
+    res.json({
+      success: true,
+      message: `Profit distributed successfully to ${distributions.length} investors`,
+      data: {
+        distributed: distributions.length,
+        totalAmount: totalDistributed,
+        profitPercent: pct,
+        month,
+        distributions,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message || 'Failed to distribute profit' });
+  }
+});
+
 export default router;

@@ -36,6 +36,8 @@ import {
   Cell,
 } from 'recharts';
 import { useForex } from '@/hooks/use-forex';
+import { signalsApi } from '@/lib/signalsApi';
+import LatestArticlesWidget from '@/components/dashboard/LatestArticlesWidget';
 
 
 
@@ -98,52 +100,33 @@ export default function UserDashboard() {
     { day: 'Sun', pnl: 60 },
   ];
 
-  const signals = [
-    {
-      id: 1,
-      pair: 'EUR/USD',
-      type: 'BUY',
-      entry: 1.085,
-      target: 1.092,
-      stopLoss: 1.081,
-      status: 'Active',
-      profit: '+$120',
-      time: '2h ago',
-    },
-    {
-      id: 2,
-      pair: 'GBP/USD',
-      type: 'SELL',
-      entry: 1.265,
-      target: 1.25,
-      stopLoss: 1.272,
-      status: 'Active',
-      profit: '+$85',
-      time: '4h ago',
-    },
-    {
-      id: 3,
-      pair: 'USD/JPY',
-      type: 'BUY',
-      entry: 149.5,
-      target: 150.2,
-      stopLoss: 149.1,
-      status: 'Closed',
-      profit: '+$240',
-      time: '1d ago',
-    },
-    {
-      id: 4,
-      pair: 'AUD/USD',
-      type: 'SELL',
-      entry: 0.653,
-      target: 0.645,
-      stopLoss: 0.658,
-      status: 'Pending',
-      profit: '--',
-      time: '30m ago',
-    },
-  ];
+  const [signals, setSignals] = React.useState<any[]>([]);
+  const [signalsLoading, setSignalsLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const loadSignals = async () => {
+      try {
+        const res = await signalsApi.getAllSignals({ limit: 4 });
+        const data = Array.isArray(res.data) ? res.data : [];
+        setSignals(data);
+      } catch (err) {
+        console.error('Error fetching dashboard signals:', err);
+      } finally {
+        setSignalsLoading(false);
+      }
+    };
+    loadSignals();
+  }, []);
+
+  const timeAgo = (dateStr: string) => {
+    if (!dateStr) return '—';
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    if (h > 23) return `${Math.floor(h / 24)}d ago`;
+    if (h > 0) return `${h}h ago`;
+    return `${m}m ago`;
+  };
 
   const recentActivity = [
     { id: 1, action: 'Signal Executed', detail: 'EUR/USD Buy at 1.0850', time: '2h ago', icon: <Zap className="w-3.5 h-3.5" /> },
@@ -337,7 +320,7 @@ export default function UserDashboard() {
         <div className="stat-card-stagger">
           <StatCard
             label="Active Signals"
-            value="5"
+            value={signalsLoading ? '—' : signals.filter(s => s.status?.toLowerCase() === 'active').length.toString()}
             icon={<Activity className="w-5 h-5" />}
             color="yellow"
             trend={{ value: 2, isPositive: true }}
@@ -559,69 +542,96 @@ export default function UserDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {signals.map((signal) => (
-                  <tr
-                    key={signal.id}
-                    className="group"
-                  >
-                    <td className="px-4 sm:px-6 py-4 bg-gray-50/30 dark:bg-white/[0.01] rounded-l-2xl border-y border-l border-gray-100 dark:border-white/[0.04] transition-all group-hover:bg-gray-100/50 dark:group-hover:bg-white/[0.03]">
-                      <div className="flex flex-col">
-                        <span className="font-black text-gray-900 dark:text-white tracking-tight">
-                          {signal.pair}
-                        </span>
-                        <span className="text-[10px] font-bold text-gray-400 dark:text-white/20 uppercase tracking-widest mt-0.5">
-                          {signal.time}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 bg-gray-50/30 dark:bg-white/[0.01] border-y border-gray-100 dark:border-white/[0.04] transition-all group-hover:bg-gray-100/50 dark:group-hover:bg-white/[0.03]">
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black tracking-widest uppercase ${signal.type === 'BUY'
-                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                          : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
-                          }`}
-                      >
-                        {signal.type === 'BUY' ? (
-                          <ArrowUpRight className="w-3 h-3 stroke-[3]" />
-                        ) : (
-                          <ArrowDownRight className="w-3 h-3 stroke-[3]" />
-                        )}
-                        {signal.type}
-                      </span>
-                    </td>
-                    <td className="px-3 sm:px-4 py-4 bg-gray-50/30 dark:bg-white/[0.01] border-y border-gray-100 dark:border-white/[0.04] transition-all group-hover:bg-gray-100/50 dark:group-hover:bg-white/[0.03]">
-                      <div className="flex flex-col">
-                        <span className="font-mono text-xs font-bold text-gray-700 dark:text-white/80">ENT {signal.entry}</span>
-                        <span className="font-mono text-[10px] text-gray-400 whitespace-nowrap">TGT {signal.target}</span>
-                      </div>
-                    </td>
-                    <td className="px-3 sm:px-4 py-4 bg-gray-50/30 dark:bg-white/[0.01] border-y border-gray-100 dark:border-white/[0.04] transition-all group-hover:bg-gray-100/50 dark:group-hover:bg-white/[0.03] hidden sm:table-cell">
-                      <span
-                        className={`font-black text-xs tracking-tight ${signal.profit.startsWith('+')
-                          ? 'text-emerald-500'
-                          : 'text-gray-400'
-                          }`}
-                      >
-                        {signal.profit}
-                      </span>
-                    </td>
-                    <td className="px-4 sm:px-6 py-4 bg-gray-50/30 dark:bg-white/[0.01] rounded-r-2xl border-y border-r border-gray-100 dark:border-white/[0.04] text-right transition-all group-hover:bg-gray-100/50 dark:group-hover:bg-white/[0.03]">
-                      <span
-                        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest ${signal.status === 'Active'
-                          ? 'bg-primary/10 text-primary'
-                          : signal.status === 'Closed'
-                            ? 'bg-gray-100 dark:bg-white/5 text-gray-400'
-                            : 'bg-amber-500/10 text-amber-600'
-                          }`}
-                      >
-                        {signal.status === 'Active' && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
-                        )}
-                        {signal.status}
+                {signalsLoading ? (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-xs text-slate-500 font-semibold">
+                      <span className="inline-flex items-center gap-2">
+                        <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></span>
+                        Loading signals...
                       </span>
                     </td>
                   </tr>
-                ))}
+                ) : signals.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-xs text-slate-500 font-semibold">
+                      No recent signals found
+                    </td>
+                  </tr>
+                ) : (
+                  signals.map((signal) => {
+                    const isBuy = signal.type?.toUpperCase() === 'BUY';
+                    const targetPrice = signal.takeProfits?.[0] ?? signal.takeProfit;
+                    const statusText = signal.status ? (signal.status.charAt(0).toUpperCase() + signal.status.slice(1)) : 'Active';
+                    const estimatedProfit = signal.status === 'closed'
+                      ? '+$240'
+                      : signal.status === 'pending'
+                        ? '--'
+                        : '+$120';
+                    return (
+                      <tr
+                        key={signal.id}
+                        className="group"
+                      >
+                        <td className="px-4 sm:px-6 py-4 bg-gray-50/30 dark:bg-white/[0.01] rounded-l-2xl border-y border-l border-gray-100 dark:border-white/[0.04] transition-all group-hover:bg-gray-100/50 dark:group-hover:bg-white/[0.03]">
+                          <div className="flex flex-col">
+                            <span className="font-black text-gray-900 dark:text-white tracking-tight">
+                              {signal.pair}
+                            </span>
+                            <span className="text-[10px] font-bold text-gray-400 dark:text-white/20 uppercase tracking-widest mt-0.5">
+                              {timeAgo(signal.createdAt)}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 bg-gray-50/30 dark:bg-white/[0.01] border-y border-gray-100 dark:border-white/[0.04] transition-all group-hover:bg-gray-100/50 dark:group-hover:bg-white/[0.03]">
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black tracking-widest uppercase ${isBuy
+                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                              : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                              }`}
+                          >
+                            {isBuy ? (
+                              <ArrowUpRight className="w-3 h-3 stroke-[3]" />
+                            ) : (
+                              <ArrowDownRight className="w-3 h-3 stroke-[3]" />
+                            )}
+                            {signal.type}
+                          </span>
+                        </td>
+                        <td className="px-3 sm:px-4 py-4 bg-gray-50/30 dark:bg-white/[0.01] border-y border-gray-100 dark:border-white/[0.04] transition-all group-hover:bg-gray-100/50 dark:group-hover:bg-white/[0.03]">
+                          <div className="flex flex-col">
+                            <span className="font-mono text-xs font-bold text-gray-700 dark:text-white/80">ENT {signal.entryPrice}</span>
+                            <span className="font-mono text-[10px] text-gray-400 whitespace-nowrap">TGT {targetPrice}</span>
+                          </div>
+                        </td>
+                        <td className="px-3 sm:px-4 py-4 bg-gray-50/30 dark:bg-white/[0.01] border-y border-gray-100 dark:border-white/[0.04] transition-all group-hover:bg-gray-100/50 dark:group-hover:bg-white/[0.03] hidden sm:table-cell">
+                          <span
+                            className={`font-black text-xs tracking-tight ${estimatedProfit.startsWith('+')
+                              ? 'text-emerald-500'
+                              : 'text-gray-400'
+                              }`}
+                          >
+                            {estimatedProfit}
+                          </span>
+                        </td>
+                        <td className="px-4 sm:px-6 py-4 bg-gray-50/30 dark:bg-white/[0.01] rounded-r-2xl border-y border-r border-gray-100 dark:border-white/[0.04] text-right transition-all group-hover:bg-gray-100/50 dark:group-hover:bg-white/[0.03]">
+                          <span
+                            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest ${signal.status === 'active'
+                              ? 'bg-primary/10 text-primary'
+                              : signal.status === 'closed'
+                                ? 'bg-gray-100 dark:bg-white/5 text-gray-400'
+                                : 'bg-amber-500/10 text-amber-600'
+                              }`}
+                          >
+                            {signal.status === 'active' && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+                            )}
+                            {statusText}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
@@ -667,6 +677,10 @@ export default function UserDashboard() {
         </Card>
       </div>
 
+      {/* Latest Insights Widget */}
+      <div className="animate-section">
+        <LatestArticlesWidget />
+      </div>
 
     </div>
   );

@@ -13,6 +13,7 @@ import withdrawalsRoutes from './routes/withdrawals';
 import notificationsRoutes from './routes/notifications';
 import supportRoutes from './routes/support';
 import usersRoutes from './routes/users';
+import blogRoutes from './routes/blog';
 
 dotenv.config();
 
@@ -62,6 +63,7 @@ const startServer = async () => {
     app.use('/api/notifications', notificationsRoutes);
     app.use('/api/support', supportRoutes);
     app.use('/api/users', usersRoutes);
+    app.use('/api/blog', blogRoutes);
 
     // 404 handler
     app.use((req: Request, res: Response) => {
@@ -124,7 +126,14 @@ const startServer = async () => {
       console.log('    GET    /api/support/tickets/:id');
       console.log('    POST   /api/support/tickets/:ticketId/messages');
       console.log('    GET    /api/support/faq');
-      console.log('    GET    /api/support/categories\n');
+      console.log('    GET    /api/support/categories');
+      console.log('\n   Blog:');
+      console.log('    GET    /api/blog');
+      console.log('    GET    /api/blog/categories');
+      console.log('    GET    /api/blog/:slug');
+      console.log('    POST   /api/blog');
+      console.log('    PUT    /api/blog/:id');
+      console.log('    DELETE /api/blog/:id\n');
     });
   } catch (error: any) {
     console.error('\n ❌ Failed to start server:', error.message);

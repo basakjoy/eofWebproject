@@ -3,17 +3,10 @@
 import Card from '@/components/common/Card';
 import Button from '@/components/common/Button';
 import Table from '@/components/common/Table';
-import { TrendingUp, CheckCircle2, Clock } from 'lucide-react';
+import { TrendingUp, CheckCircle2, Clock, Loader2 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { useState, useEffect } from 'react';
-
-const liveSignals = [
-  { id: 1, pair: 'EURUSD', signal: 'BUY', entry: 1.0850, target: 1.0920, sl: 1.0800, timeframe: '4H', accuracy: '92%', status: 'Active' },
-  { id: 2, pair: 'GBPUSD', signal: 'SELL', entry: 1.2750, target: 1.2680, sl: 1.2800, timeframe: '1H', accuracy: '88%', status: 'Active' },
-  { id: 3, pair: 'USDJPY', signal: 'BUY', entry: 110.50, target: 111.50, sl: 110.00, timeframe: 'D', accuracy: '85%', status: 'Active' },
-  { id: 4, pair: 'AUDUSD', signal: 'SELL', entry: 0.6900, target: 0.6850, sl: 0.6950, timeframe: '4H', accuracy: '86%', status: 'Closed' },
-  { id: 5, pair: 'NZDUSD', signal: 'BUY', entry: 0.6050, target: 0.6150, sl: 0.6000, timeframe: '1D', accuracy: '90%', status: 'Active' },
-];
+import { signalsApi } from '@/lib/signalsApi';
 
 const performanceHistory = [
   { date: 'Week 1', wins: 8, losses: 1, roi: '8.5%' },
@@ -33,6 +26,8 @@ const signalStats = [
 export default function TradingSignalsPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
+  const [signals, setSignals] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const handleResize = () => {
@@ -43,6 +38,22 @@ export default function TradingSignalsPage() {
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    const fetchSignals = async () => {
+      try {
+        const response = await signalsApi.getAllSignals();
+        const data = Array.isArray(response.data) ? response.data : 
+                     (response.data && Array.isArray(response.data.signals) ? response.data.signals : []);
+        setSignals(data);
+      } catch (error) {
+        console.error("Failed to fetch live signals:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchSignals();
   }, []);
 
   const chartHeight = isMobile ? 250 : isTablet ? 280 : 300;
@@ -100,27 +111,41 @@ export default function TradingSignalsPage() {
                 </tr>
               </thead>
               <tbody>
-                {liveSignals.map((signal) => (
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={8} className="py-10 text-center">
+                      <Loader2 className="w-8 h-8 text-blue-500 animate-spin mx-auto" />
+                    </td>
+                  </tr>
+                ) : signals.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="py-10 text-center text-gray-500 font-medium">
+                      No signals available.
+                    </td>
+                  </tr>
+                ) : signals.map((signal) => (
                   <tr key={signal.id} className="border-b border-gray-700/50 hover:bg-gray-800/30 transition-colors">
                     <td className="py-3 sm:py-4 px-2 sm:px-4 font-bold text-white">{signal.pair}</td>
                     <td className="py-3 sm:py-4 px-2 sm:px-4 text-center">
                       <span className={`inline-block px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-bold ${
-                        signal.signal === 'BUY' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                        signal.type?.toUpperCase() === 'BUY' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
                       }`}>
-                        {signal.signal}
+                        {signal.type?.toUpperCase()}
                       </span>
                     </td>
-                    <td className="py-3 sm:py-4 px-2 sm:px-4 text-center text-gray-300">{signal.entry}</td>
-                    <td className="py-3 sm:py-4 px-2 sm:px-4 text-center text-indigo-400 font-semibold">{signal.target}</td>
-                    <td className="py-3 sm:py-4 px-2 sm:px-4 text-center text-gray-300">{signal.sl}</td>
-                    <td className="py-3 sm:py-4 px-2 sm:px-4 text-center text-gray-300">{signal.timeframe}</td>
-                    <td className="py-3 sm:py-4 px-2 sm:px-4 text-center text-green-400 font-semibold">{signal.accuracy}</td>
+                    <td className="py-3 sm:py-4 px-2 sm:px-4 text-center text-gray-300">{signal.entryPrice}</td>
+                    <td className="py-3 sm:py-4 px-2 sm:px-4 text-center text-indigo-400 font-semibold">{signal.takeProfit || signal.takeProfit1}</td>
+                    <td className="py-3 sm:py-4 px-2 sm:px-4 text-center text-gray-300">{signal.stopLoss}</td>
+                    <td className="py-3 sm:py-4 px-2 sm:px-4 text-center text-gray-300">{signal.timeframe || '4H'}</td>
+                    <td className="py-3 sm:py-4 px-2 sm:px-4 text-center text-green-400 font-semibold">
+                      {signal.accuracy?.toString().includes('%') ? signal.accuracy : `${(parseFloat(signal.accuracy || '85') * (signal.accuracy?.toString().includes('.') ? 100 : 1)).toFixed(0)}%`}
+                    </td>
                     <td className="py-3 sm:py-4 px-2 sm:px-4 text-center">
                       <span className={`inline-flex items-center gap-1 text-xs sm:text-sm font-semibold ${
-                        signal.status === 'Active' ? 'text-blue-400' : 'text-gray-400'
+                        signal.status?.toLowerCase() === 'active' ? 'text-blue-400' : 'text-gray-400'
                       }`}>
-                        <span className={`w-2 h-2 rounded-full ${signal.status === 'Active' ? 'bg-blue-400 animate-pulse' : 'bg-gray-400'}`}></span>
-                        {signal.status}
+                        <span className={`w-2 h-2 rounded-full ${signal.status?.toLowerCase() === 'active' ? 'bg-blue-400 animate-pulse' : 'bg-gray-400'}`}></span>
+                        {signal.status || 'Active'}
                       </span>
                     </td>
                   </tr>

@@ -34,7 +34,7 @@ import {
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useThemeColors } from "@/lib/themeColors";
-import SignalManager from "./SignalManager";
+import SignalManager from "@/components/admin/SignalManager";
 import { 
   BarChart, 
   Bar, 
@@ -59,6 +59,7 @@ import { cn } from "@/lib/utils";
 
 type DashboardTab = "overview" | "articles" | "users" | "signals" | "forex" | "blog" | "education" | "transactions" | "notifications" | "settings" | "traffic";
 
+
 interface Article {
   id: string;
   title: string;
@@ -70,6 +71,15 @@ interface Article {
   author: string;
   date: string;
   readTime: string;
+}
+
+interface NewArticleFormData {
+  title: string;
+  excerpt: string;
+  category: string;
+  readTime: string;
+  author:string;
+  content: string;
 }
 
 interface User {
@@ -139,6 +149,8 @@ const mockArticles: Article[] = [
   { id: "5", title: "Psychology of Trading: Mastering Your Emotions", excerpt: "The mental game is crucial for trading success...", category: "Education", status: "published", views: 2100, comments: 45, author: "David Lee", date: "Jan 16, 2026", readTime: "7 min" },
 ];
 
+
+
 const mockBlogPosts: BlogPost[] = [
   { id: "1", title: "Understanding Support and Resistance", excerpt: "Learn how to identify and trade key price levels...", author: "John Smith", date: "Feb 3, 2026", views: 2547, category: "Technical Analysis" },
   { id: "2", title: "Central Bank Impact on Forex", excerpt: "How monetary policy decisions affect currency pairs...", author: "Sarah Chen", date: "Feb 1, 2026", views: 1823, category: "Economics" },
@@ -161,6 +173,20 @@ export default function AdminDashboard() {
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; userId: string | null; userName: string | null }>({ open: false, userId: null, userName: null });
   const [deletedUsers, setDeletedUsers] = useState<Set<string>>(new Set());
 
+
+  // Article Model States
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [ articles, setArticles ] = useState<Article[]>(mockArticles);
+  const [ formDate, setFormData ] = useState<NewArticleFormData>({
+    title: "",
+    content: "",
+    excerpt: "",
+    category: "Education",
+    readTime: "5 min",
+    author: ""
+   });
+
+
   // Collapsible Accordion Panels States (Overview Tab)
   const [openPanels, setOpenPanels] = useState<Record<string, boolean>>({
     deposit: true,
@@ -173,6 +199,7 @@ export default function AdminDashboard() {
     turnover: false,
     grossMargin: false,
   });
+
 
   const togglePanel = (panelId: string) => {
     setOpenPanels(prev => ({
@@ -298,6 +325,64 @@ export default function AdminDashboard() {
   };
 
   const filteredUsers = users.filter(user => !deletedUsers.has(user.id));
+
+  // Article Modal Handlers
+  const handleOpenModal = () => setIsModalOpen(true);
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    resetForm();
+  };
+ const resetForm = () => {
+    setFormData({
+      title: "",
+      content: "",
+      excerpt: "",
+      category: "Education",
+      readTime: "5 min",
+      author:""
+    });
+ };
+ const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+  // Create new article 
+
+
+  const newArticle: Article = {
+     id: Date.now().toString(),
+     title: formDate.title,
+     excerpt: formDate.excerpt,
+     category: formDate.category,
+     readTime: formDate.readTime,
+     author: formDate.author,
+     date: new Date().toLocaleDateString('en-US', {
+      year: "numeric",
+      month: "short",
+      day: "numeric"
+     }),
+     status: "draft",
+     views: 0,
+     comments: 0,
+  };
+
+  setArticles((prev) => [...prev, newArticle]);
+  handleCloseModal();
+  console.log("New Article Created:", newArticle);
+
+
+  };
+
+
+  function handleDeleteArticle(id: string) {
+    throw new Error("Function not implemented.");
+  }
 
   return (
     <motion.div 
@@ -973,32 +1058,45 @@ export default function AdminDashboard() {
         <div className="space-y-6 px-6 sm:px-8">
           <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
             <h2 className="text-xl font-bold font-display uppercase tracking-wider text-white">Articles Directory</h2>
-            <Button className="bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs py-2 px-4 rounded-xl flex items-center gap-2">
+            <Button onClick={handleOpenModal} className="bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs py-2 px-4 rounded-xl flex items-center gap-2">
               <Plus size={16} /> New Article
             </Button>
           </div>
-
+          
           <div className="grid gap-4">
-            {mockArticles.map((article) => (
-              <div key={article.id} className="bg-[#111018]/50 border border-white/5 p-5 rounded-2xl flex items-center justify-between gap-4">
-                <div className="flex gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 border border-purple-500/20">
-                    <FileText size={20} />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-sm sm:text-base text-slate-200 hover:text-purple-400 transition-colors cursor-pointer">{article.title}</h3>
-                    <p className="text-xs text-slate-400 mt-1 line-clamp-1">{article.excerpt}</p>
-                    <div className="flex flex-wrap items-center gap-3 mt-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-                      <span className="bg-purple-500/10 text-purple-400 px-2 py-0.5 rounded-md border border-purple-500/10">{article.category}</span>
-                      <span>• {article.readTime}</span>
-                      <span>• {article.author}</span>
-                      <span>• {article.date}</span>
+            {articles.length === 0 ? (
+              <div className="text-center py-12 bg-[#111018]/30 rounded-2xl border border-white/5">
+                <FileText size={32} className="mx-auto text-slate-600 mb-2" />
+                <p className="text-xs text-slate-500">No articles available.</p>
+              </div>
+            ) : (
+              articles.map((article) => (
+                <div key={article.id} className="bg-[#111018]/50 border border-white/5 p-5 rounded-2xl flex items-center justify-between gap-4">
+                  <div className="flex gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 border border-purple-500/20">
+                      <FileText size={20} />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-sm sm:text-base text-slate-200 hover:text-purple-400 transition-colors cursor-pointer">{article.title}</h3>
+                      <p className="text-xs text-slate-400 mt-1 line-clamp-1">{article.excerpt}</p>
+                      <div className="flex flex-wrap items-center gap-3 mt-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                        <span className="bg-purple-500/10 text-purple-400 px-2 py-0.5 rounded-md border border-purple-500/10">{article.category}</span>
+                        <span>• {article.readTime}</span>
+                        <span>• {article.author}</span>
+                        <span>• {article.date}</span>
+                      </div>
                     </div>
                   </div>
+                  <div className="flex items-center gap-2">
+                   <Badge variant={article.status === "published" ? "success" : article.status ==="review" ? "warning" : "info"} label={article.status} />
+                   <button onClick = {() => handleDeleteArticle(article.id)} className="p-2 rounded-xl hover:bg-red-500/10 text-slate-400 hover:text-red-400 border-transparent hover:border-red-500/10 transition-colors">
+                    <Trash2 size={16} />
+
+                   </button>
+                   </div>
                 </div>
-                <Badge variant={article.status === "published" ? "success" : "info"} label={article.status} />
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       )}
@@ -1339,3 +1437,7 @@ export default function AdminDashboard() {
     </motion.div>
   );
 }
+function resetForm() {
+  throw new Error("Function not implemented.");
+}
+

@@ -231,21 +231,83 @@ export const getAdminLogs = async (req: Request, res: Response) => {
   }
 };
 
-// Get dashboard stats
+// Get dashboard stats — uses Prisma for full aggregate data
 export const getDashboardStats = async (req: Request, res: Response) => {
   try {
-    const totalUsers = await getAsync('SELECT COUNT(*) as count FROM users');
-    const totalInvestments = await getAsync('SELECT COUNT(*) as count FROM investments');
-    const totalSignals = await getAsync('SELECT COUNT(*) as count FROM signals');
-    const totalWithdrawals = await getAsync('SELECT COUNT(*) as count FROM withdrawals');
+    const { prisma } = await import('../database');
+
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [
+      totalUsers,
+      activeUsers,
+      newUsersToday,
+      newUsersThisMonth,
+      totalInvestments,
+      activeInvestments,
+      investmentAmounts,
+      activeSignals,
+      totalSignals,
+      pendingWithdrawals,
+      pendingWithdrawalAmount,
+      openTickets,
+      totalArticles,
+      publishedArticles,
+    ] = await Promise.all([
+      prisma.user.count(),
+      prisma.user.count({ where: { status: 'active' } }),
+      prisma.user.count({ where: { createdAt: { gte: startOfToday } } }),
+      prisma.user.count({ where: { createdAt: { gte: startOfMonth } } }),
+      prisma.investment.count(),
+      prisma.investment.count({ where: { status: 'active' } }),
+      prisma.investment.aggregate({
+        _sum: { amount: true, roi: true },
+        where: { status: 'active' },
+      }),
+      prisma.signal.count({ where: { status: 'active' } }),
+      prisma.signal.count(),
+      prisma.withdrawal.count({ where: { status: 'pending' } }),
+      prisma.withdrawal.aggregate({
+        _sum: { amount: true },
+        where: { status: 'pending' },
+      }),
+      prisma.supportTicket.count({ where: { status: 'open' } }),
+      prisma.faqArticle.count(),
+      prisma.faqArticle.count({ where: { published: true } }),
+    ]);
 
     res.json({
       success: true,
       data: {
-        totalUsers: totalUsers?.count || 0,
-        totalInvestments: totalInvestments?.count || 0,
-        totalSignals: totalSignals?.count || 0,
-        totalWithdrawals: totalWithdrawals?.count || 0,
+        users: {
+          total: totalUsers,
+          active: activeUsers,
+          newToday: newUsersToday,
+          newThisMonth: newUsersThisMonth,
+        },
+        investments: {
+          total: totalInvestments,
+          active: activeInvestments,
+          totalInvestedAmount: Number(investmentAmounts._sum.amount || 0),
+          totalProfitDistributed: Number(investmentAmounts._sum.roi || 0),
+        },
+        signals: {
+          total: totalSignals,
+          active: activeSignals,
+        },
+        withdrawals: {
+          pending: pendingWithdrawals,
+          pendingAmount: Number(pendingWithdrawalAmount._sum.amount || 0),
+        },
+        support: {
+          openTickets,
+        },
+        blog: {
+          total: totalArticles,
+          published: publishedArticles,
+        },
       },
     });
   } catch (error: any) {

@@ -1,43 +1,29 @@
 'use client';
-import React, { useState } from 'react';
-import { TrendingUp, TrendingDown, Clock, Lock, ArrowRight, Zap } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { TrendingUp, TrendingDown, Clock, Lock, ArrowRight, Zap, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { signalsApi }  from '@/lib/signalsApi';
 
 export default function LiveSignalsSection() {
-  const [signals] = useState([
-    {
-      id: 1,
-      pair: 'EUR/USD',
-      icon: 'up',
-      timeAgo: '10 mins ago',
-      status: 'Active',
-      entry: '1.0924',
-      takeProfit: '1.0980',
-      stopLoss: '1.0880',
-      confidence: 88,
-      isPremium: false,
-    },
-    {
-      id: 2,
-      pair: 'GBP/JPY',
-      icon: 'down',
-      timeAgo: '45 mins ago',
-      status: 'Active',
-      isPremium: true,
-      premiumText: 'Premium Signal',
-      premiumSubtext: 'Upgrade to view target zones',
-    },
-    {
-      id: 3,
-      pair: 'XAU/USD',
-      icon: 'up',
-      timeAgo: '1 hour ago',
-      status: 'Pending',
-      isPremium: true,
-      premiumText: 'Elite Signal',
-    },
-  ]);
+  const [signals, setSignals] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSignals = async () => {
+      try {
+        const response = await signalsApi.getAllSignals({ status: 'active', limit: 3 });
+        const data = Array.isArray(response.data) ? response.data : 
+                     (response.data && Array.isArray(response.data.signals) ? response.data.signals : []);
+        setSignals(data.slice(0, 3));
+      } catch (error) {
+        console.error("Failed to fetch live signals:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchSignals();
+  }, []);
 
   const features = [
     { title: 'AI-Powered Analysis', desc: 'Neural networks scanning 50+ pairs 24/7' },
@@ -166,7 +152,25 @@ export default function LiveSignalsSection() {
 
               {/* Signals Content */}
               <div className="p-4 space-y-4 max-h-[400px] sm:max-h-[500px] overflow-y-auto scrollbar-hide md:custom-scrollbar">
-                {signals.map((signal) => (
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-10">
+                    <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+                  </div>
+                ) : signals.length === 0 ? (
+                  <div className="text-center py-10 text-gray-500 text-sm font-medium">
+                    No active signals right now.
+                  </div>
+                ) : signals.map((signal) => {
+                  const date = new Date(signal.createdAt);
+                  const now = new Date();
+                  const diffMins = Math.floor((now.getTime() - date.getTime()) / 60000);
+                  let timeAgo = `${diffMins} mins ago`;
+                  if (diffMins > 60) timeAgo = `${Math.floor(diffMins / 60)} hours ago`;
+                  if (diffMins > 1440) timeAgo = `${Math.floor(diffMins / 1440)} days ago`;
+
+                  const isUp = signal.type?.toUpperCase() === 'BUY';
+
+                  return (
                   <motion.div 
                     key={signal.id} 
                     whileHover={{ x: 5 }}
@@ -174,47 +178,39 @@ export default function LiveSignalsSection() {
                   >
                     <div className="flex justify-between items-start mb-4 sm:mb-6">
                       <div className="flex items-center gap-3 sm:gap-4">
-                        <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center ${signal.icon === 'up' ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
-                          {signal.icon === 'up' ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
+                        <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center ${isUp ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
+                          {isUp ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
                         </div>
                         <div>
                           <h4 className="text-base sm:text-lg font-bold text-white tracking-tight">{signal.pair}</h4>
                           <span className="text-[10px] text-gray-500 font-bold flex items-center gap-1 mt-0.5">
-                            <Clock size={10} /> {signal.timeAgo}
+                            <Clock size={10} /> {timeAgo}
                           </span>
                         </div>
                       </div>
                       <span className={`px-2 sm:px-3 py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider ${
-                        signal.status === 'Active' ? 'bg-blue-600/20 text-blue-400' : 'bg-gray-800 text-gray-500'
+                        signal.status?.toLowerCase() === 'active' ? 'bg-blue-600/20 text-blue-400' : 'bg-gray-800 text-gray-500'
                       }`}>
-                        {signal.status}
+                        {signal.status || 'Active'}
                       </span>
                     </div>
 
-                    {!signal.isPremium ? (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-                        <div className="bg-[#020817] p-2 sm:p-3 rounded-xl border border-white/5">
-                           <span className="text-[8px] font-black text-gray-500 uppercase block mb-1">Entry</span>
-                           <span className="text-xs sm:text-sm font-bold text-white">{signal.entry}</span>
-                        </div>
-                        <div className="bg-[#020817] p-2 sm:p-3 rounded-xl border border-white/5">
-                           <span className="text-[8px] font-black text-gray-500 uppercase block mb-1">TP</span>
-                           <span className="text-xs sm:text-sm font-bold text-green-400">{signal.takeProfit}</span>
-                        </div>
-                        <div className="bg-[#020817] p-2 sm:p-3 rounded-xl border border-white/5 col-span-2 sm:col-span-1">
-                           <span className="text-[8px] font-black text-gray-500 uppercase block mb-1">Confidence</span>
-                           <span className="text-xs sm:text-sm font-bold text-blue-400">{signal.confidence}%</span>
-                        </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                      <div className="bg-[#020817] p-2 sm:p-3 rounded-xl border border-white/5">
+                         <span className="text-[8px] font-black text-gray-500 uppercase block mb-1">Entry</span>
+                         <span className="text-xs sm:text-sm font-bold text-white">{signal.entryPrice}</span>
                       </div>
-                    ) : (
-                      <div className="py-4 sm:py-6 flex flex-col items-center justify-center bg-gray-900/40 rounded-xl border border-dashed border-white/10 text-center px-4">
-                        <Lock size={16} className="text-gray-600 mb-2" />
-                        <span className="text-[10px] sm:text-xs font-bold text-gray-400">{signal.premiumSubtext || 'View Entry & TP'}</span>
-                        <Link href="/register" className="mt-2 text-[9px] sm:text-[10px] font-black text-blue-400 uppercase tracking-widest hover:text-blue-300 transition-colors">Upgrade Now &rarr;</Link>
+                      <div className="bg-[#020817] p-2 sm:p-3 rounded-xl border border-white/5">
+                         <span className="text-[8px] font-black text-gray-500 uppercase block mb-1">TP</span>
+                         <span className="text-xs sm:text-sm font-bold text-green-400">{signal.takeProfit || signal.takeProfit1}</span>
                       </div>
-                    )}
+                      <div className="bg-[#020817] p-2 sm:p-3 rounded-xl border border-white/5 col-span-2 sm:col-span-1">
+                         <span className="text-[8px] font-black text-gray-500 uppercase block mb-1">Confidence</span>
+                         <span className="text-xs sm:text-sm font-bold text-blue-400">{signal.accuracy?.toString().includes('%') ? signal.accuracy : `${(parseFloat(signal.accuracy || '85') * (signal.accuracy?.toString().includes('.') ? 100 : 1)).toFixed(0)}%`}</span>
+                      </div>
+                    </div>
                   </motion.div>
-                ))}
+                )})}
               </div>
 
               {/* Bottom Decoration */}
