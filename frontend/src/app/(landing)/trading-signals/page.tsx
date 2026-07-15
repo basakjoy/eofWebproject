@@ -44,8 +44,7 @@ export default function TradingSignalsPage() {
     const fetchSignals = async () => {
       try {
         const response = await signalsApi.getAllSignals();
-        const data = Array.isArray(response.data) ? response.data : 
-                     (response.data && Array.isArray(response.data.signals) ? response.data.signals : []);
+        const data = Array.isArray(response.data) ? response.data : [];
         setSignals(data);
       } catch (error) {
         console.error("Failed to fetch live signals:", error);

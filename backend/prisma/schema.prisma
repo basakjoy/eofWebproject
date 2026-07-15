@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,92 +7,93 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ========== ROLES & PERMISSIONS ==========
-model Role {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?  @db.Text
-  createdAt   DateTime @default(now())
+enum AdminScope {
+  SIGNAL_ADMIN
+  CONTENT_ADMIN
+  SUPER_ADMIN
+}
 
-  users                User[]
-  rolePermissions      RolePermission[]
+model Role {
+  id              String           @id @default(cuid())
+  name            String           @unique
+  description     String?
+  createdAt       DateTime         @default(now())
+  rolePermissions RolePermission[]
+  users           User[]
 
   @@map("roles")
 }
 
 model Permission {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?  @db.Text
-  resource    String?
-  action      String?
-  createdAt   DateTime @default(now())
-
+  id              String           @id @default(cuid())
+  name            String           @unique
+  description     String?
+  resource        String?
+  action          String?
+  createdAt       DateTime         @default(now())
   rolePermissions RolePermission[]
 
   @@map("permissions")
 }
 
 model RolePermission {
-  id           String   @id @default(cuid())
+  id           String     @id @default(cuid())
   roleId       String
   permissionId String
-  createdAt    DateTime @default(now())
-
-  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@unique([roleId, permissionId])
   @@map("role_permissions")
 }
 
-// ========== USERS ==========
 model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  password  String
-  phone     String?
-  role      String   @default("user")
-  roleId    String?
-  status    String   @default("active")
-  lastLogin DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  userRole Role? @relation(fields: [roleId], references: [id])
-
-  investments               Investment[]
-  createdSignals            Signal[]      @relation("createdBy")
-  createdCampaigns          Campaign[]    @relation("createdBy")
-  activityLogs              Log[]
-  adminPermissions          AdminPermission[]
-  adminUser                 AdminUser?
-  brokersReviews            BrokerReview[]
-  brokerAccounts            BrokerAccount[]
-  brokerComparisons         BrokerComparison[]
-  analysisCreated           Analysis[]    @relation("createdBy")
-  analysisComments          AnalysisComment[]
-  analysisReportsCreated    AnalysisReport[] @relation("createdBy")
-  notificationsReceived     Notification[]
-  notificationPreferences   NotificationPreference?
-  notificationHistory       NotificationHistory[]
-  bulkNotifications         BulkNotification[]
-  supportTicketsCreated     SupportTicket[] @relation("createdBy")
-  supportTicketsAssigned    SupportTicket[] @relation("assignedTo")
-  supportMessages           SupportMessage[]
-  faqArticlesCreated        FaqArticle[]  @relation("createdBy")
-  supportAgent              SupportAgent?
-  withdrawalsCreated        Withdrawal[]  @relation("createdBy")
-  withdrawalsApproved       Withdrawal[]  @relation("approvedBy")
-  withdrawalAccounts        UserWithdrawalAccount[]
-  withdrawalLimits          WithdrawalLimit?
-  transactions              Transaction[]
+  id                      String                  @id @default(cuid())
+  name                    String
+  email                   String                  @unique
+  password                String
+  phone                   String?
+  role                    String                  @default("user")
+  roleId                  String?
+  adminScope              AdminScope?
+  adminScopeGrantedAt     DateTime?
+  adminScopeGrantedBy     String?
+  status                  String                  @default("active")
+  lastLogin               DateTime?
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+  adminPermissions        AdminPermission[]
+  adminUser               AdminUser?
+  analysisCreated         Analysis[]              @relation("createdBy")
+  analysisComments        AnalysisComment[]
+  analysisReportsCreated  AnalysisReport[]        @relation("createdBy")
+  brokerAccounts          BrokerAccount[]
+  brokerComparisons       BrokerComparison[]
+  brokersReviews          BrokerReview[]
+  bulkNotifications       BulkNotification[]
+  createdCampaigns        Campaign[]              @relation("createdBy")
+  faqArticlesCreated      FaqArticle[]            @relation("createdBy")
+  investments             Investment[]
+  transactions            Transaction[]
+  activityLogs            Log[]
+  notificationHistory     NotificationHistory[]
+  notificationPreferences NotificationPreference?
+  notificationsReceived   Notification[]
+  createdSignals          Signal[]                @relation("createdBy")
+  supportAgent            SupportAgent?
+  supportMessages         SupportMessage[]
+  supportTicketsAssigned  SupportTicket[]         @relation("assignedTo")
+  supportTicketsCreated   SupportTicket[]         @relation("createdBy")
+  withdrawalAccounts      UserWithdrawalAccount[]
+  userRole                Role?                   @relation(fields: [roleId], references: [id])
+  withdrawalLimits        WithdrawalLimit?
+  withdrawalsApproved     Withdrawal[]            @relation("approvedBy")
+  withdrawalsCreated      Withdrawal[]            @relation("createdBy")
 
   @@map("users")
 }
 
-// ========== INVESTMENTS ==========
 model Investment {
   id        String   @id @default(cuid())
   userId    String
@@ -105,23 +103,36 @@ model Investment {
   roi       Decimal  @default(0) @db.Decimal(5, 2)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("investments")
 }
 
-// ========== SIGNALS ==========
+model Transaction {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String
+  amount      Decimal  @db.Decimal(15, 2)
+  description String?  @db.Text
+  status      String   @default("pending")
+  metadata    String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("transactions")
+}
+
 model Signal {
   id          String   @id @default(cuid())
-  name        String?
-  pair        String?
+  pair        String
   type        String
   direction   String?
   strength    String?
   source      String?
-  entryPrice  String?
   entryPoint  String?
+  entryPrice  String?
   stopLoss    String?
   takeProfit  String?
   takeProfit1 String?
@@ -134,51 +145,30 @@ model Signal {
   createdBy   String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  creator User? @relation("createdBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  creator     User?    @relation("createdBy", fields: [createdBy], references: [id])
 
   @@map("signals")
 }
 
-// ========== TRANSACTIONS ==========
-model Transaction {
-  id          String   @id @default(cuid())
-  userId      String
-  type        String
-  amount      Decimal  @db.Decimal(15, 2)
-  description String?  @db.Text
-  status      String   @default("pending")
-  metadata    String?  @db.Text
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("transactions")
-}
-
-// ========== CAMPAIGNS ==========
 model Campaign {
-  id        String   @id @default(cuid())
-  name      String
-  status    String   @default("draft")
-  budget    Decimal? @db.Decimal(15, 2)
-  spent     Decimal  @default(0) @db.Decimal(15, 2)
-  roi       Decimal  @default(0) @db.Decimal(5, 2)
-  impressions Int    @default(0)
-  clicks    Int      @default(0)
-  startDate DateTime?
-  endDate   DateTime?
-  createdBy String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  creator User? @relation("createdBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  id          String    @id @default(cuid())
+  name        String
+  status      String    @default("draft")
+  budget      Decimal?  @db.Decimal(15, 2)
+  spent       Decimal   @default(0) @db.Decimal(15, 2)
+  roi         Decimal   @default(0) @db.Decimal(5, 2)
+  impressions Int       @default(0)
+  clicks      Int       @default(0)
+  startDate   DateTime?
+  endDate     DateTime?
+  createdBy   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  creator     User?     @relation("createdBy", fields: [createdBy], references: [id])
 
   @@map("campaigns")
 }
 
-// ========== ACTIVITY LOGS ==========
 model Log {
   id        String   @id @default(cuid())
   userId    String?
@@ -186,52 +176,47 @@ model Log {
   ipAddress String?
   status    String   @default("success")
   timestamp DateTime @default(now())
-
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user      User?    @relation(fields: [userId], references: [id])
 
   @@map("logs")
 }
 
-// ========== ADMIN ==========
 model AdminPermission {
-  id        String   @id @default(cuid())
-  adminId   String
+  id         String   @id @default(cuid())
+  adminId    String
   permission String
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
 
   @@unique([adminId, permission])
   @@map("admin_permissions")
 }
 
 model AdminUser {
-  id            String   @id @default(cuid())
-  userId        String   @unique
-  status        String   @default("active")
-  permissions   String?  @db.Text
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  actions AdminAction[]
+  id          String        @id @default(cuid())
+  userId      String        @unique
+  status      String        @default("active")
+  permissions String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  actions     AdminAction[]
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("admin_users")
 }
 
 model AdminAction {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   adminId    String
   action     String
   targetId   String?
   targetType String?
-  changes    String?  @db.Text
-  reason     String?  @db.Text
+  changes    String?
+  reason     String?
   ipAddress  String?
-  status     String   @default("success")
-  createdAt  DateTime @default(now())
-
-  admin AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  status     String    @default("success")
+  createdAt  DateTime  @default(now())
+  admin      AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
 
   @@map("admin_actions")
 }
@@ -239,15 +224,14 @@ model AdminAction {
 model AdminRole {
   id          String   @id @default(cuid())
   name        String   @unique
-  description String?  @db.Text
-  permissions String?  @db.Text
+  description String?
+  permissions String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@map("admin_roles")
 }
 
-// ========== MARKET ANALYSIS ==========
 model MarketAnalysis {
   id        String   @id @default(cuid())
   asset     String
@@ -263,90 +247,84 @@ model MarketAnalysis {
   @@map("market_analysis")
 }
 
-// ========== ANALYSIS ==========
 model Analysis {
-  id        String   @id @default(cuid())
-  title     String
-  type      String
-  symbol    String?
-  content   String   @db.Text
-  metricsData   String?  @db.Text
-  createdBy String
-  status    String   @default("draft")
-  viewCount Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String            @id @default(cuid())
+  title       String
+  type        String
+  symbol      String?
+  content     String
+  metricsData String?
+  createdBy   String
+  status      String            @default("draft")
+  viewCount   Int               @default(0)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  creator     User              @relation("createdBy", fields: [createdBy], references: [id], onDelete: Cascade)
+  comments    AnalysisComment[]
+  metrics     AnalysisMetric[]
 
-  creator   User                @relation("createdBy", fields: [createdBy], references: [id], onDelete: Cascade)
-  metrics   AnalysisMetric[]
-  comments  AnalysisComment[]
   @@map("analysis")
 }
 
 model AnalysisMetric {
-  id         String   @id @default(cuid())
-  analysisId String
-  metricName String
+  id          String   @id @default(cuid())
+  analysisId  String
+  metricName  String
   metricValue String?
-  unit       String?
-  createdAt  DateTime @default(now())
-
-  analysis Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  unit        String?
+  createdAt   DateTime @default(now())
+  analysis    Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
 
   @@map("analysis_metrics")
 }
 
 model AnalysisComment {
-  id        String   @id @default(cuid())
+  id         String   @id @default(cuid())
   analysisId String
-  userId    String
-  comment   String   @db.Text
-  rating    Int?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  analysis Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  comment    String
+  rating     Int?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  analysis   Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("analysis_comments")
 }
 
 model AnalysisReport {
-  id        String   @id @default(cuid())
-  title     String
-  period    String
-  summary   String?  @db.Text
-  statistics String? @db.Text
-  createdBy String
-  createdAt DateTime @default(now())
-
-  creator User @relation("createdBy", fields: [createdBy], references: [id], onDelete: Cascade)
+  id         String   @id @default(cuid())
+  title      String
+  period     String
+  summary    String?
+  statistics String?
+  createdBy  String
+  createdAt  DateTime @default(now())
+  creator    User     @relation("createdBy", fields: [createdBy], references: [id], onDelete: Cascade)
 
   @@map("analysis_reports")
 }
 
-// ========== BROKERS ==========
 model Broker {
-  id            String   @id @default(cuid())
-  name          String   @unique
-  code          String   @unique
-  logo          String?
-  website       String?
-  email         String?
-  phone         String?
-  country       String?
-  status        String   @default("active")
-  rating        Decimal  @default(0) @db.Decimal(3, 2)
-  reviewCount   Int      @default(0)
-  minimumDeposit Decimal? @db.Decimal(15, 2)
-  leverage      String?
-  spreads       String?
-  features      String?  @db.Text
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  reviews        BrokerReview[]
+  id             String          @id @default(cuid())
+  name           String          @unique
+  code           String          @unique
+  logo           String?
+  website        String?
+  email          String?
+  phone          String?
+  country        String?
+  status         String          @default("active")
+  rating         Decimal         @default(0) @db.Decimal(3, 2)
+  reviewCount    Int             @default(0)
+  minimumDeposit Decimal?        @db.Decimal(15, 2)
+  leverage       String?
+  spreads        String?
+  features       String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
   accounts       BrokerAccount[]
+  reviews        BrokerReview[]
 
   @@map("brokers")
 }
@@ -356,98 +334,91 @@ model BrokerReview {
   brokerId  String
   userId    String
   rating    Int
-  comment   String?  @db.Text
+  comment   String?
   verified  Boolean  @default(false)
   helpful   Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  broker Broker @relation(fields: [brokerId], references: [id], onDelete: Cascade)
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  broker    Broker   @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([brokerId, userId])
   @@map("broker_reviews")
 }
 
 model BrokerAccount {
-  id          String   @id @default(cuid())
-  userId      String
-  brokerId    String
+  id            String   @id @default(cuid())
+  userId        String
+  brokerId      String
   accountNumber String?
-  accountType String?
-  balance     Decimal  @default(0) @db.Decimal(15, 2)
-  currency    String   @default("USD")
-  status      String   @default("active")
-  connectedAt DateTime @default(now())
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  broker Broker @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+  accountType   String?
+  balance       Decimal  @default(0) @db.Decimal(15, 2)
+  currency      String   @default("USD")
+  status        String   @default("active")
+  connectedAt   DateTime @default(now())
+  broker        Broker   @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, brokerId])
   @@map("broker_accounts")
 }
 
 model BrokerComparison {
-  id        String   @id @default(cuid())
-  title     String
-  description String? @db.Text
-  brokers   String?  @db.Text
-  criteria  String?  @db.Text
-  createdBy String
-  createdAt DateTime @default(now())
-
-  creator User @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  brokers     String?
+  criteria    String?
+  createdBy   String
+  createdAt   DateTime @default(now())
+  creator     User     @relation(fields: [createdBy], references: [id], onDelete: Cascade)
 
   @@map("broker_comparisons")
 }
 
-// ========== NOTIFICATIONS ==========
 model Notification {
-  id        String   @id @default(cuid())
+  id        String                @id @default(cuid())
   userId    String
   type      String
   title     String
-  message   String   @db.Text
-  data      String?  @db.Text
-  read      Boolean  @default(false)
+  message   String
+  data      String?
+  read      Boolean               @default(false)
   readAt    DateTime?
   actionUrl String?
-  createdAt DateTime @default(now())
-
-  user    User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  history NotificationHistory[]
+  createdAt DateTime              @default(now())
+  history   NotificationHistory[]
+  user      User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notifications")
 }
 
 model NotificationPreference {
-  id                   String   @id @default(cuid())
-  userId               String   @unique
-  emailNotifications   Boolean  @default(true)
-  pushNotifications    Boolean  @default(true)
-  smsNotifications     Boolean  @default(false)
-  inAppNotifications   Boolean  @default(true)
-  notificationTypes    String?  @db.Text
-  quietHours           String?  @db.Text
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  emailNotifications Boolean  @default(true)
+  pushNotifications  Boolean  @default(true)
+  smsNotifications   Boolean  @default(false)
+  inAppNotifications Boolean  @default(true)
+  notificationTypes  String?
+  quietHours         String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notification_preferences")
 }
 
 model NotificationHistory {
-  id             String   @id @default(cuid())
+  id             String        @id @default(cuid())
   notificationId String?
   userId         String
   deliveryMethod String
-  status         String   @default("sent")
-  sentAt         DateTime @default(now())
-  failureReason  String?  @db.Text
-
-  notification Notification? @relation(fields: [notificationId], references: [id], onDelete: SetNull)
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status         String        @default("sent")
+  sentAt         DateTime      @default(now())
+  failureReason  String?
+  notification   Notification? @relation(fields: [notificationId], references: [id])
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notification_history")
 }
@@ -457,8 +428,8 @@ model NotificationTemplate {
   name      String
   slug      String   @unique
   subject   String?
-  template  String   @db.Text
-  variables String?  @db.Text
+  template  String
+  variables String?
   category  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -467,92 +438,87 @@ model NotificationTemplate {
 }
 
 model BulkNotification {
-  id            String   @id @default(cuid())
-  title         String
-  message       String   @db.Text
-  recipientCount Int    @default(0)
-  sentCount     Int      @default(0)
-  failedCount   Int      @default(0)
-  status        String   @default("draft")
-  scheduledFor  DateTime?
-  sentAt        DateTime?
-  createdBy     String
-  createdAt     DateTime @default(now())
-
-  creator User @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  id             String    @id @default(cuid())
+  title          String
+  message        String
+  recipientCount Int       @default(0)
+  sentCount      Int       @default(0)
+  failedCount    Int       @default(0)
+  status         String    @default("draft")
+  scheduledFor   DateTime?
+  sentAt         DateTime?
+  createdBy      String
+  createdAt      DateTime  @default(now())
+  creator        User      @relation(fields: [createdBy], references: [id], onDelete: Cascade)
 
   @@map("bulk_notifications")
 }
 
-// ========== SUPPORT ==========
 model SupportTicket {
-  id          String   @id @default(cuid())
-  userId      String
-  subject     String
-  description String   @db.Text
-  category    String
-  priority    String   @default("medium")
-  status      String   @default("open")
-  assignedTo  String?
-  attachments String?  @db.Text
-  resolution  String?  @db.Text
+  id             String           @id @default(cuid())
+  userId         String
+  subject        String
+  description    String
+  category       String
+  priority       String           @default("medium")
+  status         String           @default("open")
+  assignedTo     String?
+  attachments    String?
+  resolution     String?
   resolutionTime Int?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  closedAt    DateTime?
-
-  creator User? @relation("createdBy", fields: [userId], references: [id], onDelete: Cascade)
-  assignee User? @relation("assignedTo", fields: [assignedTo], references: [id], onDelete: SetNull)
-  messages SupportMessage[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  closedAt       DateTime?
+  messages       SupportMessage[]
+  assignee       User?            @relation("assignedTo", fields: [assignedTo], references: [id])
+  creator        User             @relation("createdBy", fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("support_tickets")
 }
 
 model SupportMessage {
-  id         String   @id @default(cuid())
-  ticketId   String
-  userId     String
-  message    String   @db.Text
-  attachments String? @db.Text
-  isInternal Boolean  @default(false)
-  createdAt  DateTime @default(now())
-
-  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String        @id @default(cuid())
+  ticketId    String
+  userId      String
+  message     String
+  attachments String?
+  isInternal  Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("support_messages")
 }
 
 model SupportCategory {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  slug        String   @unique
-  description String?  @db.Text
-  icon        String?
+  id           String   @id @default(cuid())
+  name         String   @unique
+  slug         String   @unique
+  description  String?
+  icon         String?
   responseTime Int?
-  position    Int      @default(0)
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
+  position     Int      @default(0)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
 
   @@map("support_categories")
 }
 
 model FaqArticle {
-  id            String   @id @default(cuid())
-  title         String
-  slug          String   @unique
-  category      String
-  content       String   @db.Text
-  keywords      String?
-  viewCount     Int      @default(0)
-  helpfulCount  Int      @default(0)
-  unhelpfulCount Int     @default(0)
-  author        String
-  published     Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  creator User @relation("createdBy", fields: [author], references: [id], onDelete: Cascade)
+  id             String   @id @default(cuid())
+  title          String
+  slug           String   @unique
+  category       String
+  content        String
+  keywords       String?
+  viewCount      Int      @default(0)
+  helpfulCount   Int      @default(0)
+  unhelpfulCount Int      @default(0)
+  author         String
+  published      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  creator        User     @relation("createdBy", fields: [author], references: [id], onDelete: Cascade)
 
   @@map("faq_articles")
 }
@@ -567,110 +533,104 @@ model SupportAgent {
   avgResolutionTime Decimal? @db.Decimal(10, 2)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("support_agents")
 }
 
 model SupportMetric {
-  id                   String   @id @default(cuid())
-  period               String
-  totalTickets         Int      @default(0)
-  resolvedTickets      Int      @default(0)
+  id                    String   @id @default(cuid())
+  period                String
+  totalTickets          Int      @default(0)
+  resolvedTickets       Int      @default(0)
   averageResolutionTime Decimal? @db.Decimal(10, 2)
-  customerSatisfaction Decimal? @db.Decimal(3, 2)
-  avgFirstResponseTime Decimal? @db.Decimal(10, 2)
-  createdAt            DateTime @default(now())
+  customerSatisfaction  Decimal? @db.Decimal(3, 2)
+  avgFirstResponseTime  Decimal? @db.Decimal(10, 2)
+  createdAt             DateTime @default(now())
 
   @@map("support_metrics")
 }
 
-// ========== WITHDRAWALS ==========
 model Withdrawal {
-  id                String   @id @default(cuid())
-  userId            String
-  amount            Decimal  @db.Decimal(15, 2)
-  currency          String   @default("USD")
-  method            String
-  status            String   @default("pending")
-  destinationDetails String? @db.Text
-  transactionId     String?
-  reason            String?
-  rejectionReason   String?  @db.Text
-  approvedBy        String?
-  approvedAt        DateTime?
-  completedAt       DateTime?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  user        User      @relation("createdBy", fields: [userId], references: [id], onDelete: Cascade)
-  approver    User?     @relation("approvedBy", fields: [approvedBy], references: [id], onDelete: SetNull)
-  accounts    UserWithdrawalAccount[]
+  id                 String                  @id @default(cuid())
+  userId             String
+  amount             Decimal                 @db.Decimal(15, 2)
+  currency           String                  @default("USD")
+  method             String
+  status             String                  @default("pending")
+  destinationDetails String?
+  transactionId      String?
+  reason             String?
+  rejectionReason    String?
+  approvedBy         String?
+  approvedAt         DateTime?
+  completedAt        DateTime?
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+  approver           User?                   @relation("approvedBy", fields: [approvedBy], references: [id])
+  user               User                    @relation("createdBy", fields: [userId], references: [id], onDelete: Cascade)
+  accounts           UserWithdrawalAccount[] @relation("UserWithdrawalAccountToWithdrawal")
 
   @@map("withdrawals")
 }
 
 model WithdrawalMethod {
-  id             String   @id @default(cuid())
-  name           String   @unique
-  code           String   @unique
-  description    String?  @db.Text
+  id             String                  @id @default(cuid())
+  name           String                  @unique
+  code           String                  @unique
+  description    String?
   icon           String?
-  minAmount      Decimal? @db.Decimal(15, 2)
-  maxAmount      Decimal? @db.Decimal(15, 2)
-  fee            Decimal  @default(0) @db.Decimal(5, 2)
+  minAmount      Decimal?                @db.Decimal(15, 2)
+  maxAmount      Decimal?                @db.Decimal(15, 2)
+  fee            Decimal                 @default(0) @db.Decimal(5, 2)
   processingTime String?
-  available      Boolean  @default(true)
-  createdAt      DateTime @default(now())
-
-  accounts UserWithdrawalAccount[]
+  available      Boolean                 @default(true)
+  createdAt      DateTime                @default(now())
+  accounts       UserWithdrawalAccount[]
 
   @@map("withdrawal_methods")
 }
 
 model UserWithdrawalAccount {
-  id               String   @id @default(cuid())
+  id               String           @id @default(cuid())
   userId           String
   methodId         String
   accountName      String
-  accountDetails   String?  @db.Text
-  isDefault        Boolean  @default(false)
-  verified         Boolean  @default(false)
+  accountDetails   String?
+  isDefault        Boolean          @default(false)
+  verified         Boolean          @default(false)
   verificationCode String?
-  createdAt        DateTime @default(now())
-
-  user   User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  method WithdrawalMethod   @relation(fields: [methodId], references: [id], onDelete: Cascade)
-  withdrawals Withdrawal[]
+  createdAt        DateTime         @default(now())
+  method           WithdrawalMethod @relation(fields: [methodId], references: [id], onDelete: Cascade)
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  withdrawals      Withdrawal[]     @relation("UserWithdrawalAccountToWithdrawal")
 
   @@map("user_withdrawal_accounts")
 }
 
 model WithdrawalReport {
-  id                   String   @id @default(cuid())
-  period              String
-  totalRequests       Int      @default(0)
-  totalAmount         Decimal  @default(0) @db.Decimal(15, 2)
-  approvedAmount      Decimal  @default(0) @db.Decimal(15, 2)
-  rejectedAmount      Decimal  @default(0) @db.Decimal(15, 2)
+  id                    String   @id @default(cuid())
+  period                String
+  totalRequests         Int      @default(0)
+  totalAmount           Decimal  @default(0) @db.Decimal(15, 2)
+  approvedAmount        Decimal  @default(0) @db.Decimal(15, 2)
+  rejectedAmount        Decimal  @default(0) @db.Decimal(15, 2)
   averageProcessingTime Decimal? @db.Decimal(10, 2)
-  createdAt           DateTime @default(now())
+  createdAt             DateTime @default(now())
 
   @@map("withdrawal_reports")
 }
 
 model WithdrawalLimit {
-  id              String   @id @default(cuid())
-  userId          String   @unique
-  dailyLimit      Decimal? @db.Decimal(15, 2)
-  monthlyLimit    Decimal? @db.Decimal(15, 2)
-  remainingDaily  Decimal? @db.Decimal(15, 2)
-  remainingMonthly Decimal? @db.Decimal(15, 2)
-  resetDate       DateTime?
-  updatedAt       DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id               String    @id @default(cuid())
+  userId           String    @unique
+  dailyLimit       Decimal?  @db.Decimal(15, 2)
+  monthlyLimit     Decimal?  @db.Decimal(15, 2)
+  remainingDaily   Decimal?  @db.Decimal(15, 2)
+  remainingMonthly Decimal?  @db.Decimal(15, 2)
+  resetDate        DateTime?
+  updatedAt        DateTime  @updatedAt
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("withdrawal_limits")
 }

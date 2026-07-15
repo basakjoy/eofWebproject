@@ -169,15 +169,9 @@ export default function ServicesPage() {
       {/* Hero Section */}
       <section className="relative pt-20 md:pt-32 pb-12 md:pb-20 px-4">
         <div className="max-w-7xl mx-auto hero-content text-center">
-          <div className="inline-flex items-center justify-center gap-2 px-3 md:px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-zinc-400 text-xs font-bold uppercase tracking-widest mb-6 md:mb-8">
-            <Sparkles size={14} className="text-indigo-400" />
-            <span>Premium Trading Solutions</span>
-          </div>
-          <h1 className="text-5xl sm:text-6xl md:text-8xl font-black tracking-tighter mb-6 md:mb-8 leading-[0.9]">
-            OUR <br className="hidden sm:block" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">
-              ECOSYSTEM
-            </span>
+          
+          <h1 className="text-5xl md:text-9xl font-bold text-white/80 tracking-tight mb-6 leading-tight">
+            OUR SERVICES
           </h1>
           <p className="text-base sm:text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed px-2">
             From algorithmic signals to fully managed capital solutions—we provide the institutional infrastructure required to dominate the global markets.

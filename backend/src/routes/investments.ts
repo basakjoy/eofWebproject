@@ -28,13 +28,11 @@ router.get('/portfolio/overview/:userId', async (req: AuthRequest, res: Response
     const activeInvestments = investments.filter(inv => inv.status === 'active').length;
     const completedInvestments = investments.filter(inv => inv.status === 'completed').length;
 
-    // Get transactions (Wait, there is no Transaction model in schema? I'll leave as query raw or create later? Schema.prisma didn't have Transaction!)
-    // Wait, let's just query what's there. 
-    // Wait, the user has "transactions" router, so there might be a transaction model. 
-    // I'll use raw for transactions to not break compilation if it's missing, or find it.
-    // Actually, Prisma lets us do raw queries. Let's just do an empty array if transactions don't exist.
-    // I will look up if Transaction exists. Let me use empty array for now.
-    const transactions: any[] = []; // await prisma.transaction.findMany({ where: { userId }, take: 10, orderBy: { createdAt: 'desc' } });
+    const transactions = await prisma.transaction.findMany({
+      where: { userId },
+      take: 10,
+      orderBy: { createdAt: 'desc' },
+    });
 
     res.json({
       success: true,

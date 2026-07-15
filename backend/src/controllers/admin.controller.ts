@@ -5,10 +5,12 @@ import { v4 as uuidv4 } from 'uuid';
 // Get all admin users
 export const getAllAdminUsers = async (req: Request, res: Response) => {
   try {
-    const admins = await allAsync('SELECT * FROM admin_users');
+    const users = await allAsync(
+      'SELECT id, name, email, role, status, createdAt, updatedAt FROM users ORDER BY createdAt DESC'
+    );
     res.json({
       success: true,
-      data: admins,
+      data: users,
     });
   } catch (error: any) {
     res.status(500).json({

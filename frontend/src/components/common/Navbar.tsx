@@ -1,14 +1,19 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu, X, ArrowRight } from 'lucide-react';
+import { Menu, X, LogOut, User } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { LogoIcon } from './LogoIcon';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuthStore } from '@/store/authStore';
+import { useRouter } from 'next/navigation';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const { isAuthenticated, user, logout } = useAuthStore();
+  const router = useRouter();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -25,6 +30,13 @@ export default function Navbar() {
     { name: 'Services', href: '/services' },
     { name: 'About', href: '/about' },
   ];
+
+  const handleLogout = () => {
+    logout();
+    setProfileOpen(false);
+    setIsOpen(false);
+    router.push('/home');
+  };
 
   return (
     <nav 
@@ -62,18 +74,57 @@ export default function Navbar() {
 
           {/* Auth Actions */}
           <div className="hidden md:flex items-center gap-4">
-            <Link
-              href="/login"
-              className="text-sm font-bold text-white hover:text-blue-400 transition-colors"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/register"
-              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black uppercase tracking-widest rounded-full transition-all hover:scale-105 active:scale-95 shadow-lg shadow-blue-600/20"
-            >
-              Get Started
-            </Link>
+            {isAuthenticated && user ? (
+              <div className="relative">
+                <button
+                  onClick={() => setProfileOpen(!profileOpen)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
+                >
+                  <User size={16} className="text-blue-400" />
+                  <span className="text-sm font-bold text-white truncate max-w-[120px]">{user.name}</span>
+                </button>
+
+                {/* Profile Dropdown */}
+                {profileOpen && (
+                  <div className="absolute top-full right-0 mt-2 w-48 bg-black/95 border border-white/20 rounded-2xl shadow-xl backdrop-blur-xl z-50">
+                    <div className="p-4 border-b border-white/10">
+                      <p className="text-sm font-bold text-white">{user.name}</p>
+                      <p className="text-xs text-gray-400">{user.email}</p>
+                    </div>
+                    <Link
+                      href={user.role === 'admin' ? '/admin/dashboard' : '/dashboard/user'}
+                      className="flex items-center gap-2 px-4 py-3 text-sm text-white hover:bg-white/5 transition-colors"
+                      onClick={() => setProfileOpen(false)}
+                    >
+                      <User size={16} />
+                      Dashboard
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+                    >
+                      <LogOut size={16} />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="text-sm font-bold text-white hover:text-blue-400 transition-colors"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/register"
+                  className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black uppercase tracking-widest rounded-full transition-all hover:scale-105 active:scale-95 shadow-lg shadow-blue-600/20"
+                >
+                  Get Started
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Icon */}
@@ -106,21 +157,45 @@ export default function Navbar() {
                   {link.name}
                 </Link>
               ))}
-              <div className="pt-6 grid grid-cols-2 gap-4">
-                <Link
-                  href="/login"
-                  className="flex items-center justify-center p-4 rounded-2xl bg-white/5 text-white font-bold"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/register"
-                  className="flex items-center justify-center p-4 rounded-2xl bg-blue-600 text-white font-bold"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Sign Up
-                </Link>
+              <div className="pt-6 space-y-4">
+                {isAuthenticated && user ? (
+                  <>
+                    <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                      <p className="text-sm font-bold text-white">{user.name}</p>
+                      <p className="text-xs text-gray-400">{user.email}</p>
+                    </div>
+                    <Link
+                      href={user.role === 'admin' ? '/admin/dashboard' : '/dashboard/user'}
+                      className="flex items-center justify-center p-4 rounded-2xl bg-blue-600 text-white font-bold"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Dashboard
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center justify-center p-4 rounded-2xl bg-red-600/20 text-red-400 font-bold border border-red-500/30"
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4">
+                    <Link
+                      href="/login"
+                      className="flex items-center justify-center p-4 rounded-2xl bg-white/5 text-white font-bold"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      href="/register"
+                      className="flex items-center justify-center p-4 rounded-2xl bg-blue-600 text-white font-bold"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Sign Up
+                    </Link>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>

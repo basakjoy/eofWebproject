@@ -1,4 +1,4 @@
-'use client';
+ 'use client';
 
 import StatCard from '@/components/common/StatCard';
 import Card from '@/components/common/Card';

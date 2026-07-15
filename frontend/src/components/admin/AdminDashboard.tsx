@@ -56,6 +56,7 @@ import Input from "@/components/common/Input";
 import Badge from "@/components/common/Badge";
 import adminApi from "@/lib/adminApi";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/store/authStore";
 
 type DashboardTab = "overview" | "articles" | "users" | "signals" | "forex" | "blog" | "education" | "transactions" | "notifications" | "settings" | "traffic";
 
@@ -141,6 +142,15 @@ interface Notification {
   read: boolean;
 }
 
+interface DashboardStats {
+  users?: { total: number; active: number; newToday: number; newThisMonth: number };
+  investments?: { total: number; active: number; totalInvestedAmount: number; totalProfitDistributed: number };
+  signals?: { total: number; active: number };
+  withdrawals?: { pending: number; pendingAmount: number };
+  support?: { openTickets: number };
+  blog?: { total: number; published: number };
+}
+
 const mockArticles: Article[] = [
   { id: "1", title: "Understanding Risk Management in Forex", excerpt: "Learn the fundamentals of protecting your capital...", category: "Education", status: "published", views: 1240, comments: 23, author: "John Smith", date: "Jan 20, 2026", readTime: "8 min" },
   { id: "2", title: "Weekly Market Outlook: EUR/USD Analysis", excerpt: "A comprehensive technical and fundamental analysis...", category: "Analysis", status: "published", views: 892, comments: 15, author: "Sarah Chen", date: "Jan 19, 2026", readTime: "5 min" },
@@ -167,6 +177,7 @@ export default function AdminDashboard() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const colors = useThemeColors();
+  const { user } = useAuthStore();
   
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
@@ -176,7 +187,10 @@ export default function AdminDashboard() {
 
   // Article Model States
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [ articles, setArticles ] = useState<Article[]>(mockArticles);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
+  const [isSubmittingArticle, setIsSubmittingArticle] = useState(false);
+  const [isDeletingArticleId, setIsDeletingArticleId] = useState<string | null>(null);
   const [ formDate, setFormData ] = useState<NewArticleFormData>({
     title: "",
     content: "",
@@ -227,13 +241,18 @@ export default function AdminDashboard() {
         setLoading(true);
         setError(null);
         
-        // Fetch all data in parallel
-        const [usersRes, signalsRes, withdrawalsRes, notificationsRes] = await Promise.all([
+        const [statsRes, usersRes, signalsRes, withdrawalsRes, notificationsRes, articlesRes] = await Promise.all([
+          adminApi.getDashboardStats().catch(() => ({ success: false, data: null })),
           adminApi.getAllUsers({ limit: 50 }).catch(() => ({ success: false, data: [] })),
           adminApi.getAllSignals().catch(() => ({ success: false, data: [] })),
           adminApi.getAllWithdrawals({ limit: 50 }).catch(() => ({ success: false, data: [] })),
           adminApi.getAllNotifications({ limit: 50 }).catch(() => ({ success: false, data: [] })),
+          adminApi.getAllArticles({ limit: 50 }).catch(() => ({ success: false, data: [] })),
         ]);
+
+        if (statsRes.success && statsRes.data) {
+          setDashboardStats(statsRes.data);
+        }
 
         // Update users
         if (usersRes.success && Array.isArray(usersRes.data)) {
@@ -275,13 +294,38 @@ export default function AdminDashboard() {
           })));
         }
 
-        // Update transactions
+        if (articlesRes.success && Array.isArray(articlesRes.data)) {
+          const mappedArticles = articlesRes.data.map((article: any) => ({
+            id: article.id,
+            title: article.title,
+            excerpt: article.excerpt || article.content?.slice(0, 120) || "",
+            category: article.category || "General",
+            status: article.published ? "published" : "draft",
+            views: article.viewCount || 0,
+            comments: article.helpfulCount || 0,
+            author: article.author || user?.name || "Admin",
+            date: article.createdAt ? new Date(article.createdAt).toLocaleDateString() : "N/A",
+            readTime: article.readTime || "5 min",
+          }));
+
+          setArticles(mappedArticles);
+          setBlogPosts(mappedArticles.map((article: Article) => ({
+            id: article.id,
+            title: article.title,
+            excerpt: article.excerpt,
+            author: article.author,
+            date: article.date,
+            views: article.views,
+            category: article.category,
+          })));
+        }
+
         if (withdrawalsRes.success && Array.isArray(withdrawalsRes.data)) {
           setTransactions(withdrawalsRes.data.map((w: any) => ({
             id: w.id,
             user: w.userId || "Unknown",
             type: "withdrawal",
-            amount: w.amount || 0,
+            amount: Number(w.amount || 0),
             date: w.createdAt ? new Date(w.createdAt).toLocaleDateString() : "N/A",
             status: w.status || "pending",
           })));
@@ -350,39 +394,74 @@ export default function AdminDashboard() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  // Create new article 
 
+    if (!formDate.title.trim() || !formDate.content.trim()) {
+      setError("Title and content are required to create an article.");
+      return;
+    }
 
-  const newArticle: Article = {
-     id: Date.now().toString(),
-     title: formDate.title,
-     excerpt: formDate.excerpt,
-     category: formDate.category,
-     readTime: formDate.readTime,
-     author: formDate.author,
-     date: new Date().toLocaleDateString('en-US', {
-      year: "numeric",
-      month: "short",
-      day: "numeric"
-     }),
-     status: "draft",
-     views: 0,
-     comments: 0,
+    setIsSubmittingArticle(true);
+
+    try {
+      const response = await adminApi.createArticle({
+        title: formDate.title.trim(),
+        content: formDate.content.trim(),
+        excerpt: formDate.excerpt.trim() || formDate.content.trim().slice(0, 120),
+        category: formDate.category,
+        keywords: formDate.category,
+        published: false,
+        authorId: user?.id,
+      });
+
+      if (response?.success) {
+        const created = response.data;
+        const newArticle: Article = {
+          id: created?.id || Date.now().toString(),
+          title: created?.title || formDate.title,
+          excerpt: created?.excerpt || formDate.excerpt || formDate.content.slice(0, 120),
+          category: created?.category || formDate.category,
+          readTime: created?.readTime || formDate.readTime,
+          author: created?.author || user?.name || "Admin",
+          date: created?.createdAt ? new Date(created.createdAt).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          }) : new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }),
+          status: created?.published ? "published" : "draft",
+          views: created?.viewCount || 0,
+          comments: created?.helpfulCount || 0,
+        };
+        setArticles((prev) => [newArticle, ...prev]);
+      }
+
+      handleCloseModal();
+    } catch (err) {
+      console.error("Error creating article:", err);
+      setError("Failed to create article.");
+    } finally {
+      setIsSubmittingArticle(false);
+    }
   };
 
-  setArticles((prev) => [...prev, newArticle]);
-  handleCloseModal();
-  console.log("New Article Created:", newArticle);
+  const handleDeleteArticle = async (id: string) => {
+    if (!window.confirm("Delete this article?")) return;
 
+    setIsDeletingArticleId(id);
 
+    try {
+      const result = await adminApi.deleteArticle(id);
+      if (result?.success) {
+        setArticles((prev) => prev.filter((article) => article.id !== id));
+      }
+    } catch (err) {
+      console.error("Error deleting article:", err);
+      setError("Failed to delete article.");
+    } finally {
+      setIsDeletingArticleId(null);
+    }
   };
-
-
-  function handleDeleteArticle(id: string) {
-    throw new Error("Function not implemented.");
-  }
 
   return (
     <motion.div 
@@ -447,10 +526,10 @@ export default function AdminDashboard() {
                     Online User
                   </p>
                   <h3 className="text-2xl sm:text-3xl font-black text-white font-display mt-3 leading-none">
-                    4
+                    {dashboardStats?.users?.active ?? 0}
                   </h3>
                   <p className="text-[9px] font-bold text-emerald-500 uppercase mt-1 tracking-wider">
-                    Of 89 Active
+                    Of {dashboardStats?.users?.total ?? 0} Active
                   </p>
                 </div>
                 <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/15 group-hover:scale-110 transition-transform">
@@ -474,10 +553,10 @@ export default function AdminDashboard() {
                     Registered User
                   </p>
                   <h3 className="text-2xl sm:text-3xl font-black text-white font-display mt-3 leading-none">
-                    3
+                    {dashboardStats?.users?.total ?? 0}
                   </h3>
                   <p className="text-[9px] font-bold text-rose-500 uppercase mt-1 tracking-wider">
-                    Yesterday 0
+                    Today {dashboardStats?.users?.newToday ?? 0}
                   </p>
                 </div>
                 <div className="p-3 bg-rose-500/10 text-rose-400 rounded-xl border border-rose-500/15 group-hover:scale-110 transition-transform">
@@ -501,7 +580,7 @@ export default function AdminDashboard() {
                     Company Total Win Loss
                   </p>
                   <h3 className="text-2xl sm:text-3xl font-black text-white font-display mt-3 leading-none">
-                    USD 0.00
+                    {dashboardStats?.investments?.totalProfitDistributed ? `USD ${dashboardStats.investments.totalProfitDistributed.toLocaleString()}` : "USD 0.00"}
                   </h3>
                 </div>
                 <div className="p-3 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/15 group-hover:scale-110 transition-transform">
@@ -1063,6 +1142,8 @@ export default function AdminDashboard() {
             </Button>
           </div>
           
+          {error && <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">{error}</div>}
+
           <div className="grid gap-4">
             {articles.length === 0 ? (
               <div className="text-center py-12 bg-[#111018]/30 rounded-2xl border border-white/5">
@@ -1089,9 +1170,12 @@ export default function AdminDashboard() {
                   </div>
                   <div className="flex items-center gap-2">
                    <Badge variant={article.status === "published" ? "success" : article.status ==="review" ? "warning" : "info"} label={article.status} />
-                   <button onClick = {() => handleDeleteArticle(article.id)} className="p-2 rounded-xl hover:bg-red-500/10 text-slate-400 hover:text-red-400 border-transparent hover:border-red-500/10 transition-colors">
-                    <Trash2 size={16} />
-
+                   <button
+                     onClick={() => handleDeleteArticle(article.id)}
+                     disabled={isDeletingArticleId === article.id}
+                     className="p-2 rounded-xl hover:bg-red-500/10 text-slate-400 hover:text-red-400 border-transparent hover:border-red-500/10 transition-colors disabled:opacity-50"
+                   >
+                    {isDeletingArticleId === article.id ? <Clock size={16} /> : <Trash2 size={16} />}
                    </button>
                    </div>
                 </div>
@@ -1203,7 +1287,7 @@ export default function AdminDashboard() {
             <Button className="bg-purple-600 hover:bg-purple-500 text-white text-xs px-4 py-2 rounded-xl">Add New Post</Button>
           </div>
           <div className="grid gap-4">
-            {mockBlogPosts.map((post) => (
+            {blogPosts.map((post) => (
               <div key={post.id} className="bg-[#111018]/50 border border-white/5 p-5 rounded-2xl">
                 <div className="flex items-start justify-between">
                   <div>
@@ -1400,6 +1484,75 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              className="w-full max-w-2xl rounded-3xl border border-white/10 bg-[#111018] p-6 shadow-2xl"
+            >
+              <div className="mb-5 flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-white">Create Article</h3>
+                  <p className="text-sm text-slate-400">Publish content for the website blog and educational sections.</p>
+                </div>
+                <button onClick={handleCloseModal} className="rounded-xl border border-white/10 p-2 text-slate-400 hover:text-white">
+                  <X size={16} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-400">Title</label>
+                    <Input name="title" value={formDate.title} onChange={handleInputChange} className="bg-[#161520] border-white/5" placeholder="Article title" />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-400">Category</label>
+                    <select name="category" value={formDate.category} onChange={handleInputChange} className="w-full rounded-xl border border-white/10 bg-[#161520] px-3 py-2.5 text-sm text-slate-200 outline-none">
+                      <option value="Education">Education</option>
+                      <option value="Analysis">Analysis</option>
+                      <option value="Blog">Blog</option>
+                      <option value="News">News</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-400">Author</label>
+                    <Input name="author" value={formDate.author} onChange={handleInputChange} className="bg-[#161520] border-white/5" placeholder="Author name" />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-400">Read Time</label>
+                    <Input name="readTime" value={formDate.readTime} onChange={handleInputChange} className="bg-[#161520] border-white/5" placeholder="5 min" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-400">Excerpt</label>
+                  <textarea name="excerpt" value={formDate.excerpt} onChange={handleInputChange} rows={3} className="w-full rounded-xl border border-white/10 bg-[#161520] px-3 py-2.5 text-sm text-slate-200 outline-none" placeholder="Short summary" />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-400">Content</label>
+                  <textarea name="content" value={formDate.content} onChange={handleInputChange} rows={8} className="w-full rounded-xl border border-white/10 bg-[#161520] px-3 py-2.5 text-sm text-slate-200 outline-none" placeholder="Write article content" />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-2">
+                  <Button type="button" onClick={handleCloseModal} className="border border-white/10 bg-white/5 text-slate-300">Cancel</Button>
+                  <Button type="submit" disabled={isSubmittingArticle} className="bg-purple-600 hover:bg-purple-500 text-white">
+                    {isSubmittingArticle ? "Creating..." : "Create Article"}
+                  </Button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Delete User Confirmation Modal */}
       <AnimatePresence>

@@ -132,7 +132,13 @@ router.post('/', async (req: Request, res: Response) => {
   try {
     const { title, category, content, keywords, published = false, authorId } = req.body;
 
-    if (!title || !category || !content || !authorId) {
+    let resolvedAuthorId = authorId;
+    if (!resolvedAuthorId) {
+      const fallbackUser = await prisma.user.findFirst({ select: { id: true } });
+      resolvedAuthorId = fallbackUser?.id;
+    }
+
+    if (!title || !category || !content || !resolvedAuthorId) {
       return res.status(400).json({
         success: false,
         message: 'title, category, content, and authorId are required',
@@ -154,7 +160,7 @@ router.post('/', async (req: Request, res: Response) => {
         category,
         content,
         keywords: keywords || '',
-        author: authorId,
+        author: resolvedAuthorId,
         published: Boolean(published),
       },
     });

@@ -7,6 +7,7 @@ import investmentRoutes from './routes/investments';
 import transactionsRoutes from './routes/transactions';
 import signalsRoutes from './routes/signals';
 import adminRoutes from './routes/admin';
+import adminManagementRoutes from './routes/admin-management';
 import analysisRoutes from './routes/analysis';
 import brokersRoutes from './routes/brokers';
 import withdrawalsRoutes from './routes/withdrawals';
@@ -57,6 +58,7 @@ const startServer = async () => {
     app.use('/api/transactions', transactionsRoutes);
     app.use('/api/signals', signalsRoutes);
     app.use('/api/admin', adminRoutes);
+    app.use('/api/admin/management', adminManagementRoutes);
     app.use('/api/analysis', analysisRoutes);
     app.use('/api/brokers', brokersRoutes);
     app.use('/api/withdrawals', withdrawalsRoutes);

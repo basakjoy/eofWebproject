@@ -276,16 +276,10 @@ export default function App() {
           <div className="absolute inset-0 bg-gradient-to-b from-black via-black/20 to-black"></div>
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 text-center hero-content">
-          <div className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-sm font-medium mb-6 animate-fade-in">
-            <ShieldCheck size={16} />
-            <span>Regulated & Trusted Worldwide</span>
-          </div>
-          <h1 className="text-5xl md:text-8xl font-black tracking-tight mb-8 leading-tight">
-            THE EMPIRE OF <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">
-            FOREX
-            </span>
+        <div className="max-w-7xl mx-auto text-center px-4 relative z-10 hero-content">
+          
+          <h1 className="text-5xl md:text-9xl font-bold text-white/80 tracking-tight mb-8 leading-tight">
+            EMPIRE OF FOREX
           </h1>
           <p className="text-xl md:text-2xl text-zinc-400 max-w-3xl mx-auto mb-10 font-light leading-relaxed">
             We've redefined the trading experience by bridging the gap between institutional expertise and retail traders. Founded in 2020, powered by precision.

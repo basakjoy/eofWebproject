@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { signalsApi } from '@/lib/signalsApi';
+import { signalsApi, type SignalRecord } from '@/lib/signalsApi';
 
 interface Signal {
   id: string;
@@ -8,6 +8,7 @@ interface Signal {
   entryPrice: number;
   stopLoss: number;
   takeProfit?: number;
+  // takeProfits: number[];
   status: string;
   createdAt: string;
   accuracy?: number;
@@ -32,7 +33,18 @@ export function useSignals(options?: UseSignalsOptions) {
       try {
         setLoading(true);
         const data = await signalsApi.getAllSignals(options);
-        setSignals(data.data || []);
+        const normalizedSignals: Signal[] = (data.data || []).map((signal: SignalRecord) => ({
+          ...signal,
+          type: (signal.direction ?? signal.type ?? 'BUY').toUpperCase(),
+          entryPrice: signal.entryPrice ?? 0,
+          stopLoss: signal.stopLoss ?? signal.stoploss ?? 0,
+          takeProfit: signal.takeProfit ?? undefined,
+          accuracy: signal.accuracy ?? undefined,
+          reliability: signal.reliability ?? undefined,
+          status: signal.status ?? 'active',
+          createdAt: signal.createdAt ?? new Date().toISOString(),
+        }));
+        setSignals(normalizedSignals);
         setTotal(data.total || 0);
         setError(null);
       } catch (err: any) {
@@ -59,7 +71,18 @@ export function useSignal(signalId: string) {
       try {
         setLoading(true);
         const data = await signalsApi.getSignalById(signalId);
-        setSignal(data.data);
+        const signalData = Array.isArray(data.data) ? data.data[0] : data.data as SignalRecord | undefined;
+        setSignal(signalData ? {
+          ...signalData,
+          type: (signalData.direction ?? signalData.type ?? 'BUY').toUpperCase(),
+          entryPrice: signalData.entryPrice ?? 0,
+          stopLoss: signalData.stopLoss ?? signalData.stoploss ?? 0,
+          takeProfit: signalData.takeProfit ?? undefined,
+          accuracy: signalData.accuracy ?? undefined,
+          reliability: signalData.reliability ?? undefined,
+          status: signalData.status ?? 'active',
+          createdAt: signalData.createdAt ?? new Date().toISOString(),
+        } : null);
         setError(null);
       } catch (err: any) {
         console.error('Error fetching signal:', err);

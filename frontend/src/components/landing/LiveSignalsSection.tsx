@@ -13,8 +13,7 @@ export default function LiveSignalsSection() {
     const fetchSignals = async () => {
       try {
         const response = await signalsApi.getAllSignals({ status: 'active', limit: 3 });
-        const data = Array.isArray(response.data) ? response.data : 
-                     (response.data && Array.isArray(response.data.signals) ? response.data.signals : []);
+        const data = Array.isArray(response.data) ? response.data : [];
         setSignals(data.slice(0, 3));
       } catch (error) {
         console.error("Failed to fetch live signals:", error);

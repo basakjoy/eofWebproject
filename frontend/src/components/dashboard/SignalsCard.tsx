@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { ArrowUpRight, ArrowDownRight, Clock, Loader2, Zap, ExternalLink } from "lucide-react";
-import { signalsApi } from "@/lib/signalsApi";
+import { signalsApi, type SignalRecord } from "@/lib/signalsApi";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -10,9 +10,14 @@ interface TradingSignal {
   id: string;
   pair: string;
   type: string;
+  direction?: string | null;
   entryPrice: number;
-  stopLoss: number;
-  takeProfit: number | null;
+  stopLoss?: number | null;
+  stoploss?: number | null;
+  takeProfit?: number | null;
+  takeProfit1?: number | null;
+  takeProfit2?: number | null;
+  takeProfit3?: number | null;
   takeProfits: number[];
   accuracy: number;
   timeframe: string;
@@ -29,7 +34,18 @@ export function SignalsCard() {
       try {
         const res = await signalsApi.getAllSignals({ status: 'active', limit: 4 });
         const data = Array.isArray(res.data) ? res.data : [];
-        setSignals(data.slice(0, 4));
+        const normalizedSignals: TradingSignal[] = data.slice(0, 4).map((signal: SignalRecord) => ({
+          ...signal,
+          entryPrice: signal.entryPrice ?? 0,
+          stopLoss: signal.stopLoss ?? 0,
+          takeProfit: signal.takeProfit ?? null,
+          takeProfits: (signal.takeProfits ?? []).filter((value): value is number => value != null),
+          accuracy: signal.accuracy ?? 85,
+          timeframe: signal.timeframe ?? '4H',
+          status: signal.status ?? 'active',
+          createdAt: signal.createdAt ?? new Date().toISOString(),
+        }));
+        setSignals(normalizedSignals);
       } catch {
         setSignals([]);
       } finally {
@@ -61,8 +77,10 @@ export function SignalsCard() {
       ) : (
         <div className="space-y-4">
           {signals.map(signal => {
-            const isBuy = signal.type?.toUpperCase() === 'BUY';
-            const tp = signal.takeProfits?.[0] ?? signal.takeProfit;
+            const direction = (signal.direction ?? signal.type ?? 'BUY').toUpperCase();
+            const isBuy = direction === 'BUY';
+            const tp = signal.takeProfits?.[0] ?? signal.takeProfit1 ?? signal.takeProfit;
+            const stopLoss = signal.stoploss ?? signal.stopLoss ?? 0;
             return (
               <div
                 key={signal.id}
@@ -85,13 +103,13 @@ export function SignalsCard() {
                         "text-[10px] font-black px-1.5 py-0.5 rounded",
                         isBuy ? "bg-success/20 text-success" : "bg-destructive/20 text-destructive"
                       )}>
-                        {signal.type?.toUpperCase()}
+                        {direction}
                       </span>
                     </div>
                     <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                       <span>Entry: {signal.entryPrice}</span>
                       {tp && <span>TP: {tp}</span>}
-                      <span>SL: {signal.stopLoss}</span>
+                      <span>SL: {stopLoss}</span>
                     </div>
                   </div>
                 </div>
