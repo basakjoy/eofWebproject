@@ -1,8 +1,30 @@
 import express, { Request, Response } from 'express';
+import multer from 'multer';
+import path from 'path';
 import { prisma } from '../database';
 import { v4 as uuidv4 } from 'uuid';
+import { verifyToken } from '../middleware/auth';
 
 const router = express.Router();
+
+const uploadDir = path.join(__dirname, '../uploads');
+const uploadStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, uploadDir),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname) || '';
+    cb(null, `${uuidv4()}${ext}`);
+  },
+});
+
+const upload = multer({
+  storage: uploadStorage,
+  limits: { fileSize: 2_500_000 },
+  fileFilter: (_req, file, cb) => {
+    if (!file.mimetype.startsWith('image/')) {
+      return cb(new Error('Only image files are allowed'));}
+    cb(null, true);
+  },
+});
 
 // ─── Helpers ────────────────────────────────────────────────
 function slugify(text: string): string {
@@ -57,6 +79,7 @@ router.get('/', async (req: Request, res: Response) => {
           slug: true,
           category: true,
           keywords: true,
+          imageUrl: true,
           viewCount: true,
           helpfulCount: true,
           author: true,
@@ -98,6 +121,23 @@ router.get('/categories', async (_req: Request, res: Response) => {
   }
 });
 
+// ─── POST /api/blog/upload — Admin: upload cover image ───────
+router.post('/upload', verifyToken, upload.single('image'), async (req: Request, res: Response) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No image file provided' });
+    }
+
+    const host = req.get('host');
+    const protocol = req.protocol;
+    const imageUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
+
+    res.status(201).json({ success: true, message: 'Image uploaded successfully', data: { imageUrl } });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message || 'Failed to upload image' });
+  }
+});
+
 // ─── GET /api/blog/:slug — Public: single article ───────────
 router.get('/:slug', async (req: Request, res: Response) => {
   try {
@@ -128,9 +168,9 @@ router.get('/:slug', async (req: Request, res: Response) => {
 });
 
 // ─── POST /api/blog — Admin: create article ─────────────────
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', verifyToken, async (req: Request, res: Response) => {
   try {
-    const { title, category, content, keywords, published = false, authorId } = req.body;
+    const { title, category, content, keywords, imageUrl, published = false, authorId } = req.body;
 
     let resolvedAuthorId = authorId;
     if (!resolvedAuthorId) {
@@ -160,6 +200,7 @@ router.post('/', async (req: Request, res: Response) => {
         category,
         content,
         keywords: keywords || '',
+        imageUrl: imageUrl || null,
         author: resolvedAuthorId,
         published: Boolean(published),
       },
@@ -172,9 +213,9 @@ router.post('/', async (req: Request, res: Response) => {
 });
 
 // ─── PUT /api/blog/:id — Admin: update article ──────────────
-router.put('/:id', async (req: Request, res: Response) => {
+router.put('/:id', verifyToken, async (req: Request, res: Response) => {
   try {
-    const { title, category, content, keywords, published } = req.body;
+    const { title, category, content, keywords, imageUrl, published } = req.body;
 
     const existing = await prisma.faqArticle.findUnique({ where: { id: req.params.id } });
     if (!existing) {
@@ -197,6 +238,7 @@ router.put('/:id', async (req: Request, res: Response) => {
     if (category !== undefined) data.category = category;
     if (content !== undefined) data.content = content;
     if (keywords !== undefined) data.keywords = keywords;
+    if (imageUrl !== undefined) data.imageUrl = imageUrl;
     if (published !== undefined) data.published = Boolean(published);
 
     const updated = await prisma.faqArticle.update({
@@ -211,7 +253,7 @@ router.put('/:id', async (req: Request, res: Response) => {
 });
 
 // ─── DELETE /api/blog/:id — Admin: delete article ───────────
-router.delete('/:id', async (req: Request, res: Response) => {
+router.delete('/:id', verifyToken, async (req: Request, res: Response) => {
   try {
     const existing = await prisma.faqArticle.findUnique({ where: { id: req.params.id } });
     if (!existing) {

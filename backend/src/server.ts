@@ -2,6 +2,11 @@
 import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import fs from 'fs';
+import helmet from 'helmet';
+import hpp from 'hpp';
+import { globalLimiter } from './middleware/rateLimiter';
+import path from 'path';
 import authRoutes from './routes/auth';
 import investmentRoutes from './routes/investments';
 import transactionsRoutes from './routes/transactions';
@@ -22,9 +27,48 @@ const app: Express = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+const uploadsPath = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadsPath)) {
+  fs.mkdirSync(uploadsPath, { recursive: true });
+}
+// Security Middleware
+app.use(helmet());
+app.use(hpp());
+
+// Rate Limiting (apply to all /api routes)
+app.use('/api', globalLimiter);
+
+// CORS configuration
+const allowedOrigins = process.env.CORS_ORIGIN 
+  ? process.env.CORS_ORIGIN.split(',').map(o => o.trim()) 
+  : ['http://localhost:3000', 'http://localhost:5173'];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: process.env.CORS_CREDENTIALS === 'true'
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static(uploadsPath));
+
+// Handle OPTIONS preflight requests for CORS
+app.options('*', cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: process.env.CORS_CREDENTIALS === 'true'
+}));
 
 // Request logging middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
@@ -37,15 +81,7 @@ app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'Server is running', timestamp: new Date() });
 });
 
-// Error handling middleware
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error('Error:', err.message);
-  res.status(err.status || 500).json({
-    success: false,
-    message: err.message || 'Internal Server Error',
-    error: process.env.NODE_ENV === 'development' ? err : {},
-  });
-});
+
 
 // Start server
 const startServer = async () => {
@@ -73,6 +109,16 @@ const startServer = async () => {
         success: false,
         message: 'Route not found',
         path: req.path,
+      });
+    });
+
+    // Error handling middleware (must be after routes)
+    app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+      console.error('Error:', err.message);
+      res.status(err.status || 500).json({
+        success: false,
+        message: err.message || 'Internal Server Error',
+        error: process.env.NODE_ENV === 'development' ? err : {},
       });
     });
 
@@ -133,6 +179,7 @@ const startServer = async () => {
       console.log('    GET    /api/blog');
       console.log('    GET    /api/blog/categories');
       console.log('    GET    /api/blog/:slug');
+      console.log('    POST   /api/blog/upload');
       console.log('    POST   /api/blog');
       console.log('    PUT    /api/blog/:id');
       console.log('    DELETE /api/blog/:id\n');

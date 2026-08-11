@@ -29,6 +29,7 @@ const EMPTY_FORM: CreateArticleInput & { id?: string } = {
   category: "Blog",
   content: "",
   keywords: "",
+  imageUrl: "",
   published: false,
   authorId: "",
 };
@@ -225,6 +226,49 @@ function ArticleModal({
             />
           </div>
 
+          {/* Cover Image */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Cover image</label>
+            <label className="block rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 p-4 text-sm text-slate-500 dark:text-slate-400 cursor-pointer hover:border-blue-500/50 transition-colors">
+              <span className="font-semibold text-slate-700 dark:text-slate-200">Upload image or paste URL</span>
+              <input
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  if (file.size > 2_100_000) {
+                    toast.error('Choose an image under 2MB');
+                    return;
+                  }
+
+                  try {
+                    const data = new FormData();
+                    data.append('image', file);
+                    const uploadResponse = await blogApi.uploadArticleImage(data);
+                    setForm({ ...form, imageUrl: uploadResponse.data.imageUrl });
+                    toast.success('Cover image uploaded successfully');
+                  } catch (error: any) {
+                    toast.error(error?.response?.data?.message || 'Failed to upload image');
+                  }
+                }}
+              />
+              <p className="mt-2 text-xs text-slate-400">Supported formats: JPG, PNG, WebP.</p>
+            </label>
+            <input
+              value={form.imageUrl}
+              onChange={e => setForm({ ...form, imageUrl: e.target.value })}
+              placeholder="Or paste a full image URL"
+              className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-400"
+            />
+            {form.imageUrl && (
+              <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-slate-700">
+                <img src={form.imageUrl} alt="Article cover preview" className="w-full h-48 object-cover" />
+              </div>
+            )}
+          </div>
+
           {/* Content */}
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Content * (Markdown)</label>
@@ -323,6 +367,7 @@ export default function ArticlesPage() {
       category: article.category,
       content: article.content,
       keywords: article.keywords ?? "",
+      imageUrl: article.imageUrl ?? "",
       published: article.published,
       authorId: article.author,
     });
@@ -340,6 +385,7 @@ export default function ArticlesPage() {
           category: form.category,
           content: form.content,
           keywords: form.keywords,
+          imageUrl: form.imageUrl || undefined,
           published: form.published,
         };
         await blogApi.updateArticle(editingId, upd);
@@ -347,6 +393,7 @@ export default function ArticlesPage() {
       } else {
         if (!form.authorId) {
           toast.error("Author ID is missing — please log in as admin");
+          setSaving(false);
           return;
         }
         await blogApi.createArticle(form);

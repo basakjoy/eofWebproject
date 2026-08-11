@@ -45,14 +45,18 @@ export const brokersApi = {
   // Create broker (admin)
   createBroker: async (data: {
     name: string;
+    code: string;
     website?: string;
     logo?: string;
-    description?: string;
+    email?: string;
+    phone?: string;
+    country?: string;
+    status?: string;
     rating?: number;
+    minimumDeposit?: number;
+    leverage?: string;
+    spreads?: string;
     features?: string[];
-    minDeposit?: number;
-    maxLeverage?: number;
-    regulationStatus?: string;
   }) => {
     try {
       const response = await apiClient.post('/brokers', data);

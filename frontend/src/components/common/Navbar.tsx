@@ -39,18 +39,16 @@ export default function Navbar() {
   };
 
   return (
-    <nav 
-      className={`fixed top-0 left-0 w-full z-[100] transition-all duration-500 ${
-        scrolled ? 'py-4' : 'py-8'
-      }`}
+    <nav
+      className={`fixed top-0 left-0 w-full z-[100] transition-all duration-500 ${scrolled ? 'py-4' : 'py-8'
+        }`}
     >
       <div className="container mx-auto px-6">
-        <div className={`relative flex items-center justify-between px-6 py-3 rounded-full border transition-all duration-500 ${
-          scrolled 
-            ? 'bg-black/60 backdrop-blur-xl border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)]' 
+        <div className={`relative flex items-center justify-between px-6 py-3 rounded-full border transition-all duration-500 ${scrolled
+            ? 'bg-black/60 backdrop-blur-xl border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)]'
             : 'bg-transparent border-transparent'
-        }`}>
-          
+          }`}>
+
           {/* Logo Section */}
           <Link href="/home" className="flex items-center gap-2 group">
             <LogoIcon size={32} />
@@ -128,7 +126,7 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Menu Icon */}
-          <button 
+          <button
             className="md:hidden text-white p-2"
             onClick={() => setIsOpen(!isOpen)}
           >

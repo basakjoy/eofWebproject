@@ -45,6 +45,7 @@ export default function NewArticlePage() {
     category: 'Blog',
     content: '',
     keywords: '',
+    imageUrl: '',
     published: false,
   });
   const [saving, setSaving] = useState(false);
@@ -71,6 +72,7 @@ export default function NewArticlePage() {
         category: form.category,
         content: form.content,
         keywords: form.keywords,
+        imageUrl: form.imageUrl || undefined,
         published: publish,
         authorId: user.id,
       });
@@ -214,25 +216,62 @@ export default function NewArticlePage() {
           </div>
 
           {/* Keywords */}
-          <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-5">
-            <h3 className="text-xs font-black text-gray-500 dark:text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-              <Tag className="w-3 h-3" /> Keywords
-            </h3>
-            <input
-              value={form.keywords}
-              onChange={e => setForm({ ...form, keywords: e.target.value })}
-              placeholder="forex, trading, eurusd..."
-              className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-400"
-            />
-            {form.keywords && (
-              <div className="flex flex-wrap gap-1.5 mt-2">
-                {form.keywords.split(',').filter(k => k.trim()).map((k, i) => (
-                  <span key={i} className="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-[10px] font-bold px-2 py-0.5 rounded-md">
-                    {k.trim()}
-                  </span>
-                ))}
-              </div>
-            )}
+          <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-5 space-y-4">
+            <div>
+              <h3 className="text-xs font-black text-gray-500 dark:text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                <Tag className="w-3 h-3" /> Keywords
+              </h3>
+              <input
+                value={form.keywords}
+                onChange={e => setForm({ ...form, keywords: e.target.value })}
+                placeholder="forex, trading, eurusd..."
+                className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-400"
+              />
+              {form.keywords && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {form.keywords.split(',').filter(k => k.trim()).map((k, i) => (
+                    <span key={i} className="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-[10px] font-bold px-2 py-0.5 rounded-md">
+                      {k.trim()}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div>
+              <h3 className="text-xs font-black text-gray-500 dark:text-slate-400 uppercase tracking-widest mb-3">Cover Image</h3>
+              <label className="flex flex-col gap-2 text-xs text-slate-500 dark:text-slate-400 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-3 cursor-pointer hover:border-blue-500/50 transition-colors">
+                <span className="font-semibold text-slate-700 dark:text-slate-200">Upload a cover image</span>
+                <span className="text-[11px] text-slate-400">JPG, PNG, WebP (max 2MB)</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (file.size > 2_100_000) {
+                      toast.error('Please choose an image under 2MB');
+                      return;
+                    }
+
+                    try {
+                      const data = new FormData();
+                      data.append('image', file);
+                      const uploadResponse = await blogApi.uploadArticleImage(data);
+                      setForm({ ...form, imageUrl: uploadResponse.data.imageUrl });
+                      toast.success('Cover image uploaded successfully');
+                    } catch (error: any) {
+                      toast.error(error?.response?.data?.message || 'Failed to upload image');
+                    }
+                  }}
+                />
+              </label>
+              {form.imageUrl && (
+                <div className="mt-3 rounded-2xl overflow-hidden border border-gray-200 dark:border-slate-700">
+                  <img src={form.imageUrl} alt="Cover preview" className="w-full h-40 object-cover" />
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Stats */}

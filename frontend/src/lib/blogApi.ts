@@ -8,6 +8,7 @@ export interface BlogArticle {
   content: string;
   excerpt?: string;
   keywords?: string;
+  imageUrl?: string;
   viewCount: number;
   helpfulCount: number;
   unhelpfulCount?: number;
@@ -23,6 +24,7 @@ export interface CreateArticleInput {
   category: string;
   content: string;
   keywords?: string;
+  imageUrl?: string;
   published?: boolean;
   authorId: string;
 }
@@ -32,6 +34,7 @@ export interface UpdateArticleInput {
   category?: string;
   content?: string;
   keywords?: string;
+  imageUrl?: string;
   published?: boolean;
 }
 
@@ -72,6 +75,13 @@ const blogApi = {
   updateArticle: async (id: string, data: UpdateArticleInput) => {
     const response = await apiClient.put(`/blog/${id}`, data);
     return response.data as { success: boolean; data: BlogArticle; message: string };
+  },
+
+  uploadArticleImage: async (formData: FormData) => {
+    const response = await apiClient.post('/blog/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data as { success: boolean; data: { imageUrl: string }; message: string };
   },
 
   deleteArticle: async (id: string) => {

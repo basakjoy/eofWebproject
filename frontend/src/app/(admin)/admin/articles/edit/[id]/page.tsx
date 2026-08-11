@@ -41,6 +41,7 @@ export default function EditArticlePage() {
     category: 'Blog',
     content: '',
     keywords: '',
+    imageUrl: '',
     published: false,
   });
   const [loading, setLoading] = useState(true);
@@ -63,6 +64,7 @@ export default function EditArticlePage() {
           category: article.category,
           content: article.content,
           keywords: article.keywords ?? '',
+          imageUrl: article.imageUrl ?? '',
           published: article.published,
         });
       } catch {
@@ -88,6 +90,7 @@ export default function EditArticlePage() {
         category: form.category,
         content: form.content,
         keywords: form.keywords,
+        imageUrl: form.imageUrl || undefined,
         published: publish !== undefined ? publish : form.published,
       });
       toast.success('Article updated successfully!');
@@ -190,22 +193,60 @@ export default function EditArticlePage() {
             className="w-full bg-transparent text-3xl font-black text-gray-900 dark:text-white placeholder:text-gray-300 dark:placeholder:text-slate-700 focus:outline-none border-b-2 border-gray-100 dark:border-slate-800 pb-4 focus:border-blue-500 transition-colors"
           />
 
-          <div className="min-h-[500px]">
-            {preview ? (
-              <div className="bg-white dark:bg-[#0d1929] border border-gray-200 dark:border-slate-800 rounded-2xl p-8 min-h-[500px]">
-                {form.content ? <MarkdownPreview content={form.content} /> : (
-                  <p className="text-gray-400 dark:text-slate-600 italic text-sm">Nothing to preview yet...</p>
-                )}
-              </div>
-            ) : (
-              <textarea
-                value={form.content}
-                onChange={e => setForm({ ...form, content: e.target.value })}
-                rows={24}
-                placeholder="Write your content in markdown..."
-                className="w-full bg-white dark:bg-[#0d1929] border border-gray-200 dark:border-slate-800 rounded-2xl px-6 py-5 text-sm font-mono text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none placeholder:text-gray-300 dark:placeholder:text-slate-700 min-h-[500px] leading-relaxed"
-              />
-            )}
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-xs font-black text-gray-500 dark:text-slate-400 uppercase tracking-widest mb-3">Cover Image</h3>
+              <label className="flex flex-col gap-2 text-xs text-slate-500 dark:text-slate-400 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-800 rounded-2xl p-3 cursor-pointer hover:border-blue-500/50 transition-colors">
+                <span className="font-semibold text-slate-700 dark:text-slate-200">Upload a cover image</span>
+                <span className="text-[11px] text-slate-400">JPG, PNG, WebP (max 2MB)</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (file.size > 2_100_000) {
+                      toast.error('Please choose an image under 2MB');
+                      return;
+                    }
+
+                    try {
+                      const data = new FormData();
+                      data.append('image', file);
+                      const uploadResponse = await blogApi.uploadArticleImage(data);
+                      setForm({ ...form, imageUrl: uploadResponse.data.imageUrl });
+                      toast.success('Cover image uploaded successfully');
+                    } catch (error: any) {
+                      toast.error(error?.response?.data?.message || 'Failed to upload image');
+                    }
+                  }}
+                />
+              </label>
+              {form.imageUrl && (
+                <div className="mt-3 rounded-2xl overflow-hidden border border-gray-200 dark:border-slate-700">
+                  <img src={form.imageUrl} alt="Cover preview" className="w-full h-40 object-cover" />
+                </div>
+              )}
+            </div>
+
+            <div className="min-h-[500px]">
+              {preview ? (
+                <div className="bg-white dark:bg-[#0d1929] border border-gray-200 dark:border-slate-800 rounded-2xl p-8 min-h-[500px]">
+                  {form.content ? <MarkdownPreview content={form.content} /> : (
+                    <p className="text-gray-400 dark:text-slate-600 italic text-sm">Nothing to preview yet...</p>
+                  )}
+                </div>
+              ) : (
+                <textarea
+                  value={form.content}
+                  onChange={e => setForm({ ...form, content: e.target.value })}
+                  rows={24}
+                  placeholder="Write your content in markdown..."
+                  className="w-full bg-white dark:bg-[#0d1929] border border-gray-200 dark:border-slate-800 rounded-2xl px-6 py-5 text-sm font-mono text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none placeholder:text-gray-300 dark:placeholder:text-slate-700 min-h-[500px] leading-relaxed"
+                />
+              )}
+            </div>
           </div>
         </div>
 

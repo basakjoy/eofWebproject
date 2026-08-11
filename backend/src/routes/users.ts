@@ -1,4 +1,5 @@
 import express, { Response } from 'express';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { prisma } from '../database';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
@@ -13,28 +14,61 @@ import { Permission, UserRole } from '../types/roles';
 
 const router = express.Router();
 
+const ADMIN_ROLES: string[] = [UserRole.ADMIN, UserRole.SUPER_ADMIN];
+
+// Rate limiting
+// Mutating endpoints (create/update/delete) are the ones worth throttling —
+// listing/reading is already permission-gated and low-risk.
+const mutationLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req: AuthRequest) => req.user?.userId ?? ipKeyGenerator(req.ip ?? ''),
+  message: { success: false, message: 'Too many requests, please try again later' },
+});
+
+const deleteLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req: AuthRequest) => req.user?.userId ?? ipKeyGenerator(req.ip ?? ''),
+  message: { success: false, message: 'Too many requests, please try again later' },
+});
+
 // Validation Schemas
+// .strict() rejects unknown keys instead of silently dropping them —
+// cheap defense against clients smuggling unexpected fields.
 
-const updateUserSchema = z.object({
-  name: z.string().min(1).max(100).optional(),
-  email: z.string().email().optional(),
-  role: z.nativeEnum(UserRole).optional(),
-  status: z.enum(['active', 'inactive', 'banned']).optional(),
-  password: z.string().min(6).optional(),
+const idParamSchema = z.object({
+  id: z.string().uuid(),
 });
 
-const createUserSchema = z.object({
-  name: z.string().min(1).max(100),
-  email: z.string().email(),
-  password: z.string().min(6),
-  role: z.nativeEnum(UserRole).default(UserRole.USER),
-  status: z.enum(['active', 'inactive']).default('active'),
-});
+const updateUserSchema = z
+  .object({
+    name: z.string().min(1).max(100).optional(),
+    email: z.string().email().optional(),
+    role: z.nativeEnum(UserRole).optional(),
+    status: z.enum(['active', 'inactive', 'banned']).optional(),
+    password: z.string().min(6).optional(),
+  })
+  .strict();
+
+const createUserSchema = z
+  .object({
+    name: z.string().min(1).max(100),
+    email: z.string().email(),
+    password: z.string().min(6),
+    role: z.nativeEnum(UserRole).default(UserRole.USER),
+    status: z.enum(['active', 'inactive']).default('active'),
+  })
+  .strict();
 
 const paginationSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
-  search: z.string().optional(),
+  search: z.string().max(200).optional(),
   role: z.nativeEnum(UserRole).optional(),
   status: z.enum(['active', 'inactive', 'banned']).optional(),
 });
@@ -124,7 +158,12 @@ router.get('/me', verifyToken, async (req: AuthRequest, res: Response) => {
 
 // GET /users/:id — Get user by ID
 router.get('/:id', verifyToken, async (req: AuthRequest, res: Response) => {
-  const isOwnProfile = req.user!.userId === req.params.id;
+  const idCheck = idParamSchema.safeParse(req.params);
+  if (!idCheck.success) {
+    return res.status(400).json({ success: false, message: 'Invalid user id' });
+  }
+
+  const isOwnProfile = req.user!.userId === idCheck.data.id;
   const canManageUsers = req.user!.permissions.includes(Permission.MANAGE_USERS);
 
   if (!isOwnProfile && !canManageUsers) {
@@ -137,7 +176,7 @@ router.get('/:id', verifyToken, async (req: AuthRequest, res: Response) => {
 
   try {
     const user = await prisma.user.findUnique({
-      where: { id: req.params.id },
+      where: { id: idCheck.data.id },
       select: { id: true, name: true, email: true, role: true, status: true, createdAt: true },
     });
 
@@ -157,6 +196,7 @@ router.post(
   '/',
   verifyToken,
   requirePermission(Permission.MANAGE_USERS),
+  mutationLimiter,
   async (req: AuthRequest, res: Response) => {
     const parsed = createUserSchema.safeParse(req.body);
 
@@ -170,8 +210,7 @@ router.post(
 
     const { name, email, password, role, status } = parsed.data;
 
-    const adminRoles: string[] = [UserRole.ADMIN, UserRole.SUPER_ADMIN];
-    if (adminRoles.includes(role) && !req.user!.permissions.includes(Permission.CREATE_ADMIN)) {
+    if (ADMIN_ROLES.includes(role) && !req.user!.permissions.includes(Permission.CREATE_ADMIN)) {
       return res.status(403).json({
         success: false,
         message: 'You do not have permission to create admin accounts',
@@ -212,10 +251,17 @@ router.post(
 );
 
 // PUT /users/:id — Update user
-router.put('/:id', verifyToken, async (req: AuthRequest, res: Response) => {
-  const isOwnProfile = req.user!.userId === req.params.id;
+router.put('/:id', verifyToken, mutationLimiter, async (req: AuthRequest, res: Response) => {
+  const idCheck = idParamSchema.safeParse(req.params);
+  if (!idCheck.success) {
+    return res.status(400).json({ success: false, message: 'Invalid user id' });
+  }
+  const targetId = idCheck.data.id;
+
+  const isOwnProfile = req.user!.userId === targetId;
   const canManageUsers = req.user!.permissions.includes(Permission.MANAGE_USERS);
   const canEditAdmin = req.user!.permissions.includes(Permission.EDIT_ADMIN);
+  const canCreateAdmin = req.user!.permissions.includes(Permission.CREATE_ADMIN);
 
   if (!isOwnProfile && !canManageUsers) {
     return res.status(403).json({
@@ -225,11 +271,22 @@ router.put('/:id', verifyToken, async (req: AuthRequest, res: Response) => {
     });
   }
 
-  if ((req.body.role || req.body.status) && !canManageUsers) {
+  const wantsRoleOrStatusChange = req.body.role !== undefined || req.body.status !== undefined;
+
+  if (wantsRoleOrStatusChange && !canManageUsers) {
     return res.status(403).json({
       success: false,
       message: 'You do not have permission to change role or status',
       requiredPermission: Permission.MANAGE_USERS,
+    });
+  }
+
+  // Self-action block: never let a user change their own role or status,
+  // even if they hold MANAGE_USERS — prevents self-escalation and accidental self-lockout.
+  if (isOwnProfile && wantsRoleOrStatusChange) {
+    return res.status(400).json({
+      success: false,
+      message: 'You cannot change your own role or status',
     });
   }
 
@@ -244,15 +301,26 @@ router.put('/:id', verifyToken, async (req: AuthRequest, res: Response) => {
 
   const updates = parsed.data;
 
+  // Escalation guard: promoting a target TO an admin role requires CREATE_ADMIN
+  // (mirrors the check already applied on POST /). Previously missing here entirely.
+  if (updates.role && ADMIN_ROLES.includes(updates.role) && !canCreateAdmin) {
+    return res.status(403).json({
+      success: false,
+      message: 'You do not have permission to grant admin roles',
+      requiredPermission: Permission.CREATE_ADMIN,
+    });
+  }
+
   try {
-    const user = await prisma.user.findUnique({ where: { id: req.params.id } });
+    const user = await prisma.user.findUnique({ where: { id: targetId } });
 
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    const adminRoles: string[] = [UserRole.ADMIN, UserRole.SUPER_ADMIN];
-    if (adminRoles.includes(user.role as any) && !canEditAdmin && !isOwnProfile) {
+    // Editing a target that is CURRENTLY an admin requires EDIT_ADMIN
+    // (isOwnProfile no longer exempts this — self-edits can't touch role/status anyway).
+    if (ADMIN_ROLES.includes(user.role as any) && !canEditAdmin) {
       return res.status(403).json({
         success: false,
         message: 'You do not have permission to edit admin accounts',
@@ -262,7 +330,7 @@ router.put('/:id', verifyToken, async (req: AuthRequest, res: Response) => {
 
     if (updates.email && updates.email !== user.email) {
       const existing = await prisma.user.findUnique({ where: { email: updates.email } });
-      if (existing && existing.id !== req.params.id) {
+      if (existing && existing.id !== targetId) {
         return res.status(409).json({ success: false, message: 'Email is already in use' });
       }
     }
@@ -273,7 +341,7 @@ router.put('/:id', verifyToken, async (req: AuthRequest, res: Response) => {
     }
 
     await prisma.user.update({
-      where: { id: req.params.id },
+      where: { id: targetId },
       data: {
         name: updates.name ?? user.name,
         email: updates.email ?? user.email,
@@ -295,8 +363,15 @@ router.delete(
   '/:id',
   verifyToken,
   requirePermission(Permission.MANAGE_USERS),
+  deleteLimiter,
   async (req: AuthRequest, res: Response) => {
-    if (req.user!.userId === req.params.id) {
+    const idCheck = idParamSchema.safeParse(req.params);
+    if (!idCheck.success) {
+      return res.status(400).json({ success: false, message: 'Invalid user id' });
+    }
+    const targetId = idCheck.data.id;
+
+    if (req.user!.userId === targetId) {
       return res.status(400).json({
         success: false,
         message: 'You cannot delete your own account',
@@ -304,14 +379,13 @@ router.delete(
     }
 
     try {
-      const user = await prisma.user.findUnique({ where: { id: req.params.id } });
+      const user = await prisma.user.findUnique({ where: { id: targetId } });
 
       if (!user) {
         return res.status(404).json({ success: false, message: 'User not found' });
       }
 
-      const adminRoles: string[] = [UserRole.ADMIN, UserRole.SUPER_ADMIN];
-      if (adminRoles.includes(user.role as any) && !req.user!.permissions.includes(Permission.DELETE_ADMIN)) {
+      if (ADMIN_ROLES.includes(user.role as any) && !req.user!.permissions.includes(Permission.DELETE_ADMIN)) {
         return res.status(403).json({
           success: false,
           message: 'You do not have permission to delete admin accounts',
@@ -319,7 +393,7 @@ router.delete(
         });
       }
 
-      await prisma.user.delete({ where: { id: req.params.id } });
+      await prisma.user.delete({ where: { id: targetId } });
 
       res.json({ success: true, message: 'User deleted successfully' });
     } catch (error) {

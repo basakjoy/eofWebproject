@@ -55,15 +55,17 @@ export default function Footer() {
             <p className="text-gray-500 max-w-sm leading-relaxed">
               Empowering traders worldwide with elite market intelligence, institutional-grade signals, and secure investment strategies.
             </p>
-            <div className="flex gap-4">
-              {[Facebook, Twitter, Instagram, Youtube].map((Icon, i) => (
-                <a 
-                  key={i} 
-                  href="https://www.facebook.com/empireofforex, https://www.instagram.com/empireofforex, https://www.youtube.com/empireofforex, https://www.twitter.com/empireofforex" 
-                  className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-blue-600 hover:text-white transition-all transform hover:-translate-y-1"
-                >
-                  <Icon size={18} />
-                </a>
+            <div className="flex gap-10 text-gray-500">
+              {[
+                { Icon: Facebook, href: "https://www.facebook.com/empireforex"},
+                { Icon: Instagram, href: "https://www.instagram.com/empireofforexworld/?next=%2F"},
+                { Icon: Twitter, href: "http://x.com/OfEmpire38124"},
+                { Icon: Youtube, href: "https://www.youtube.com/@EmpireofForex"}
+            
+              ].map((social, index) => (
+                <Link key={index} href={social.href} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-blue-400 transition-colors">
+                  <social.Icon size={24} />
+                </Link>
               ))}
             </div>
           </div>

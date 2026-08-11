@@ -6,11 +6,35 @@ interface AuthRequest extends Request {
   user?: any;
 }
 
-// Get all withdrawals
+// TODO: align this with however your JWT payload actually signals admin
+// access (e.g. req.user.role === 'SUPER_ADMIN', or a permissions array like
+// req.user.permissions.includes('MANAGE_WITHDRAWALS')). This mirrors the
+// pattern requireWithdrawalAdmin presumably already checks at the route
+// level — duplicating a lightweight version here so the controller can also
+// tell "is this person allowed to see/act on someone else's withdrawal".
+function isWithdrawalAdmin(req: AuthRequest): boolean {
+  return (
+    req.user?.role === 'SUPER_ADMIN' ||
+    req.user?.role === 'ADMIN' ||
+    (Array.isArray(req.user?.permissions) &&
+      req.user.permissions.includes('MANAGE_WITHDRAWALS'))
+  );
+}
+
+const VALID_STATUSES = ['pending', 'approved', 'rejected', 'completed'];
+
+// Get all withdrawals (admin-only at the router level)
 export const getAllWithdrawals = async (req: Request, res: Response) => {
   try {
     const { status, userId, limit = 20, offset = 0 } = req.query;
-    
+
+    const parsedLimit = Math.min(Math.max(parseInt(String(limit), 10) || 20, 1), 100);
+    const parsedOffset = Math.max(parseInt(String(offset), 10) || 0, 0);
+
+    if (status && !VALID_STATUSES.includes(String(status))) {
+      return res.status(400).json({ success: false, message: 'Invalid status filter' });
+    }
+
     let query = 'SELECT * FROM withdrawals WHERE 1=1';
     const params: any[] = [];
 
@@ -24,7 +48,7 @@ export const getAllWithdrawals = async (req: Request, res: Response) => {
     }
 
     query += ' ORDER BY createdAt DESC LIMIT ? OFFSET ?';
-    params.push(limit, offset);
+    params.push(parsedLimit, parsedOffset);
 
     const withdrawals = await allAsync(query, params);
     res.json({
@@ -40,13 +64,19 @@ export const getAllWithdrawals = async (req: Request, res: Response) => {
 };
 
 // Get withdrawal by ID
-export const getWithdrawalById = async (req: Request, res: Response) => {
+export const getWithdrawalById = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const withdrawal = await getAsync('SELECT * FROM withdrawals WHERE id = ?', [id]);
-    
+
     if (!withdrawal) {
       return res.status(404).json({ success: false, message: 'Withdrawal not found' });
+    }
+
+    // Ownership check: a user may only view their own withdrawal unless they're an admin.
+    const isOwner = withdrawal.userId === req.user?.userId;
+    if (!isOwner && !isWithdrawalAdmin(req)) {
+      return res.status(403).json({ success: false, message: 'Insufficient permissions' });
     }
 
     res.json({ success: true, data: withdrawal });
@@ -64,11 +94,55 @@ export const requestWithdrawal = async (req: AuthRequest, res: Response) => {
     const { amount, currency = 'USD', method, accountId, reason } = req.body;
     const userId = req.user?.userId;
 
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Authentication required' });
+    }
+
     if (!amount || !method) {
       return res.status(400).json({
         success: false,
         message: 'amount and method are required',
       });
+    }
+
+    const numericAmount = Number(amount);
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'amount must be a positive number',
+      });
+    }
+
+    // Verify the withdrawal method exists and is currently available —
+    // previously any string was accepted with no check against real methods.
+    const methodRecord = await getAsync(
+      'SELECT * FROM withdrawal_methods WHERE code = ? AND available = 1',
+      [method]
+    );
+    if (!methodRecord) {
+      return res.status(400).json({ success: false, message: 'Invalid or unavailable withdrawal method' });
+    }
+    if (
+      (methodRecord.minAmount != null && numericAmount < methodRecord.minAmount) ||
+      (methodRecord.maxAmount != null && numericAmount > methodRecord.maxAmount)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: `Amount must be between ${methodRecord.minAmount} and ${methodRecord.maxAmount} for this method`,
+      });
+    }
+
+    // IDOR fix: verify the destination account actually belongs to the
+    // requesting user — previously accountId was trusted straight from the
+    // request body, letting a user withdraw to someone else's payout account.
+    if (accountId) {
+      const account = await getAsync(
+        'SELECT * FROM user_withdrawal_accounts WHERE id = ? AND userId = ?',
+        [accountId, userId]
+      );
+      if (!account) {
+        return res.status(403).json({ success: false, message: 'Withdrawal account not found or not owned by you' });
+      }
     }
 
     // Check withdrawal limit
@@ -77,7 +151,7 @@ export const requestWithdrawal = async (req: AuthRequest, res: Response) => {
       [userId]
     );
 
-    if (limit && (limit.remainingDaily < amount || limit.remainingMonthly < amount)) {
+    if (limit && (limit.remainingDaily < numericAmount || limit.remainingMonthly < numericAmount)) {
       return res.status(400).json({
         success: false,
         message: 'Withdrawal exceeds your limit',
@@ -86,9 +160,9 @@ export const requestWithdrawal = async (req: AuthRequest, res: Response) => {
 
     const withdrawalId = uuidv4();
     await runAsync(
-      `INSERT INTO withdrawals (id, userId, amount, currency, method, destinationDetails, reason)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [withdrawalId, userId, amount, currency, method, accountId, reason]
+      `INSERT INTO withdrawals (id, userId, amount, currency, method, destinationDetails, reason, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')`,
+      [withdrawalId, userId, numericAmount, currency, method, accountId, reason]
     );
 
     res.status(201).json({
@@ -116,6 +190,22 @@ export const approveWithdrawal = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ success: false, message: 'Withdrawal not found' });
     }
 
+    // Conflict of interest: an admin may not approve their own withdrawal request.
+    if (withdrawal.userId === adminId) {
+      return res.status(403).json({
+        success: false,
+        message: 'You cannot approve your own withdrawal request',
+      });
+    }
+
+    // State machine: only a pending withdrawal can be approved.
+    if (withdrawal.status !== 'pending') {
+      return res.status(409).json({
+        success: false,
+        message: `Cannot approve a withdrawal with status '${withdrawal.status}'`,
+      });
+    }
+
     await runAsync(
       `UPDATE withdrawals SET status = 'approved', transactionId = ?, approvedBy = ?, approvedAt = CURRENT_TIMESTAMP
        WHERE id = ?`,
@@ -138,9 +228,21 @@ export const rejectWithdrawal = async (req: AuthRequest, res: Response) => {
     const { rejectionReason } = req.body;
     const adminId = req.user?.userId;
 
+    if (!rejectionReason || !String(rejectionReason).trim()) {
+      return res.status(400).json({ success: false, message: 'rejectionReason is required' });
+    }
+
     const withdrawal = await getAsync('SELECT * FROM withdrawals WHERE id = ?', [id]);
     if (!withdrawal) {
       return res.status(404).json({ success: false, message: 'Withdrawal not found' });
+    }
+
+    // State machine: only a pending withdrawal can be rejected.
+    if (withdrawal.status !== 'pending') {
+      return res.status(409).json({
+        success: false,
+        message: `Cannot reject a withdrawal with status '${withdrawal.status}'`,
+      });
     }
 
     await runAsync(
@@ -159,7 +261,7 @@ export const rejectWithdrawal = async (req: AuthRequest, res: Response) => {
 };
 
 // Complete withdrawal
-export const completeWithdrawal = async (req: Request, res: Response) => {
+export const completeWithdrawal = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -168,10 +270,20 @@ export const completeWithdrawal = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: 'Withdrawal not found' });
     }
 
+    // State machine: a withdrawal must be approved before it can be completed.
+    // Previously any withdrawal — pending, rejected, whatever — could be marked
+    // completed directly, skipping the approval step entirely.
+    if (withdrawal.status !== 'approved') {
+      return res.status(409).json({
+        success: false,
+        message: `Cannot complete a withdrawal with status '${withdrawal.status}'`,
+      });
+    }
+
     await runAsync(
-      `UPDATE withdrawals SET status = 'completed', completedAt = CURRENT_TIMESTAMP
+      `UPDATE withdrawals SET status = 'completed', completedAt = CURRENT_TIMESTAMP, completedBy = ?
        WHERE id = ?`,
-      [id]
+      [req.user?.userId ?? null, id]
     );
 
     res.json({ success: true, message: 'Withdrawal completed successfully' });
@@ -195,11 +307,33 @@ export const addWithdrawalMethod = async (req: Request, res: Response) => {
       });
     }
 
+    const numMin = minAmount != null ? Number(minAmount) : null;
+    const numMax = maxAmount != null ? Number(maxAmount) : null;
+    const numFee = fee != null ? Number(fee) : null;
+
+    if (numMin != null && (!Number.isFinite(numMin) || numMin < 0)) {
+      return res.status(400).json({ success: false, message: 'minAmount must be a non-negative number' });
+    }
+    if (numMax != null && (!Number.isFinite(numMax) || numMax < 0)) {
+      return res.status(400).json({ success: false, message: 'maxAmount must be a non-negative number' });
+    }
+    if (numMin != null && numMax != null && numMin > numMax) {
+      return res.status(400).json({ success: false, message: 'minAmount cannot exceed maxAmount' });
+    }
+    if (numFee != null && (!Number.isFinite(numFee) || numFee < 0)) {
+      return res.status(400).json({ success: false, message: 'fee must be a non-negative number' });
+    }
+
+    const existing = await getAsync('SELECT id FROM withdrawal_methods WHERE code = ?', [code]);
+    if (existing) {
+      return res.status(409).json({ success: false, message: 'A withdrawal method with this code already exists' });
+    }
+
     const methodId = uuidv4();
     await runAsync(
       `INSERT INTO withdrawal_methods (id, name, code, minAmount, maxAmount, fee, processingTime)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [methodId, name, code, minAmount, maxAmount, fee, processingTime]
+      [methodId, name, code, numMin, numMax, numFee, processingTime]
     );
 
     res.status(201).json({

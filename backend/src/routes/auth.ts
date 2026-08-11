@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { prisma } from '../database';
+import { authLimiter } from '../middleware/rateLimiter';
 
 const router = express.Router();
 
@@ -11,7 +12,7 @@ interface AuthRequest extends Request {
 }
 
 // Register endpoint
-router.post('/register', async (req: Request, res: Response) => {
+router.post('/register', authLimiter, async (req: Request, res: Response) => {
   try {
     const { name, email, password, userType = 'user' } = req.body;
 
@@ -93,7 +94,7 @@ router.post('/register', async (req: Request, res: Response) => {
 });
 
 // Login endpoint
-router.post('/login', async (req: Request, res: Response) => {
+router.post('/login', authLimiter, async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
@@ -239,7 +240,7 @@ router.get('/me', async (req: AuthRequest, res: Response) => {
 });
 
 // Google OAuth endpoint
-router.post('/google', async (req: Request, res: Response) => {
+router.post('/google', authLimiter, async (req: Request, res: Response) => {
   try {
     const { email, name, googleId } = req.body;
 

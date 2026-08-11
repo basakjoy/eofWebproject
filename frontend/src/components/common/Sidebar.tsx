@@ -351,7 +351,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                             "flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm transition-all duration-200",
                             "text-slate-400 hover:text-white hover:bg-white/[0.02]",
                             active &&
-                              "text-primary bg-primary/10 border-l-2 border-primary font-medium pl-3 shadow-inner shadow-primary/5"
+                            "text-primary bg-primary/10 border-l-2 border-primary font-medium pl-3 shadow-inner shadow-primary/5"
                           )}
                         >
                           <span className="truncate">{sub.label}</span>
