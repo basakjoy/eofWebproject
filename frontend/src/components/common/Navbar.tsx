@@ -6,29 +6,53 @@ import { useState, useEffect } from 'react';
 import { LogoIcon } from './LogoIcon';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/store/authStore';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
   const [profileOpen, setProfileOpen] = useState(false);
   const { isAuthenticated, user, logout } = useAuthStore();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => {
+      // Find the first section on the page to match BottomNavbar's exact trigger point
+      const firstSection =
+        document.querySelector('main > section:first-of-type') ||
+        document.querySelector('section') ||
+        document.querySelector('main > div:first-child');
+
+      const threshold = firstSection
+        ? Math.max(250, Math.min(firstSection.clientHeight * 0.75, window.innerHeight * 0.7))
+        : window.innerHeight * 0.5;
+
+      const isPast = window.scrollY > threshold;
+      setIsVisible(!isPast);
       setScrolled(window.scrollY > 20);
+
+      // Close open dropdowns/drawers when navbar transitions out
+      if (isPast) {
+        setIsOpen(false);
+        setProfileOpen(false);
+      }
     };
-    window.addEventListener('scroll', handleScroll);
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Initial check
+
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [pathname]);
 
   const navLinks = [
     { name: 'Home', href: '/home' },
-    { name: 'Trading', href: '/trading-signals' },
-    { name: 'Investments', href: '/investment-plans' },
-    { name: 'Services', href: '/services' },
+    { name: 'Trading Signals', href: '/trading-signals' },
     { name: 'About', href: '/about' },
+    { name: 'Services', href: '/services' },
+    { name: 'Plans', href: '/investment-plans' },
+    { name: 'Blog', href: '/blog' },
   ];
 
   const handleLogout = () => {
@@ -39,155 +63,156 @@ export default function Navbar() {
   };
 
   return (
-    <nav
-      className={`fixed top-0 left-0 w-full z-[100] transition-all duration-500 ${scrolled ? 'py-4' : 'py-8'
-        }`}
-    >
-      <div className="container mx-auto px-6">
-        <div className={`relative flex items-center justify-between px-6 py-3 rounded-full border transition-all duration-500 ${scrolled
-            ? 'bg-black/60 backdrop-blur-xl border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)]'
-            : 'bg-transparent border-transparent'
-          }`}>
+    <AnimatePresence>
+      {isVisible && (
+        <motion.nav
+          initial={{ opacity: 0, y: -30 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -30 }}
+          transition={{ duration: 0.25, ease: 'easeOut' }}
+          className="fixed top-6 left-0 w-full z-[100] px-4 pointer-events-auto"
+        >
+          <div className="max-w-fit mx-auto">
+            <div className="flex items-center gap-6 sm:gap-8 px-5 py-2.5 rounded-full bg-[#16161c]/80 backdrop-blur-2xl border border-white/10 shadow-[0_10px_35px_rgba(0,0,0,0.6)] transition-all">
 
-          {/* Logo Section */}
+          {/* Logo / Brand Icon */}
           <Link href="/home" className="flex items-center gap-2 group">
-            <LogoIcon size={32} />
-            <span className="text-xl font-black text-white tracking-tighter uppercase hidden sm:block group-hover:text-blue-400 transition-colors">
-              Empire of Forex
-            </span>
+            <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center border border-white/10 group-hover:border-[#FF6B00]/40 transition-all">
+              <LogoIcon size={18} />
+            </div>
           </Link>
 
-          {/* Desktop Menu */}
-          <div className="hidden md:flex items-center gap-1">
+          {/* Desktop Menu Links */}
+          <div className="hidden md:flex items-center gap-6">
             {navLinks.map((link) => (
               <Link
                 key={link.name}
                 href={link.href}
-                className="px-5 py-2 text-sm font-bold text-gray-300 hover:text-white transition-colors rounded-full hover:bg-white/5"
+                className="text-xs font-medium text-gray-300 hover:text-white transition-colors"
               >
                 {link.name}
               </Link>
             ))}
           </div>
 
-          {/* Auth Actions */}
-          <div className="hidden md:flex items-center gap-4">
+          {/* Right Actions */}
+          <div className="hidden md:flex items-center gap-3">
             {isAuthenticated && user ? (
               <div className="relative">
                 <button
                   onClick={() => setProfileOpen(!profileOpen)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
+                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white text-black font-semibold text-xs transition-colors hover:bg-gray-200"
                 >
-                  <User size={16} className="text-blue-400" />
-                  <span className="text-sm font-bold text-white truncate max-w-[120px]">{user.name}</span>
+                  <User size={13} className="text-black" />
+                  <span className="truncate max-w-[100px]">{user.name}</span>
                 </button>
 
                 {/* Profile Dropdown */}
                 {profileOpen && (
-                  <div className="absolute top-full right-0 mt-2 w-48 bg-black/95 border border-white/20 rounded-2xl shadow-xl backdrop-blur-xl z-50">
-                    <div className="p-4 border-b border-white/10">
-                      <p className="text-sm font-bold text-white">{user.name}</p>
-                      <p className="text-xs text-gray-400">{user.email}</p>
+                  <div className="absolute top-full right-0 mt-3 w-48 bg-[#111116] border border-white/10 rounded-2xl shadow-2xl backdrop-blur-2xl z-50 p-1">
+                    <div className="p-3 border-b border-white/10">
+                      <p className="text-xs font-bold text-white">{user.name}</p>
+                      <p className="text-[10px] text-gray-400">{user.email}</p>
                     </div>
                     <Link
                       href={user.role === 'admin' ? '/admin/dashboard' : '/dashboard/user'}
-                      className="flex items-center gap-2 px-4 py-3 text-sm text-white hover:bg-white/5 transition-colors"
+                      className="flex items-center gap-2 px-3 py-2 text-xs text-white hover:bg-white/5 rounded-xl transition-colors"
                       onClick={() => setProfileOpen(false)}
                     >
-                      <User size={16} />
+                      <User size={13} />
                       Dashboard
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-red-500/10 rounded-xl transition-colors"
                     >
-                      <LogOut size={16} />
+                      <LogOut size={13} />
                       Logout
                     </button>
                   </div>
                 )}
               </div>
             ) : (
-              <>
+              <div className="flex items-center gap-2">
                 <Link
                   href="/login"
-                  className="text-sm font-bold text-white hover:text-blue-400 transition-colors"
+                  className="px-3.5 py-1.5 text-gray-300 hover:text-white text-xs font-medium transition-colors"
                 >
-                  Sign In
+                  Log In
                 </Link>
                 <Link
                   href="/register"
-                  className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black uppercase tracking-widest rounded-full transition-all hover:scale-105 active:scale-95 shadow-lg shadow-blue-600/20"
+                  className="px-4 py-1.5 bg-gradient-to-r from-[#FF6B00] to-[#FF8A00] hover:brightness-110 text-white text-xs font-semibold rounded-full transition-all shadow-[0_0_15px_rgba(255,107,0,0.35)] active:scale-95"
                 >
-                  Get Started
+                  Sign Up
                 </Link>
-              </>
+              </div>
             )}
           </div>
 
-          {/* Mobile Menu Icon */}
+          {/* Mobile Trigger */}
           <button
-            className="md:hidden text-white p-2"
+            className="md:hidden text-white p-1"
             onClick={() => setIsOpen(!isOpen)}
+            aria-label="Toggle navigation menu"
           >
-            {isOpen ? <X size={24} /> : <Menu size={24} />}
+            {isOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
+
         </div>
       </div>
 
-      {/* Mobile Sidebar */}
+      {/* Mobile Drawer */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="absolute top-full left-0 w-full bg-[#0a0a1a] border-b border-white/5 p-6 md:hidden"
+            exit={{ opacity: 0, y: -10 }}
+            className="mt-3 max-w-sm mx-auto bg-[#16161c]/95 backdrop-blur-2xl border border-white/10 rounded-3xl p-5 md:hidden shadow-2xl"
           >
-            <div className="space-y-4">
+            <div className="space-y-3">
               {navLinks.map((link) => (
                 <Link
                   key={link.name}
                   href={link.href}
-                  className="block text-lg font-bold text-gray-300 hover:text-blue-400 py-2 border-b border-white/5"
+                  className="block text-sm font-medium text-gray-300 hover:text-white py-1.5 border-b border-white/5"
                   onClick={() => setIsOpen(false)}
                 >
                   {link.name}
                 </Link>
               ))}
-              <div className="pt-6 space-y-4">
+              <div className="pt-3 border-t border-white/10">
                 {isAuthenticated && user ? (
-                  <>
-                    <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                      <p className="text-sm font-bold text-white">{user.name}</p>
-                      <p className="text-xs text-gray-400">{user.email}</p>
-                    </div>
+                  <div className="space-y-2">
                     <Link
                       href={user.role === 'admin' ? '/admin/dashboard' : '/dashboard/user'}
-                      className="flex items-center justify-center p-4 rounded-2xl bg-blue-600 text-white font-bold"
+                      className="w-full flex items-center justify-center gap-2 p-2.5 rounded-full bg-white text-black text-xs font-semibold"
                       onClick={() => setIsOpen(false)}
                     >
-                      Dashboard
+                      <User size={13} />
+                      Dashboard ({user.name})
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center justify-center p-4 rounded-2xl bg-red-600/20 text-red-400 font-bold border border-red-500/30"
+                      className="w-full flex items-center justify-center gap-2 p-2.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-semibold"
                     >
+                      <LogOut size={13} />
                       Logout
                     </button>
-                  </>
+                  </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-2">
                     <Link
                       href="/login"
-                      className="flex items-center justify-center p-4 rounded-2xl bg-white/5 text-white font-bold"
+                      className="w-full flex items-center justify-center p-2.5 rounded-full bg-white/10 text-white text-xs font-semibold hover:bg-white/15 transition-colors"
                       onClick={() => setIsOpen(false)}
                     >
-                      Sign In
+                      Log In
                     </Link>
                     <Link
                       href="/register"
-                      className="flex items-center justify-center p-4 rounded-2xl bg-blue-600 text-white font-bold"
+                      className="w-full flex items-center justify-center p-2.5 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8A00] text-white text-xs font-semibold shadow-lg transition-all"
                       onClick={() => setIsOpen(false)}
                     >
                       Sign Up
@@ -199,6 +224,8 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
-    </nav>
+    </motion.nav>
+  )}
+</AnimatePresence>
   );
 }

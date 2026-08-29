@@ -7,6 +7,8 @@ import helmet from 'helmet';
 import hpp from 'hpp';
 import { globalLimiter } from './middleware/rateLimiter';
 import path from 'path';
+import http from 'http';
+import { setupSupportWebSocket } from './websocket/supportHandler';
 import authRoutes from './routes/auth';
 import investmentRoutes from './routes/investments';
 import transactionsRoutes from './routes/transactions';
@@ -122,7 +124,11 @@ const startServer = async () => {
       });
     });
 
-    app.listen(PORT, () => {
+    // Create HTTP server and attach WebSocket
+    const server = http.createServer(app);
+    setupSupportWebSocket(server);
+
+    server.listen(PORT, () => {
       console.log(`✓ Server running on http://localhost:${PORT}\n`);
       console.log('Available endpoints:');
       console.log('\n   Auth:');
@@ -175,6 +181,7 @@ const startServer = async () => {
       console.log('    POST   /api/support/tickets/:ticketId/messages');
       console.log('    GET    /api/support/faq');
       console.log('    GET    /api/support/categories');
+      console.log('    WS     /ws/support (WebSocket support chat)');
       console.log('\n   Blog:');
       console.log('    GET    /api/blog');
       console.log('    GET    /api/blog/categories');

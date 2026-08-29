@@ -1,127 +1,108 @@
 "use client";
 
-import { Wallet, TrendingUp, PiggyBank, DollarSign, TrendingDown } from "lucide-react";
-import StatCard from "@/components/investment/StatCard";
-import RevenueChart from "@/components/investment/RevenueChart";
-import CurrencyPairs from "@/components/investment/CurrencyPairs";
-import InvestmentForm from "@/components/investment/InvestmentForm";
-import RecentTransactions from "@/components/investment/RecentTransaction";
-import AvailableBalanceCard from "@/components/investment/AvailableBalanceCard";
-import TransactionHistoryTable from "@/components/investment/TransactionHistoryTable";
-import { useThemeStore } from "@/store/themeStore";
-import { useThemeColors } from "@/lib/themeColors";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Activity, ArrowDownLeft, ArrowDownRight, ArrowUpRight, BarChart3,
+  Bell, CalendarDays, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight,
+  Clock3, Download, Info, MoreHorizontal, MoreVertical, RefreshCw, Search,
+  TrendingUp, Wallet, X,
+} from "lucide-react";
+import { toast } from "sonner";
+import { useForex } from "@/hooks/use-forex";
+import investmentApi from "@/lib/investmentApi";
 
-const Index = () => {
-  const theme = useThemeStore((state) => state.theme);
-  const colors = useThemeColors();
+type TransactionType = "deposit" | "withdrawal" | "profit";
+type TransactionStatus = "completed" | "pending" | "failed";
+type Transaction = { id: string; type: TransactionType; description: string; amount: number; date: string; time: string; status: TransactionStatus; reference: string; method: string };
 
-  return (
-    <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-950 transition-colours duration-300 p-8 text-slate-900 dark:text-slate-100">
-      <main className="w-full">
-        <div className="max-w-[1400px] mx-auto space-y-8">
-          
-          {/* Section 1: Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
-            {/* 1 */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sw">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <p className="text-xs sm-text-sm mb-2 text-slate-500 dark:text-slate-400">Total Balance</p>
-                  <p className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">$125,847.00</p>
-                  <div className="flex items-center gap-1 mt-2 sm:mt-3">
-                    <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-600" />
-                    <span className="text-xs sm:text-sm font-semibold text-emerald-600">+12.5%</span>
-                  </div>
-                </div>
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
-                  <Wallet className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />
-                </div>
-              </div>
-            </div>
-            {/* 2 */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sw">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <p className="text-xs sm-text-sm mb-2 text-slate-500 dark:text-slate-400">Total Profit</p>
-                  <p className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">$34,256.00</p>
-                  <div className="flex items-center gap-1 mt-2 sm:mt-3">
-                    <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-600" />
-                    <span className="text-xs sm:text-sm font-semibold text-emerald-600">+8.2%</span>
-                  </div>
-                </div>
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
-                </div>
-              </div>
-            </div>
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sw">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <p className="text-xs sm-text-sm mb-2 text-slate-500 dark:text-slate-400">Total Invested</p>
-                  <p className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">$91,591.00</p>
-                  <div className="flex items-center gap-1 mt-2 sm:mt-3">
-                    <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-600" />
-                    <span className="text-xs sm:text-sm font-semibold text-emerald-600">+5.7%</span>
-                  </div>
-                </div>
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
-                  <PiggyBank className="w-5 h-5 sm:w-6 sm:h-6 text-amber-700" />
-                </div>
-              </div>
-            </div>
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sw">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <p className="text-xs sm-text-sm mb-2 text-slate-500 dark:text-slate-400">Pending Withdrawal</p>
-                  <p className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">$2.450.00</p>
-                  <div className="flex items-center gap-1 mt-2 sm:mt-3">
-                    <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-rose-600" />
-                    <span className="text-xs sm:text-sm font-semibold text-rose-600">-2.4%</span>
-                  </div>
-                </div>
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
-                    <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-purple-700" />
-                </div>
-              </div>
-            </div>
-          </div>
+const transactions: Transaction[] = [];
+const pairs = ["EUR/USD", "GBP/USD", "USD/JPY"];
+const chartData = [4500, 5200, 4800, 6100, 7200, 6800, 8500, 9200, 8800, 10500, 11200, 12800];
+const formatMoney = (value: number) => `$${value.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
+let portfolioSnapshot: { totalInvested?: number; totalReturns?: number } | null = null;
 
-          {/* Section 2: Revenue Chart + Available Balance */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-            <div className="lg:col-span-2 rounded-xl p-6  transition-all duration-300" style={{  boxShadow: `0 4px 6px ${colors.shadow}` }}>
-              <RevenueChart />
-            </div>
-            <div>
-              <AvailableBalanceCard />
-            </div>
-          </div>
-
-          {/* Section 3: Investment Form + Recent Transactions */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
-            <div className="rounded-xl p-6  transition-all duration-300" style={{  boxShadow: `0 4px 6px ${colors.shadow}` }}>
-              <InvestmentForm />
-            </div>
-            <div className="rounded-xl p-6  transition-all duration-300" style={{  boxShadow: `0 4px 6px ${colors.shadow}` }}>
-              <RecentTransactions />
-            </div>
-          </div>
-
-          {/* Section 4: Currency Pairs */}
-          <div className="grid grid-cols-1 gap-4 sm:gap-6 mb-6 sm:mb-8">
-            <div className="rounded-xl p-6  transition-all duration-300" style={{  boxShadow: `0 4px 6px ${colors.shadow}` }}>
-              <CurrencyPairs />
-            </div>
-          </div>
-
-          {/* Section 5: Transaction History Table */}
-          <div className="rounded-xl p-6  mb-8 sm:mb-12 transition-all duration-300" style={{  boxShadow: `0 4px 6px ${colors.shadow}` }}>
-            <TransactionHistoryTable />
-          </div>
-
-        </div>
-      </main>
-    </div>
-  );
+const getPortfolioStatValue = (label: string, fallback: string) => {
+  if (label === "Total Balance") return formatMoney(Number(portfolioSnapshot?.totalInvested ?? 0) + Number(portfolioSnapshot?.totalReturns ?? 0));
+  if (label === "Total Profit") return formatMoney(Number(portfolioSnapshot?.totalReturns ?? 0));
+  if (label === "Total Invested") return formatMoney(Number(portfolioSnapshot?.totalInvested ?? 0));
+  if (label === "Pending Withdrawal") return "$0.00";
+  return fallback;
 };
 
-export default Index;
+function Panel({ children, className = "", id }: { children: React.ReactNode; className?: string; id?: string }) {
+  return <section className={`rounded-[22px] border border-white/[0.07] bg-[#111116]/80 shadow-[0_18px_60px_rgba(0,0,0,0.22)] backdrop-blur-2xl ${className}`} id={id}>{children}</section>;
+}
+
+function SectionHeading({ icon: Icon, title, subtitle, action }: { icon: typeof Wallet; title: string; subtitle: string; action?: React.ReactNode }) {
+  return <div className="flex items-start justify-between gap-4"><div className="flex items-center gap-3"><div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] text-white"><Icon size={21} /></div><div><h2 className="text-[18px] font-semibold tracking-tight text-white">{title}</h2><p className="mt-1 text-xs text-[#9696a0]">{subtitle}</p></div></div>{action}</div>;
+}
+
+function StatCard({ label, value, change, icon: Icon, tone }: { label: string; value: string; change: string; icon: typeof Wallet; tone: string }) {
+  return <Panel className="relative overflow-hidden p-5 sm:p-6"><div className={`absolute -right-7 -top-8 opacity-[0.06] ${tone}`}><Icon size={132} /></div><div className="relative z-10"><p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#92929c]">{label}</p><p className="mt-4 text-[26px] font-bold tracking-tight text-white sm:text-[30px]">{getPortfolioStatValue(label, value)}</p><span className={`mt-4 inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold ${change.startsWith("-") ? "border-rose-400/20 bg-rose-400/10 text-rose-300" : "border-emerald-400/20 bg-emerald-400/10 text-emerald-300"}`}><TrendingUp size={14} />{change}</span><span className="ml-2 text-[11px] text-[#777780]">vs last month</span></div></Panel>;
+}
+
+function RevenueChart() {
+  const points = chartData.map((value, index) => `${(index / 11) * 100},${100 - (value / 14000) * 100}`).join(" ");
+  return <Panel className="p-5 sm:p-6"><div className="flex flex-wrap items-start justify-between gap-4"><div><h2 className="text-[20px] font-semibold text-white">Revenue Overview</h2><p className="mt-1 text-sm text-[#9696a0]">Monthly performance tracking</p></div><button className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 text-xs font-semibold text-[#d5d5da] transition hover:bg-white/[0.08]" type="button"><CalendarDays size={16} />This Year<ChevronDown size={15} /></button></div><div className="mt-6 flex items-center gap-5 text-xs text-[#9696a0]"><span className="flex items-center gap-2"><i className="h-2.5 w-2.5 rounded-full bg-[#3b82f6] shadow-[0_0_10px_#3b82f6]" />Revenue</span><span className="flex items-center gap-2"><i className="h-2.5 w-2.5 rounded-full bg-[#ff4d94] shadow-[0_0_10px_#ff4d94]" />Investment</span></div><div className="relative mt-6 h-[300px] overflow-hidden rounded-xl border-b border-l border-white/10 bg-[linear-gradient(to_bottom,transparent_24.5%,rgba(255,255,255,0.05)_25%,transparent_25.5%,transparent_49.5%,rgba(255,255,255,0.05)_50%,transparent_50.5%,transparent_74.5%,rgba(255,255,255,0.05)_75%,transparent_75.5%)]"><div className="absolute -left-1 top-0 flex h-full flex-col justify-between text-[10px] text-[#676771]"><span>$14k</span><span>$10.5k</span><span>$7k</span><span>$3.5k</span><span>$0</span></div><svg className="absolute inset-0 ml-9 h-full w-[calc(100%-2.25rem)] overflow-visible" preserveAspectRatio="none" viewBox="0 0 100 100"><defs><linearGradient id="areaPink" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#ff4d94" stopOpacity=".28" /><stop offset="1" stopColor="#ff4d94" stopOpacity="0" /></linearGradient></defs><polygon fill="url(#areaPink)" points={`0,100 ${points} 100,100`} /><polyline fill="none" points={points} stroke="#ff4d94" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.3" vectorEffect="non-scaling-stroke" /><polyline fill="none" points="0,72 9,68 18,74 27,61 36,66 45,52 54,57 63,43 72,47 81,34 90,38 100,22" stroke="#3b82f6" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.1" vectorEffect="non-scaling-stroke" /></svg></div><div className="ml-9 mt-3 flex justify-between text-[10px] text-[#676771]"><span>Jan</span><span>Mar</span><span>May</span><span>Jul</span><span>Sep</span><span>Nov</span><span>Dec</span></div></Panel>;
+}
+
+function QuickInvestment() {
+  const [amount, setAmount] = useState(""); const [duration, setDuration] = useState(""); const months = duration ? Number(duration) : 0; const returns = amount && months ? Number(amount) + Number(amount) * 0.06 * months * 0.5 : 0;
+  const submit = () => { if (!amount || !duration) return toast.error("Enter an amount and duration first"); toast.success("Investment request submitted"); setAmount(""); setDuration(""); };
+  return <Panel className="p-5 sm:p-6"><SectionHeading icon={Wallet} title="Quick Investment" subtitle="50% profit sharing model" /><div className="mt-7 space-y-5"><label className="block text-xs font-semibold uppercase tracking-[0.13em] text-[#9696a0]">Investment Amount<div className="relative mt-2"><span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#85858f]">$</span><input aria-label="Investment amount" className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.04] pl-9 pr-4 text-base text-white outline-none transition focus:border-[#ff4d94]/70 focus:ring-2 focus:ring-[#ff4d94]/20" min="100" onChange={(event) => setAmount(event.target.value)} placeholder="0.00" type="number" value={amount} /></div></label><label className="block text-xs font-semibold uppercase tracking-[0.13em] text-[#9696a0]">Investment Duration<select aria-label="Investment duration" className="mt-2 h-12 w-full rounded-xl border border-white/10 bg-[#17171c] px-4 text-sm text-white outline-none focus:border-[#ff4d94]/70" onChange={(event) => setDuration(event.target.value)} value={duration}><option value="">Select duration</option><option value="3">3 Months</option><option value="6">6 Months</option><option value="12">12 Months</option></select></label><div className="rounded-xl border border-white/10 bg-white/[0.04] p-4"><div className="flex items-center gap-2 text-xs font-semibold text-[#7fb2ff]"><TrendingUp size={16} />Estimated Total Returns</div><p className="mt-2 text-[27px] font-bold text-white">{formatMoney(returns)}</p><p className="mt-2 flex gap-2 text-xs leading-relaxed text-[#85858f]"><Info className="mt-0.5 shrink-0" size={15} />Based on 50% profit sharing from trading. Actual returns depend on market performance.</p></div><button className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#ff4d94] to-[#ff8c42] px-5 text-sm font-bold text-white shadow-[0_10px_28px_rgba(255,77,148,0.28)] transition hover:opacity-90" onClick={submit} type="button">Invest Now<ArrowUpRight size={18} /></button></div></Panel>;
+}
+
+function BalanceCard({ totalBalance = Number(portfolioSnapshot?.totalInvested ?? 0) + Number(portfolioSnapshot?.totalReturns ?? 0), monthlyProfit = 0 }: { totalBalance?: number; monthlyProfit?: number }) {
+  return <Panel className="relative overflow-hidden p-5 sm:p-6"><div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[#3b82f6]/15 blur-[80px]" /><SectionHeading icon={Wallet} title="Available Balance" subtitle="Ready to withdraw" /><div className="relative mt-8"><p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[#92929c]">Total Available</p><p className="mt-2 text-[36px] font-bold tracking-tight text-[#78aaff]">{formatMoney(totalBalance)}</p><span className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-emerald-400/20 bg-emerald-400/10 px-3 py-1.5 text-xs font-semibold text-emerald-300"><TrendingUp size={15} />+{formatMoney(monthlyProfit)} this month</span></div><div className="relative mt-7 grid grid-cols-2 gap-3"><div className="rounded-xl border border-white/10 bg-white/[0.04] p-3"><p className="text-[11px] text-[#8b8b95]">Monthly Profit</p><p className="mt-1 text-sm font-semibold text-emerald-300">{formatMoney(monthlyProfit)}</p></div><div className="rounded-xl border border-white/10 bg-white/[0.04] p-3"><p className="text-[11px] text-[#8b8b95]">Last Withdrawal</p><p className="mt-1 text-sm font-semibold text-[#78aaff]">$0.00</p></div></div><div className="relative mt-6 space-y-3"><button className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#3b82f6] px-5 text-sm font-bold text-white transition hover:bg-[#2563eb]" onClick={() => toast.info("Withdrawal flow is ready to connect")} type="button"><ArrowUpRight size={18} />Withdraw Now</button><button className="min-h-12 w-full rounded-xl border border-white/10 bg-white/[0.04] text-sm font-semibold text-white transition hover:bg-white/[0.08]" onClick={() => toast.info("Showing your withdrawal history")} type="button">View History</button></div><p className="relative mt-5 flex gap-2 rounded-xl border border-white/10 bg-white/[0.04] p-3 text-xs leading-relaxed text-[#8b8b95]"><Info className="mt-0.5 shrink-0" size={15} />Withdrawals are processed within 24-48 hours. Minimum withdrawal is $100.</p></Panel>;
+}
+
+function RecentTransactions() {
+  return <Panel className="p-5 sm:p-6"><SectionHeading icon={Clock3} title="Recent Transactions" subtitle="Your latest activity" action={<button aria-label="More transaction options" className="flex h-10 w-10 items-center justify-center rounded-full text-[#8b8b95] transition hover:bg-white/[0.06] hover:text-white" type="button"><MoreHorizontal size={20} /></button>} /><div className="mt-7 space-y-2">{transactions.slice(0, 5).map((transaction) => <div className="flex items-center justify-between gap-3 rounded-xl p-3 transition hover:bg-white/[0.04]" key={transaction.id}><div className="flex min-w-0 items-center gap-3"><span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${transaction.type === "withdrawal" ? "bg-rose-400/10 text-rose-300" : "bg-emerald-400/10 text-emerald-300"}`}>{transaction.type === "withdrawal" ? <ArrowDownLeft size={18} /> : <ArrowUpRight size={18} />}</span><div className="min-w-0"><p className="truncate text-sm font-semibold text-white">{transaction.description}</p><p className="mt-1 text-xs text-[#85858f]">{transaction.time}</p></div></div><div className="shrink-0 text-right"><p className={`text-sm font-bold tabular-nums ${transaction.type === "withdrawal" ? "text-rose-300" : "text-emerald-300"}`}>{transaction.type === "withdrawal" ? "-" : "+"}{formatMoney(transaction.amount)}</p><span className="mt-1 inline-block rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[10px] text-[#a1a1aa]">{transaction.status}</span></div></div>)}</div><button className="mt-5 w-full rounded-xl border border-transparent py-3 text-sm font-semibold text-[#d9d9de] transition hover:border-white/10 hover:bg-white/[0.04]" onClick={() => document.getElementById("transactions")?.scrollIntoView({ behavior: "smooth" })} type="button">View All Transactions</button></Panel>;
+}
+
+function CurrencyPairs() {
+  const { data, loading, refresh } = useForex(pairs);
+  return <Panel className="p-5 sm:p-6"><SectionHeading icon={Activity} title="Currency Pairs" subtitle="Live market rates" action={<button aria-label="Refresh currency rates" className={`flex h-10 w-10 items-center justify-center rounded-full text-[#8b8b95] transition hover:bg-white/[0.06] hover:text-white ${loading ? "animate-spin" : ""}`} disabled={loading} onClick={refresh} type="button"><RefreshCw size={18} /></button>} /><div className="mt-6 grid gap-2 md:grid-cols-3">{pairs.map((pair) => { const item = data[pair]; return <div className="flex items-center justify-between rounded-xl border border-transparent bg-white/[0.035] p-4 transition hover:border-white/10 hover:bg-white/[0.06]" key={pair}><div><p className="text-sm font-bold text-white">{pair}</p><p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-[#777780]">Live rate</p></div><div className="text-right"><p className="font-mono text-sm font-semibold text-white">{item?.rate ?? "--"}</p><p className={`mt-1 flex items-center justify-end gap-1 text-xs font-semibold ${item?.isPositive ? "text-emerald-300" : "text-rose-300"}`}>{item?.isPositive ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />}{item?.change ?? "--"}</p></div></div>; })}</div></Panel>;
+}
+
+function TransactionsTable() {
+  const [query, setQuery] = useState(""); const [type, setType] = useState<"all" | TransactionType>("all"); const [page, setPage] = useState(1); const pageSize = 6;
+  const filtered = useMemo(() => transactions.filter((item) => (type === "all" || item.type === type) && `${item.description} ${item.reference} ${item.id}`.toLowerCase().includes(query.toLowerCase())), [query, type]);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize)); const visible = filtered.slice((page - 1) * pageSize, page * pageSize);
+  return <Panel className="overflow-hidden" id="transactions"><div className="flex flex-col gap-4 border-b border-white/[0.07] p-5 sm:p-6 md:flex-row md:items-center md:justify-between"><div><h2 className="text-[22px] font-bold text-white">Transactions</h2><p className="mt-1 text-sm text-[#9696a0]">View and manage your recent financial activity.</p></div><button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#5b4eff] px-4 text-sm font-semibold text-white transition hover:bg-[#4a3ecc]" onClick={() => toast.success("Statement export started")} type="button"><Download size={17} />Export Statement</button></div><div className="flex flex-col gap-4 p-5 sm:p-6 lg:flex-row lg:items-center lg:justify-between"><label className="relative block w-full lg:max-w-md"><Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#777780]" size={18} /><input aria-label="Search transactions" className="h-12 w-full rounded-full border border-white/10 bg-white/[0.04] pl-11 pr-10 text-sm text-white outline-none focus:border-[#5b4eff] focus:ring-2 focus:ring-[#5b4eff]/20" onChange={(event) => { setQuery(event.target.value); setPage(1); }} placeholder="Search transactions..." value={query} />{query && <button aria-label="Clear search" className="absolute right-3 top-1/2 -translate-y-1/2 text-[#777780]" onClick={() => { setQuery(""); setPage(1); }} type="button"><X size={16} /></button>}</label><div className="flex gap-2 overflow-x-auto pb-1">{(["all", "deposit", "withdrawal", "profit"] as const).map((item) => <button className={`min-h-10 whitespace-nowrap rounded-full border px-4 text-xs font-semibold capitalize transition ${type === item ? "border-white bg-white text-[#111116]" : "border-white/10 bg-white/[0.04] text-[#b4b4bd] hover:bg-white/[0.08]"}`} key={item} onClick={() => { setType(item); setPage(1); }} type="button">{item}</button>)}</div></div><div className="overflow-x-auto"><table className="w-full min-w-[760px] text-left"><thead className="border-y border-white/[0.07] bg-white/[0.03] text-[10px] uppercase tracking-[0.14em] text-[#85858f]"><tr><th className="px-5 py-4 font-semibold sm:px-6">Transaction</th><th className="px-5 py-4 font-semibold sm:px-6">Reference</th><th className="px-5 py-4 font-semibold sm:px-6">Status</th><th className="px-5 py-4 font-semibold sm:px-6">Date</th><th className="px-5 py-4 text-right font-semibold sm:px-6">Amount</th><th /></tr></thead><tbody className="divide-y divide-white/[0.06]">{visible.length ? visible.map((item) => <tr className="transition hover:bg-white/[0.035]" key={item.id}><td className="px-5 py-4 sm:px-6"><div className="flex items-center gap-3"><span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${item.type === "withdrawal" ? "bg-rose-400/10 text-rose-300" : item.type === "profit" ? "bg-blue-400/10 text-blue-300" : "bg-emerald-400/10 text-emerald-300"}`}>{item.type === "withdrawal" ? <ArrowDownLeft size={18} /> : <ArrowUpRight size={18} />}</span><div><p className="text-sm font-semibold text-white">{item.description}</p><p className="mt-1 text-xs text-[#85858f]">{item.method}</p></div></div></td><td className="px-5 py-4 font-mono text-xs text-[#b8b8c0] sm:px-6">{item.reference}</td><td className="px-5 py-4 sm:px-6"><span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${item.status === "completed" ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300" : item.status === "pending" ? "border-amber-400/20 bg-amber-400/10 text-amber-300" : "border-rose-400/20 bg-rose-400/10 text-rose-300"}`}><CheckCircle2 size={13} />{item.status}</span></td><td className="px-5 py-4 sm:px-6"><p className="text-sm text-white">{item.date}</p><p className="mt-1 text-xs text-[#85858f]">{item.time}</p></td><td className={`px-5 py-4 text-right text-sm font-bold tabular-nums sm:px-6 ${item.type === "withdrawal" ? "text-rose-300" : "text-emerald-300"}`}>{item.type === "withdrawal" ? "-" : "+"}{formatMoney(item.amount)}</td><td className="px-5 py-4 text-right sm:px-6"><button aria-label={`More options for ${item.description}`} className="text-[#777780] transition hover:text-white" type="button"><MoreVertical size={18} /></button></td></tr>) : <tr><td className="px-6 py-16 text-center text-sm text-[#85858f]" colSpan={6}>No transactions match your filters.</td></tr>}</tbody></table></div><div className="flex flex-col items-center justify-between gap-4 border-t border-white/[0.07] p-5 text-xs text-[#85858f] sm:flex-row sm:px-6"><p>Showing <span className="font-semibold text-white">{visible.length}</span> of <span className="font-semibold text-white">{filtered.length}</span> results</p><div className="flex items-center gap-2"><button aria-label="Previous page" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-[#8b8b95] transition hover:bg-white/[0.06] disabled:opacity-30" disabled={page === 1} onClick={() => setPage((value) => value - 1)} type="button"><ChevronLeft size={17} /></button><span className="flex h-9 min-w-9 items-center justify-center rounded-full bg-[#5b4eff] px-2 font-semibold text-white">{page}</span><button aria-label="Next page" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-[#8b8b95] transition hover:bg-white/[0.06] disabled:opacity-30" disabled={page >= totalPages} onClick={() => setPage((value) => value + 1)} type="button"><ChevronRight size={17} /></button></div></div></Panel>;
+}
+
+export default function InvestmentsPage() {
+  const [portfolio, setPortfolio] = useState<{ totalInvested?: number; totalReturns?: number; recentTransactions?: any[] } | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+
+  useEffect(() => {
+    const loadPortfolio = async () => {
+      try {
+        const rawUser = localStorage.getItem("user");
+        const user = rawUser ? JSON.parse(rawUser) : null;
+        const userId = user?.id || user?.userId;
+        if (!userId) return;
+        const response = await investmentApi.getPortfolioOverview(userId);
+        const data = response?.data ?? {};
+        portfolioSnapshot = data;
+        setPortfolio(data);
+        setTransactions((data.recentTransactions ?? []).map((item: any) => {
+          const date = new Date(item.createdAt);
+          return { id: item.id, type: String(item.type ?? "deposit").toLowerCase() as TransactionType, description: item.description ?? "Investment activity", amount: Number(item.amount ?? 0), date: Number.isNaN(date.getTime()) ? "" : date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }), time: Number.isNaN(date.getTime()) ? "" : date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }), status: String(item.status ?? "pending").toLowerCase() as TransactionStatus, reference: item.id, method: item.description ?? "Account activity" };
+        }));
+      } catch (error) {
+        console.error("Error fetching investment portfolio:", error);
+      }
+    };
+    void loadPortfolio();
+  }, []);
+
+  const totalInvested = Number(portfolio?.totalInvested ?? 0);
+  const totalProfit = Number(portfolio?.totalReturns ?? 0);
+  const totalBalance = totalInvested + totalProfit;
+  const currentMonth = new Date();
+  const monthlyProfit = transactions.filter((transaction) => transaction.type === "profit").filter((transaction) => { const date = new Date(transaction.date); return date.getFullYear() === currentMonth.getFullYear() && date.getMonth() === currentMonth.getMonth(); }).reduce((sum, transaction) => sum + transaction.amount, 0);
+
+  return <div className="relative min-h-dvh overflow-hidden bg-[#08080b] text-white"><div className="pointer-events-none fixed inset-0"><div className="absolute -left-32 -top-40 h-[520px] w-[520px] rounded-full bg-[#ff4d94]/10 blur-[140px]" /><div className="absolute -bottom-48 -right-32 h-[560px] w-[560px] rounded-full bg-[#3b82f6]/10 blur-[150px]" /></div><main className="relative z-10 mx-auto w-full max-w-[1600px] px-4 pb-20 sm:px-6 lg:px-8"><header className="flex min-h-24 flex-col justify-center gap-4 py-6 sm:flex-row sm:items-center sm:justify-between"><div><p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#ff7aaf]">Investor workspace</p><h1 className="text-[26px] font-bold tracking-tight text-white sm:text-[30px]">Portfolio Overview</h1></div><div className="flex items-center gap-3"><div className="hidden h-11 w-72 items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 md:flex"><Search size={17} className="text-[#777780]" /><input aria-label="Search analytics" className="w-full bg-transparent text-sm text-white outline-none placeholder:text-[#777780]" placeholder="Search analytics..." /></div><button aria-label="Notifications" className="relative flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-[#a5a5ae] transition hover:bg-white/[0.08] hover:text-white" type="button"><Bell size={19} /><span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-[#ff4d94] shadow-[0_0_8px_#ff4d94]" /></button><div className="hidden h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-[#ff4d94] to-[#ff8c42] text-sm font-bold text-white sm:flex">JD</div></div></header><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"><StatCard icon={Wallet} label="Total Balance" value="$125,847.00" change="+12.5%" tone="text-white" /><StatCard icon={BarChart3} label="Total Profit" value="$34,256.00" change="+8.2%" tone="text-[#ff4d94]" /><StatCard icon={TrendingUp} label="Total Invested" value="$91,591.00" change="+5.7%" tone="text-white" /><StatCard icon={ArrowDownRight} label="Pending Withdrawal" value="$2,450.00" change="-2.4%" tone="text-rose-300" /></div><div className="mt-4 grid gap-4 lg:grid-cols-3"><div className="lg:col-span-2"><RevenueChart /></div><BalanceCard /></div><div className="mt-4 grid gap-4 lg:grid-cols-2"><QuickInvestment /><RecentTransactions /></div><div className="mt-4"><CurrencyPairs /></div><div className="mt-4"><TransactionsTable /></div><footer className="flex flex-wrap justify-center gap-x-8 gap-y-3 py-8 text-xs font-medium text-[#777780]"><button className="flex items-center gap-2 transition hover:text-white" type="button"><Info size={15} />Statement Guidelines</button><button className="flex items-center gap-2 transition hover:text-white" onClick={() => toast.info("Support has been notified")} type="button"><Info size={15} />Report Discrepancy</button></footer></main></div>;
+}

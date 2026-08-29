@@ -22,6 +22,7 @@ import {
   Activity,
   Layers,
   Percent,
+  MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
@@ -55,9 +56,8 @@ const adminMenuItems: MenuItem[] = [
     label: "DASHBOARD",
     icon: LayoutDashboard,
     subItems: [
-      { id: "overview", label: "Overview", path: "/admin?tab=overview" },
-      { id: "traffic", label: "Traffic", path: "/admin?tab=traffic" },
-      { id: "analytics", label: "Analytics", path: "/admin?tab=traffic" },
+      { id: "overview", label: "Overview", path: "/admin" },
+     
     ],
   },
   {
@@ -65,60 +65,48 @@ const adminMenuItems: MenuItem[] = [
     label: "MEMBER",
     icon: Users,
     subItems: [
-      { id: "users", label: "User Management", path: "/admin?tab=users" },
-      { id: "roles", label: "Roles & Permissions", path: "/admin?tab=overview" },
+      { id: "users", label: "User Management", path: "/admin/users" },
+      { id: "roles", label: "Roles & Permissions", path: "/admin/roles" },
     ],
   },
   {
-    id: "payment",
-    label: "PAYMENT",
-    icon: Wallet,
-    subItems: [
-      { id: "transactions", label: "Transactions", path: "/admin?tab=transactions" },
-      { id: "forex", label: "Forex Signals", path: "/admin?tab=forex" },
-    ],
-  },
-  {
-    id: "marketing",
-    label: "MARKETING",
-    icon: FileText,
-    subItems: [
-      { id: "articles", label: "Articles", path: "/admin?tab=articles" },
-      { id: "blog", label: "Blog Insights", path: "/admin?tab=blog" },
-      { id: "education", label: "Education", path: "/admin?tab=education" },
-    ],
-  },
-  {
-    id: "report",
-    label: "REPORT",
+    id: "analytics",
+    label: "ANALYTICS",
     icon: BarChart3,
     subItems: [
-      { id: "reports", label: "Financial Reports", path: "/admin?tab=overview" },
-      { id: "logs", label: "System Logs", path: "/admin?tab=overview" },
-      { id: "notifications", label: "Notifications", path: "/admin?tab=notifications" },
+      { id: "analytics", label: "Analytics", path: "/admin/analytics" },
+      { id: "signals", label: "Signals", path: "/admin/signals" },
     ],
   },
   {
-    id: "affiliate",
-    label: "AFFILIATE",
-    icon: Layers,
-    badge: 3, // Custom Affiliate count badge as seen in screenshots
+    id: "content",
+    label: "CONTENT",
+    icon: FileText,
     subItems: [
-      { id: "affiliate-list", label: "Affiliate List", path: "/admin?tab=overview" },
-      { id: "commission", label: "Commission Stats", path: "/admin?tab=overview" },
+      { id: "articles", label: "Articles", path: "/admin/articles" },
+      { id: "brokers", label: "Brokers", path: "/admin/brokers" },
     ],
   },
   {
-    id: "referral",
-    label: "REFERRAL",
-    icon: TrendingUp,
+    id: "support",
+    label: "SUPPORT",
+    icon: MessageSquare,
     subItems: [
-      { id: "referral-tree", label: "Referral Tree", path: "/admin?tab=overview" },
-      { id: "referral-earnings", label: "Referral Earnings", path: "/admin?tab=overview" },
-      { id: "settings", label: "Settings", path: "/admin?tab=settings" },
+      { id: "client-support", label: "Client Support", path: "/admin/support" },
+    ],
+  },
+  {
+    id: "finance",
+    label: "FINANCE",
+    icon: Wallet,
+    subItems: [
+      { id: "deposits", label: "Deposits", path: "/admin/deposits" },
+      { id: "logs", label: "System Logs", path: "/admin/logs" },
     ],
   },
 ];
+
+const adminPageCount = adminMenuItems.reduce((total, menu) => total + menu.subItems.length, 0);
 
 const investorMenuItems: MenuItem[] = [
   {
@@ -223,17 +211,15 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
   // Helper to check if any child item is active
   const isMenuGroupActive = (menu: MenuItem) => {
-    return menu.subItems.some((sub) => pathname === sub.path || (pathname.startsWith("/admin") && sub.path.includes(`tab=${pathname.split("=")[1]}`)));
+    return menu.subItems.some((sub) => {
+      if (pathname === sub.path) return true;
+      return pathname.startsWith(sub.path);
+    });
   };
 
   const isSubItemActive = (subPath: string) => {
-    // If the path contains query parameters, match those too
-    if (subPath.includes("?tab=")) {
-      const tabName = subPath.split("?tab=")[1];
-      const search = typeof window !== "undefined" ? window.location.search : "";
-      return search.includes(`tab=${tabName}`);
-    }
-    return pathname === subPath;
+    if (pathname === subPath) return true;
+    return pathname.startsWith(subPath);
   };
 
   return (
@@ -281,6 +267,11 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
       {/* Navigation Menu */}
       <nav className="flex-1 py-4 sm:py-6 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent space-y-1 sm:space-y-1.5 px-3">
+        {!collapsed && pathname.startsWith("/admin") && (
+          <div className="px-3 py-2 mb-2 text-[10px] sm:text-xs font-semibold tracking-widest text-slate-400 uppercase">
+            Admin Panel
+          </div>
+        )}
         {items.map((menu) => {
           const isOpen = expandedMenus[menu.id];
           const isGroupActive = isMenuGroupActive(menu);

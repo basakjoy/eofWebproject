@@ -12,16 +12,11 @@ interface AdminHeaderProps {
   onMenuClick?: () => void;
 }
 
-const currencies = [
-  { code: "BDT", name: "Bangladeshi Take (BDT)", flag: "🇧🇩" },
-  { code: "USD", name: "US Dollar ($)", flag: "🇺🇸" },
-  { code: "EUR", name: "Euro (€)", flag: "🇪🇺" },
-  
-];
+
 
 export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
   const { user, logout } = useAuthStore();
-  const [selectedCurrency, setSelectedCurrency] = useState(currencies[0]);
+
   const [currencyOpen, setCurrencyOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -52,56 +47,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
       <div className="flex items-center gap-4 sm:gap-6">
         
         {/* Currency Type Selector */}
-        <div className="relative">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider hidden md:inline">
-              Currency Type
-            </span>
-            <button
-              onClick={() => {
-                setCurrencyOpen(!currencyOpen);
-                setProfileOpen(false);
-                setNotificationsOpen(false);
-              }}
-              className="flex items-center gap-2 bg-background border border-white/5 rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-white/5 transition-all shadow-inner"
-            >
-              <span>{selectedCurrency.flag}</span>
-              <span className="font-display">{selectedCurrency.code}</span>
-              <ChevronDown size={14} className={cn("text-slate-400 transition-transform duration-200", currencyOpen && "transform rotate-180")} />
-            </button>
-          </div>
-
-          <AnimatePresence>
-            {currencyOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                className="absolute right-0 mt-2 w-48 bg-background border border-white/5 rounded-2xl p-1.5 shadow-2xl z-50 overflow-hidden"
-              >
-                {currencies.map((currency) => (
-                  <button
-                    key={currency.code}
-                    onClick={() => {
-                      setSelectedCurrency(currency);
-                      setCurrencyOpen(false);
-                    }}
-                    className={cn(
-                      "w-full flex items-center justify-between px-3 py-2 text-xs sm:text-sm rounded-xl transition-all text-slate-300 hover:text-white hover:bg-white/5",
-                      selectedCurrency.code === currency.code && "bg-primary/10 text-primary font-semibold"
-                    )}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span>{currency.flag}</span>
-                      <span>{currency.code}</span>
-                    </div>
-                    {selectedCurrency.code === currency.code && <Check size={14} className="text-primary" />}
-                  </button>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+       
 
         {/* Separator */}
         <div className="w-[1px] h-6 bg-white/5 hidden sm:block" />
@@ -163,13 +109,13 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
           >
             {/* Avatar */}
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/10 font-bold text-white text-xs sm:text-sm group-hover:scale-105 transition-transform">
-              {user?.name ? user.name[0].toUpperCase() : "P"}
+              {user?.name ? user.name[0].toUpperCase() : "E"}
             </div>
 
             {/* Profile Info */}
             <div className="hidden md:flex flex-col items-start text-left">
               <span className="text-xs font-bold text-slate-200 leading-none group-hover:text-white transition-colors">
-                {user?.name || "parvejm"}
+                {user?.name || "EOF"}
               </span>
               <span className="text-[9px] font-bold text-primary uppercase tracking-wider mt-0.5">
                 {user?.role || "Administrator"}
@@ -216,6 +162,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
                   onClick={() => {
                     logout();
                     setProfileOpen(false);
+                    window.location.assign('/home');
                   }}
                   className="w-full flex items-center gap-2.5 px-3 py-2 text-xs sm:text-sm rounded-xl text-red-400 hover:bg-red-500/10 transition-all text-left"
                 >

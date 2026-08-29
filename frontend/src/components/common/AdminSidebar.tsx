@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/lib/themeColors';
+import { useAuthStore } from '@/store/authStore';
 
 interface AdminSidebarProps {
   collapsed: boolean;
@@ -42,11 +43,11 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
   const currentTab = searchParams.get('tab') || 'overview';
   const colors = useThemeColors();
   const router = useRouter();
+  const { logout } = useAuthStore();
 
   const handleLogout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    router.push('/login');
+    logout();
+    window.location.assign('/home');
   };
 
   const isActive = (itemId: string) => {

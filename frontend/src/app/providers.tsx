@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { SessionProvider } from "next-auth/react";
 import { useAuthStore } from "@/store/authStore";
 import { normalizeAuthUser } from "@/lib/authUtils";
+import FloatingSupport from "@/components/common/FloatingSupport";
 
 function AuthInitializer({ children }: { children: React.ReactNode }) {
   const { setUser, setToken, isAuthenticated } = useAuthStore();
@@ -34,7 +35,10 @@ export default function Providers({
 }) {
   return (
     <SessionProvider>
-      <AuthInitializer>{children}</AuthInitializer>
+      <AuthInitializer>
+        {children}
+        <FloatingSupport />
+      </AuthInitializer>
     </SessionProvider>
   );
 }

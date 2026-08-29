@@ -16,79 +16,46 @@
 
 
 :root {
-  --primary: #0D73ED;
-  --primary-light: #3b82f6;
-  --primary-dark: #005bb5;
-  --secondary: #10b981;
-  --secondary-light: #34d399;
-  --secondary-dark: #059669;
-  --neutral: #000000;
-  --neutral-light: #333333;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
+  --primary: #FF6B00;
+  --primary-gradient: linear-gradient(135deg, #FF6B00 0%, #FF3D00 100%);
+  --bg-primary: #050508;
+  --bg-panel: #0C0C10;
+  --bg-card: #111116;
+  --text-primary: #FFFFFF;
+  --text-secondary: #8E8E93;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(255, 107, 0, 0.25);
 
-  /* Light mode (default) */
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8fafc;
-  --bg-tertiary: #f1f5f9;
-  --text-primary: #0f172a;
-  --text-secondary: #64748b;
-  --border-color: #e2e8f0;
-
-  /* Sidebar (light mode) */
-  --sidebar-background: #ffffff;
-  --sidebar-foreground: #0f172a;
-  --sidebar-primary: #0D73ED;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f1f5f9;
-  --sidebar-accent-foreground: #0f172a;
-  --sidebar-border: #e2e8f0;
-  --sidebar-ring: #0D73ED;
+  /* Sidebar */
+  --sidebar-background: #0A0A0E;
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: #FF6B00;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: rgba(255, 107, 0, 0.1);
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: rgba(255, 255, 255, 0.06);
+  --sidebar-ring: #FF6B00;
 }
 
-html.dark {
-  /* Dark mode - Premium Deep Space */
-  --bg-primary: #05050A;
-  --bg-secondary: #0A0A10;
-  --bg-tertiary: #12121A;
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --border-color: rgba(255, 255, 255, 0.05);
-
-  /* Sidebar (dark mode) */
-  --sidebar-background: #0A0A10;
-  --sidebar-foreground: #f8fafc;
-  --sidebar-primary: #0D73ED;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: rgba(255, 255, 255, 0.03);
-  --sidebar-accent-foreground: #f8fafc;
-  --sidebar-border: rgba(255, 255, 255, 0.05);
-  --sidebar-ring: #0D73ED;
+html,
+body,
+:root {
+  scroll-behavior: smooth !important;
 }
 
 html {
-  scroll-behavior: smooth;
+  background-color: #050508;
+  color: #FFFFFF;
+  font-family: var(--font-poppins), 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 body {
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+  background-color: #050508;
+  color: #FFFFFF;
+  font-family: var(--font-poppins), 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
   font-smooth: antialiased;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
-  cursor: auto;
-  transition: background-color 0.3s ease, color 0.3s ease;
-  /* ✅ No padding on body — let each section/container handle its own spacing */
-}
-
-html.dark body {
-  background-image:
-    radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.05) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.05) 0px, transparent 50%),
-    radial-gradient(at 50% 100%, rgba(59, 130, 246, 0.05) 0px, transparent 50%);
-  background-attachment: fixed;
 }
 
 a,

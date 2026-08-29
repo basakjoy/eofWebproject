@@ -256,7 +256,7 @@ export const getUserBrokerAccounts = async (req: AuthRequest, res: Response) => 
       include: { broker: { select: { name: true } } },
     });
 
-    const formattedAccounts = accounts.map((acc) => ({
+    const formattedAccounts = accounts.map((acc: any) => ({
       ...acc,
       brokerName: acc.broker?.name,
     }));

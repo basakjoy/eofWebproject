@@ -17,14 +17,14 @@
 .midnight-theme {
   background-color: var(--midnight-bg);
   color: var(--text-primary);
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-poppins), 'Poppins', sans-serif !important;
 }
 
 .midnight-theme h1, 
 .midnight-theme h2, 
 .midnight-theme h3, 
 .midnight-theme .font-display {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-poppins), 'Poppins', sans-serif !important;
 }
 
 .glass-morphism {

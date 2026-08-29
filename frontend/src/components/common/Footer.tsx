@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ArrowRight, Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin } from 'lucide-react';
+import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin } from 'lucide-react';
 import { LogoIcon } from './LogoIcon';
 
 export default function Footer() {
@@ -13,9 +13,10 @@ export default function Footer() {
       title: 'Navigation',
       links: [
         { name: 'Home', href: '/home' },
-        { name: 'Trading Signals', href: '/trading-signals' },
-        { name: 'Investment Plans', href: '/investment-plans' },
-        { name: 'Market Analysis', href: '/dashboard/market-analysis' },
+        { name: 'Pages', href: '/trading-signals' },
+        { name: 'About', href: '/about' },
+        { name: 'Features', href: '/services' },
+        { name: 'Pricing', href: '/investment-plans' },
       ]
     },
     {
@@ -38,47 +39,48 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="relative bg-[#020817] pt-24 pb-12 overflow-hidden border-t border-white/5">
-      {/* Decorative Background Glow */}
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[100%] h-[50%] bg-blue-600/5 blur-[120px] rounded-full pointer-events-none" />
+    <footer className="relative bg-[#050508] pt-16 sm:pt-20 pb-28 sm:pb-12 overflow-hidden border-t border-white/5">
+      {/* Decorative Fiery Glow */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#FF5500]/10 blur-[150px] rounded-full pointer-events-none" />
 
-      <div className="container mx-auto px-6">
+      <div className="max-w-site mx-auto px-4 sm:px-6 relative z-10">
         {/* Main Footer Container */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 mb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 sm:gap-12 mb-12 sm:mb-16">
           
           {/* Brand Column */}
-          <div className="lg:col-span-4 space-y-8">
+          <div className="lg:col-span-4 space-y-6">
             <div className="flex items-center gap-3">
-              <LogoIcon size={40} />
-              <span className="text-2xl font-black text-white tracking-tighter uppercase">Empire of Forex</span>
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center border border-white/10">
+                <LogoIcon size={20} />
+              </div>
+              <span className="text-xl font-bold text-white tracking-tight uppercase">Empire of Forex</span>
             </div>
-            <p className="text-gray-500 max-w-sm leading-relaxed">
-              Empowering traders worldwide with elite market intelligence, institutional-grade signals, and secure investment strategies.
+            <p className="text-xs text-[#8E8E93] max-w-sm leading-relaxed font-normal">
+              Empowering traders worldwide with elite market intelligence, institutional-grade analytics, and secure business strategies.
             </p>
-            <div className="flex gap-10 text-gray-500">
+            <div className="flex gap-4 text-[#8E8E93]">
               {[
                 { Icon: Facebook, href: "https://www.facebook.com/empireforex"},
                 { Icon: Instagram, href: "https://www.instagram.com/empireofforexworld/?next=%2F"},
                 { Icon: Twitter, href: "http://x.com/OfEmpire38124"},
                 { Icon: Youtube, href: "https://www.youtube.com/@EmpireofForex"}
-            
               ].map((social, index) => (
-                <Link key={index} href={social.href} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-blue-400 transition-colors">
-                  <social.Icon size={24} />
+                <Link key={index} href={social.href} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-white/5 border border-white/5 hover:border-[#FF6B00]/40 hover:text-white transition-all">
+                  <social.Icon size={16} />
                 </Link>
               ))}
             </div>
           </div>
 
           {/* Links Columns */}
-          <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-3 gap-12">
+          <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-3 gap-8">
             {footerLinks.map((column) => (
               <div key={column.title}>
-                <h4 className="text-white font-bold mb-6 uppercase tracking-widest text-xs">{column.title}</h4>
-                <ul className="space-y-4">
+                <h4 className="text-white font-semibold mb-4 tracking-wider text-xs uppercase">{column.title}</h4>
+                <ul className="space-y-3">
                   {column.links.map((link) => (
                     <li key={link.name}>
-                      <Link href={link.href} className="text-gray-500 hover:text-blue-400 text-sm transition-colors block">
+                      <Link href={link.href} className="text-xs text-[#8E8E93] hover:text-white transition-colors block">
                         {link.name}
                       </Link>
                     </li>
@@ -90,27 +92,27 @@ export default function Footer() {
         </div>
 
         {/* Newsletter / Contact Row */}
-        <div className="grid md:grid-cols-3 gap-8 py-10 border-y border-white/5 mb-10">
-          <div className="flex items-center gap-4">
-             <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-blue-500"><Mail size={20} /></div>
-             <div><p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Email Us</p><p className="text-sm font-bold text-white">support@empireofforex.com</p></div>
+        <div className="grid md:grid-cols-3 gap-6 py-8 border-y border-white/5 mb-8">
+          <div className="flex items-center gap-3">
+             <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-[#FF6B00]"><Mail size={16} /></div>
+             <div><p className="text-[10px] font-semibold text-[#8E8E93] uppercase tracking-wider">Email Support</p><p className="text-xs font-bold text-white">support@empireofforex.com</p></div>
           </div>
-          <div className="flex items-center gap-4">
-             <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-blue-500"><Phone size={20} /></div>
-             <div><p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Call Center</p><p className="text-sm font-bold text-white">+880-1804-351578</p></div>
+          <div className="flex items-center gap-3">
+             <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-[#FF6B00]"><Phone size={16} /></div>
+             <div><p className="text-[10px] font-semibold text-[#8E8E93] uppercase tracking-wider">Direct Line</p><p className="text-xs font-bold text-white">+880-1804-351578</p></div>
           </div>
-          <div className="flex items-center gap-4">
-             <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-blue-500"><MapPin size={20} /></div>
-             <div><p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Global HQ</p><p className="text-sm font-bold text-white">Wall Street, New York, NY</p></div>
+          <div className="flex items-center gap-3">
+             <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-[#FF6B00]"><MapPin size={16} /></div>
+             <div><p className="text-[10px] font-semibold text-[#8E8E93] uppercase tracking-wider">Global HQ</p><p className="text-xs font-bold text-white">Wall Street, New York, NY</p></div>
           </div>
         </div>
 
         {/* Bottom copyright */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-          <p className="text-xs font-bold text-gray-600 uppercase tracking-[0.2em]">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-xs text-[#8E8E93]">
             © {currentYear} Empire of Forex International. All rights reserved.
           </p>
-          <div className="flex gap-8 text-[10px] font-black text-gray-600 uppercase tracking-widest">
+          <div className="flex gap-6 text-xs text-[#8E8E93]">
             <span className="cursor-pointer hover:text-white transition-colors">Risk Warning</span>
             <span className="cursor-pointer hover:text-white transition-colors">Sitemap</span>
           </div>
@@ -119,3 +121,4 @@ export default function Footer() {
     </footer>
   );
 }
+

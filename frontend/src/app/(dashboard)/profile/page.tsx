@@ -152,8 +152,8 @@ export default function ProfilePage() {
     if (!form.name.trim()) { showToast('Name cannot be empty.', 'error'); return; }
     setSaving(true);
     try {
-      await usersApi.updateUser(profile!.id, { name: form.name });
-      setProfile(p => p ? { ...p, name: form.name } : p);
+      const response = await usersApi.updateUser(profile!.id, { name: form.name, phone: form.phone });
+      setProfile(p => p ? { ...p, name: form.name, phone: form.phone } : p);
       setEditing(false);
       showToast('Profile updated successfully!', 'success');
     } catch {

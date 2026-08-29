@@ -202,7 +202,7 @@ export default function SettingsPage() {
   // Logout handler
   const handleLogout = () => {
     logout();
-    router.push('/login');
+    window.location.assign('/home');
   };
 
   // Apply saved notif prefs on load

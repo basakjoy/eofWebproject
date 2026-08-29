@@ -43,7 +43,7 @@ const blockSelfAction = (req: AuthRequest, res: Response, next: NextFunction) =>
  */
 router.get('/users', verifyToken, requireRole(['admin','superadmin']), adminController.getAllAdminUsers);
 router.get('/users/:id', verifyToken, requireRole(['admin','superadmin']), adminController.getAdminUser);
-router.post('/users', verifyToken, requireRole(['admin','superadmin']), validateAdminRequest(['userId']), adminController.createAdminUser);
+router.post('/users', verifyToken, requireRole(['admin','superadmin']), validateAdminRequest(['name', 'email', 'password']), adminController.createAdminUser);
 router.put('/users/:id', verifyToken, requireRole(['admin','superadmin']),blockSelfAction, adminController.updateAdminUser);
 router.delete('/users/:id', verifyToken, requireRole(['admin','superadmin']),blockSelfAction ,adminController.deleteAdminUser);
 

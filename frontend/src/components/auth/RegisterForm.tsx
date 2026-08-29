@@ -73,6 +73,7 @@ export default function RegisterForm() {
         name: `${formData.firstName} ${formData.lastName}`,
         email: formData.email,
         password: formData.password,
+        phone: `${countryCode}${formData.phone.replace(/^\+/, '').replace(/\D/g, '')}`,
         userType,
       });
 

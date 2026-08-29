@@ -5,6 +5,7 @@ import { Sidebar } from "@/components/common/Sidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import styles from "./admin.module.css";
 import "../midnight-theme.css";
+import { useRequireAdmin } from "@/hooks/useRequireAuth";
 
 
 export default function AdminLayout({
@@ -12,8 +13,11 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const { isAuthorized } = useRequireAdmin();
   const [collapsed, setCollapsed] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  if (!isAuthorized) return null;
 
   return (
     <div className={`${styles.adminRoot} midnight-theme`}>

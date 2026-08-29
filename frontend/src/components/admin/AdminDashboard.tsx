@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { useThemeColors } from "@/lib/themeColors";
 import SignalManager from "@/components/admin/SignalManager";
 import { 
@@ -594,6 +595,37 @@ export default function AdminDashboard() {
             </motion.div>
           </div>
 
+          {/* Quick Access: Client Support & Live Chat Hub */}
+          <motion.div 
+            whileHover={{ y: -2 }}
+            className="bg-gradient-to-r from-indigo-950/60 via-[#131627]/90 to-[#0d0f1a] border border-indigo-500/25 p-5 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl shadow-indigo-950/20"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 shrink-0">
+                <MessageSquare className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-bold text-white font-display">Client Live Support & Chat Console</h3>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Live System Active
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Direct real-time text messaging with clients, inquiry management, and resolution tracking.
+                </p>
+              </div>
+            </div>
+
+            <Link
+              href="/admin/support"
+              className="px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow-lg shadow-indigo-600/30 transition-all shrink-0"
+            >
+              <span>Open Support Console</span>
+              <span>→</span>
+            </Link>
+          </motion.div>
+
           {/* 9 Collapsible Panels accordion stack */}
           <div className="space-y-4">
             
@@ -646,7 +678,7 @@ export default function AdminDashboard() {
                           <tr className="border-b border-white/5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                             <th className="pb-3 pl-12">Period</th>
                             <th className="pb-3 text-center">Count</th>
-                            <th className="pb-3 text-right">Amount(K)</th>
+                            <th className="pb-3 text-right">Amount(USD)</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/[0.02] text-xs sm:text-sm">
@@ -719,7 +751,7 @@ export default function AdminDashboard() {
                           <tr className="border-b border-white/5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                             <th className="pb-3 pl-12">Period</th>
                             <th className="pb-3 text-center">Count</th>
-                            <th className="pb-3 text-right">Amount(K)</th>
+                            <th className="pb-3 text-right">Amount(USD)</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/[0.02] text-xs sm:text-sm">
@@ -827,7 +859,7 @@ export default function AdminDashboard() {
                           <tr className="border-b border-white/5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                             <th className="pb-3">Period</th>
                             <th className="pb-3 text-center">Count</th>
-                            <th className="pb-3 text-right">Amount(K)</th>
+                            <th className="pb-3 text-right">Amount(USD)</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/[0.02] text-xs sm:text-sm">
@@ -882,7 +914,7 @@ export default function AdminDashboard() {
                           <tr className="border-b border-white/5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                             <th className="pb-3">Period</th>
                             <th className="pb-3 text-center">Count</th>
-                            <th className="pb-3 text-right">Amount(K)</th>
+                            <th className="pb-3 text-right">Amount(USD)</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/[0.02] text-xs sm:text-sm">
@@ -908,60 +940,7 @@ export default function AdminDashboard() {
               </AnimatePresence>
             </div>
 
-            {/* Panel 6: VIP POINT TO CASH */}
-            <div className="bg-background/40 border border-white/10 rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-xl">
-              <button 
-                onClick={() => togglePanel("vipPoint")}
-                className="w-full flex items-center justify-between px-6 py-4.5 bg-white/[0.01] hover:bg-white/[0.03] transition-colors border-b border-white/5 text-left"
-              >
-                <div className="flex items-center gap-3">
-                 
-                  <span className="font-display font-black text-sm uppercase tracking-wider text-slate-100">
-                    VIP Point To Cash
-                  </span>
-                </div>
-                <ChevronDown className={cn("w-4 h-4 text-slate-500 transition-transform duration-200", openPanels.vipPoint && "transform rotate-180")} />
-              </button>
-
-              <AnimatePresence initial={false}>
-                {openPanels.vipPoint && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="p-6 overflow-x-auto">
-                      <table className="w-full text-left border-collapse min-w-[500px]">
-                        <thead>
-                          <tr className="border-b border-white/5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                            <th className="pb-3">Period</th>
-                            <th className="pb-3 text-center">Uid</th>
-                            <th className="pb-3 text-right">Amount(K)</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/[0.02] text-xs sm:text-sm">
-                          {[
-                            { period: "Today", uid: 0, amount: "0.00" },
-                            { period: "Yesterday", uid: 0, amount: "0.00" },
-                            { period: "This Week", uid: 0, amount: "0.00" },
-                            { period: "Last Week", uid: 0, amount: "0.00" },
-                            { period: "This Month", uid: 0, amount: "0.00" },
-                            { period: "Last Month", uid: 0, amount: "0.00" },
-                          ].map((row, i) => (
-                            <tr key={i} className="hover:bg-white/[0.01] transition-colors">
-                              <td className="py-3.5 font-bold text-slate-300">{row.period}</td>
-                              <td className="py-3.5 text-center text-slate-400 font-semibold">{row.uid}</td>
-                              <td className="py-3.5 text-right font-display font-semibold text-slate-200">{row.amount}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+            
 
             {/* Panel 7: COMPANY WIN / LOSS */}
             <div className="bg-background/40 border border-white/10 rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-xl">
@@ -992,7 +971,7 @@ export default function AdminDashboard() {
                           <tr className="border-b border-white/5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                             <th className="pb-3">Period</th>
                             <th className="pb-3 text-center">Count</th>
-                            <th className="pb-3 text-right">Amount(K)</th>
+                            <th className="pb-3 text-right">Amount(USD)</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/[0.02] text-xs sm:text-sm">
@@ -1047,7 +1026,7 @@ export default function AdminDashboard() {
                           <tr className="border-b border-white/5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                             <th className="pb-3">Period</th>
                             <th className="pb-3 text-center">Count</th>
-                            <th className="pb-3 text-right">Amount(K)</th>
+                            <th className="pb-3 text-right">Amount(USD)</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/[0.02] text-xs sm:text-sm">

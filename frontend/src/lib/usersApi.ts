@@ -53,6 +53,7 @@ export const usersApi = {
     role?: string;
     status?: string;
     password?: string;
+    phone?: string;
   }) => {
     try {
       const response = await apiClient.put(`/users/${userId}`, data);

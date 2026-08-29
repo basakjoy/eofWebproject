@@ -1,13 +1,15 @@
 import { Request, Response } from 'express';
-import { getAsync, allAsync, runAsync } from '../database';
+import { prisma } from '../database';
+import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 
 // Get all admin users
 export const getAllAdminUsers = async (req: Request, res: Response) => {
   try {
-    const users = await allAsync(
-      'SELECT id, name, email, role, status, createdAt, updatedAt FROM users ORDER BY createdAt DESC'
-    );
+    const users = await prisma.user.findMany({
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, name: true, email: true, role: true, status: true, createdAt: true, updatedAt: true },
+    });
     res.json({
       success: true,
       data: users,
@@ -24,7 +26,10 @@ export const getAllAdminUsers = async (req: Request, res: Response) => {
 export const getAdminUser = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const admin = await getAsync('SELECT * FROM admin_users WHERE id = ?', [id]);
+    const admin = await prisma.user.findUnique({
+      where: { id },
+      select: { id: true, name: true, email: true, role: true, status: true, createdAt: true, updatedAt: true },
+    });
     
     if (!admin) {
       return res.status(404).json({
@@ -48,43 +53,27 @@ export const getAdminUser = async (req: Request, res: Response) => {
 // Create admin user
 export const createAdminUser = async (req: Request, res: Response) => {
   try {
-    const { userId, permissions = [] } = req.body;
+    const { email, password, name, role = 'user' } = req.body;
 
-    if (!userId) {
+    if (!email || !password || !name) {
       return res.status(400).json({
         success: false,
-        message: 'userId is required',
+        message: 'name, email, and password are required',
       });
     }
 
-    // Check if user exists
-    const user = await getAsync('SELECT id FROM users WHERE id = ?', [userId]);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found',
-      });
-    }
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) return res.status(409).json({ success: false, message: 'Email is already registered' });
 
-    // Check if already admin
-    const existingAdmin = await getAsync('SELECT id FROM admin_users WHERE userId = ?', [userId]);
-    if (existingAdmin) {
-      return res.status(400).json({
-        success: false,
-        message: 'User is already an admin',
-      });
-    }
-
-    const adminId = uuidv4();
-    await runAsync(
-      `INSERT INTO admin_users (id, userId, permissions) VALUES (?, ?, ?)`,
-      [adminId, userId, JSON.stringify(permissions)]
-    );
+    const user = await prisma.user.create({
+      data: { name, email, password: await bcrypt.hash(password, 12), role: String(role).toLowerCase() },
+      select: { id: true, name: true, email: true, role: true, status: true, createdAt: true, updatedAt: true },
+    });
 
     res.status(201).json({
       success: true,
-      message: 'Admin user created successfully',
-      data: { id: adminId, userId, permissions, status: 'active' },
+      message: 'User created successfully',
+      data: user,
     });
   } catch (error: any) {
     res.status(500).json({
@@ -98,41 +87,30 @@ export const createAdminUser = async (req: Request, res: Response) => {
 export const updateAdminUser = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { permissions, status } = req.body;
+    const { name, role, status } = req.body;
 
-    const admin = await getAsync('SELECT * FROM admin_users WHERE id = ?', [id]);
-    if (!admin) {
+    const existingUser = await prisma.user.findUnique({ where: { id } });
+    if (!existingUser) {
       return res.status(404).json({
         success: false,
         message: 'Admin user not found',
       });
     }
 
-    const updates = [];
-    const values = [];
-    
-    if (permissions !== undefined) {
-      updates.push('permissions = ?');
-      values.push(JSON.stringify(permissions));
-    }
-    if (status !== undefined) {
-      updates.push('status = ?');
-      values.push(status);
-    }
-
-    updates.push('updatedAt = CURRENT_TIMESTAMP');
-    values.push(id);
-
-    if (updates.length > 1) {
-      await runAsync(
-        `UPDATE admin_users SET ${updates.join(', ')} WHERE id = ?`,
-        values
-      );
-    }
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: {
+        ...(name !== undefined ? { name } : {}),
+        ...(role !== undefined ? { role: String(role).toLowerCase() } : {}),
+        ...(status !== undefined ? { status: String(status).toLowerCase() } : {}),
+      },
+      select: { id: true, name: true, email: true, role: true, status: true, createdAt: true, updatedAt: true },
+    });
 
     res.json({
       success: true,
-      message: 'Admin user updated successfully',
+      message: 'User updated successfully',
+      data: updatedUser,
     });
   } catch (error: any) {
     res.status(500).json({
@@ -147,19 +125,19 @@ export const deleteAdminUser = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const admin = await getAsync('SELECT * FROM admin_users WHERE id = ?', [id]);
-    if (!admin) {
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user) {
       return res.status(404).json({
         success: false,
         message: 'Admin user not found',
       });
     }
 
-    await runAsync('DELETE FROM admin_users WHERE id = ?', [id]);
+    await prisma.user.delete({ where: { id } });
 
     res.json({
       success: true,
-      message: 'Admin user deleted successfully',
+      message: 'User deleted successfully',
     });
   } catch (error: any) {
     res.status(500).json({
@@ -181,16 +159,29 @@ export const logAdminAction = async (req: Request, res: Response) => {
       });
     }
 
-    const logId = uuidv4();
-    await runAsync(
-      `INSERT INTO admin_actions (id, adminId, action, targetId, targetType, changes, reason, ipAddress, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'success')`,
-      [logId, adminId, action, targetId, targetType, JSON.stringify(changes), reason, ipAddress]
-    );
+    const adminUser = await prisma.adminUser.findFirst({
+      where: { OR: [{ id: String(adminId) }, { userId: String(adminId) }] },
+    });
+    if (!adminUser) return res.status(404).json({ success: false, message: 'Admin profile not found' });
+
+    const log = await prisma.adminAction.create({
+      data: {
+        id: uuidv4(),
+        adminId: adminUser.id,
+        action: String(action),
+        targetId: targetId ? String(targetId) : null,
+        targetType: targetType ? String(targetType) : null,
+        changes: changes ? JSON.stringify(changes) : null,
+        reason: reason ? String(reason) : null,
+        ipAddress: ipAddress ? String(ipAddress) : null,
+        status: 'success',
+      },
+    });
 
     res.status(201).json({
       success: true,
       message: 'Admin action logged successfully',
+      data: log,
     });
   } catch (error: any) {
     res.status(500).json({
@@ -204,26 +195,26 @@ export const logAdminAction = async (req: Request, res: Response) => {
 export const getAdminLogs = async (req: Request, res: Response) => {
   try {
     const { adminId, action, limit = 50, offset = 0 } = req.query;
-    
-    let query = 'SELECT * FROM admin_actions WHERE 1=1';
-    const params: any[] = [];
-
-    if (adminId) {
-      query += ' AND adminId = ?';
-      params.push(adminId);
-    }
-    if (action) {
-      query += ' AND action = ?';
-      params.push(action);
-    }
-
-    query += ' ORDER BY createdAt DESC LIMIT ? OFFSET ?';
-    params.push(limit, offset);
-
-    const logs = await allAsync(query, params);
+    const where = {
+      ...(adminId ? { adminId: String(adminId) } : {}),
+      ...(action ? { action: { contains: String(action), mode: 'insensitive' as const } } : {}),
+    };
+    const [logs, total] = await Promise.all([
+      prisma.adminAction.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take: Math.min(Math.max(Number(limit) || 50, 1), 100),
+        skip: Math.max(Number(offset) || 0, 0),
+        select: { id: true, adminId: true, action: true, targetId: true, targetType: true, reason: true, status: true, createdAt: true, admin: { select: { user: { select: { name: true, email: true } } } } },
+      }),
+      prisma.adminAction.count({ where }),
+    ]);
     res.json({
       success: true,
       data: logs,
+      total,
+      limit: Number(limit),
+      offset: Number(offset),
     });
   } catch (error: any) {
     res.status(500).json({

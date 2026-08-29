@@ -1,4 +1,5 @@
 import apiClient from './api';
+import axios from 'axios';
 
 export interface SignalRecord {
   id: string;
@@ -17,6 +18,8 @@ export interface SignalRecord {
   reliability?: number | null;
   timeframe?: string | null;
   status?: string | null;
+  category?: string | null;
+  riskReward?: string | null;
   createdAt?: string | null;
   updatedAt?: string | null;
 }
@@ -31,6 +34,30 @@ export interface SignalsApiResponse {
   message?: string;
 }
 
+const sleep = (milliseconds: number) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+const isRetryableSignalError = (error: unknown): boolean => {
+  if (!axios.isAxiosError(error)) return true;
+  const status = error.response?.status;
+  return !status || status >= 500;
+};
+
+async function getSignalsWithRetry<T>(request: () => Promise<T>): Promise<T> {
+  const maxRetries = 2;
+
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return await request();
+    } catch (error) {
+      if (attempt >= maxRetries || !isRetryableSignalError(error)) {
+        throw error;
+      }
+
+      await sleep(400 * 2 ** attempt);
+    }
+  }
+}
+
 export const signalsApi = {
   // Get all signals with filtering
   getAllSignals: async (options?: {
@@ -41,7 +68,9 @@ export const signalsApi = {
     offset?: number;
   }) => {
     try {
-      const response = await apiClient.get<SignalsApiResponse>('/signals', { params: options });
+      const response = await getSignalsWithRetry(() =>
+        apiClient.get<SignalsApiResponse>('/signals', { params: options })
+      );
       return response.data;
     } catch (error) {
       console.error('Error fetching signals:', error);
@@ -52,7 +81,9 @@ export const signalsApi = {
   // Get signal by ID
   getSignalById: async (signalId: string) => {
     try {
-      const response = await apiClient.get<SignalsApiResponse>(`/signals/${signalId}`);
+      const response = await getSignalsWithRetry(() =>
+        apiClient.get<SignalsApiResponse>(`/signals/${signalId}`)
+      );
       return response.data;
     } catch (error) {
       console.error('Error fetching signal:', error);

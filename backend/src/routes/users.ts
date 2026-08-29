@@ -52,6 +52,7 @@ const updateUserSchema = z
     role: z.nativeEnum(UserRole).optional(),
     status: z.enum(['active', 'inactive', 'banned']).optional(),
     password: z.string().min(6).optional(),
+    phone: z.string().regex(/^\+[1-9]\d{6,14}$/, 'Phone must include a valid country code').optional(),
   })
   .strict();
 
@@ -136,7 +137,7 @@ router.get('/me', verifyToken, async (req: AuthRequest, res: Response) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user!.userId },
-      select: { id: true, name: true, email: true, role: true, status: true, createdAt: true },
+      select: { id: true, name: true, email: true, phone: true, role: true, status: true, createdAt: true },
     });
 
     if (!user) {
@@ -345,6 +346,7 @@ router.put('/:id', verifyToken, mutationLimiter, async (req: AuthRequest, res: R
       data: {
         name: updates.name ?? user.name,
         email: updates.email ?? user.email,
+        phone: updates.phone ?? user.phone,
         role: updates.role ?? user.role,
         status: updates.status ?? user.status,
         password: hashedPassword,

@@ -14,7 +14,8 @@ interface AuthRequest extends Request {
 // Register endpoint
 router.post('/register', authLimiter, async (req: Request, res: Response) => {
   try {
-    const { name, email, password, userType = 'user' } = req.body;
+    const { name, email, password, phone, userType = 'user' } = req.body;
+    const normalizedPhone = phone ? String(phone).replace(/(?!^\+)\D/g, '') : null;
 
     // Validation
     if (!name || !email || !password) {
@@ -22,6 +23,10 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
         success: false,
         message: 'Name, email, and password are required',
       });
+    }
+
+    if (normalizedPhone && !/^\+[1-9]\d{6,14}$/.test(normalizedPhone)) {
+      return res.status(400).json({ success: false, message: 'Phone must include a valid country code' });
     }
 
     if (password.length < 6) {
@@ -61,6 +66,7 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
         name,
         email,
         password: hashedPassword,
+        phone: normalizedPhone,
         role: userType,
         status: 'active',
       },
@@ -81,6 +87,7 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        phone: user.phone,
         token,
       },
     });
@@ -151,6 +158,7 @@ router.post('/login', authLimiter, async (req: Request, res: Response) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        phone: user.phone,
         token,
       },
     });

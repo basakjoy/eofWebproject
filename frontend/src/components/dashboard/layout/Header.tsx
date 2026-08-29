@@ -1,4 +1,7 @@
+"use client";
+
 import { Bell, Search, ChevronDown, LogOut, Settings, User } from "lucide-react";
+import { useAuthStore } from "@/store/authStore";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/dashboard/ui/avatar";
 import {
   DropdownMenu,
@@ -11,6 +14,8 @@ import {
 import { Input } from "@/components/dashboard/ui/input";
 
 export function Header() {
+  const { logout } = useAuthStore();
+
   return (
     <header className="h-14 sm:h-16 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-20 md:top-0">
       <div className="flex items-center justify-between h-full px-3 sm:px-6 gap-2 sm:gap-4">
@@ -65,7 +70,7 @@ export function Header() {
                 Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">
+              <DropdownMenuItem className="text-destructive" onClick={() => { logout(); window.location.assign('/home'); }}>
                 <LogOut className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                 Log out
               </DropdownMenuItem>

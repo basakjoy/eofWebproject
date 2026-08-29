@@ -94,7 +94,7 @@ router.get('/', async (req: Request, res: Response) => {
     ]);
 
     // Map content → excerpt (first 200 chars)
-    const data = articles.map((a) => ({
+    const data = articles.map((a: any) => ({
       ...a,
       excerpt: a.content.slice(0, 200).replace(/[#*`>]/g, '').trim() + '...',
       readTime: Math.max(1, Math.ceil(a.content.split(/\s+/).length / 200)) + ' min read',
@@ -114,7 +114,7 @@ router.get('/categories', async (_req: Request, res: Response) => {
       select: { category: true },
       distinct: ['category'],
     });
-    const categories = ['All', ...articles.map((a) => a.category).filter(Boolean)];
+    const categories = ['All', ...articles.map((a: any) => a.category).filter(Boolean)];
     res.json({ success: true, data: categories });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message || 'Failed to fetch categories' });

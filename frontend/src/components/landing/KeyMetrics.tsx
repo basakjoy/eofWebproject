@@ -1,147 +1,82 @@
 'use client';
 
-import Card from '@/components/common/Card';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { TrendingUp, Users, DollarSign, Activity } from 'lucide-react';
-import { useState, useEffect } from 'react';
-
-const portfolioData = [
-  { month: 'Jan', value: 40000 },
-  { month: 'Feb', value: 45000 },
-  { month: 'Mar', value: 52000 },
-  { month: 'Apr', value: 48000 },
-  { month: 'May', value: 61000 },
-  { month: 'Jun', value: 75000 },
-];
-
-const performanceData = [
-  { name: 'Week 1', profit: 2400 },
-  { name: 'Week 2', profit: 2210 },
-  { name: 'Week 3', profit: 2290 },
-  { name: 'Week 4', profit: 2000 },
-  { name: 'Week 5', profit: 2181 },
-];
+import { Star } from 'lucide-react';
 
 export default function KeyMetrics() {
-  const [isMobile, setIsMobile] = useState(false);
-  const [isTablet, setIsTablet] = useState(false);
+  const stats = [
+    { value: '130+', label: 'Countries' },
+    { value: '34K+', label: 'Qualified Analysis' },
+    { value: '320+', label: 'Traders' },
+    { value: '17K', label: 'Virtual Strategies' },
+    { value: '$320M+', label: 'Performance Fee' },
+  ];
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 640);
-      setIsTablet(window.innerWidth < 1024 && window.innerWidth >= 640);
-    };
+  // Text-based marks, matching your original placeholder style —
+  // swap these strings for real client/partner names whenever you have them.
+  const logos = [
+    '★ AlphaCorp',
+    '❖ Aurora Funds',
+    '░▒ Beta Investments',
+    '⚡ Gamma Capital',
+    '⬡ Delta Partners',
+  ];
 
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  const chartHeight = isMobile ? 250 : isTablet ? 280 : 300;
+  // Duplicated so the track can loop seamlessly at -50%.
+  const logoTrack = [...logos, ...logos];
 
   return (
-    <section className="max-w-7xl mx-auto px-4 py-12 sm:py-16 md:py-20">
-      <div className="text-center mb-12 sm:mb-16">
-        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold gradient-text mb-3 sm:mb-4">Platform Performance</h2>
-        <p className="text-base sm:text-lg md:text-xl text-gray-400 px-2">Real-time metrics showing our platform's incredible growth</p>
-      </div>
+    <section className="bg-[#050508] py-16 border-t border-b border-white/5 relative z-10 overflow-hidden">
+      <div className="max-w-site mx-auto px-4 sm:px-6 space-y-10 sm:space-y-12">
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-12">
-        <Card hover>
-          <div className="flex items-start gap-3 sm:gap-4">
-            <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 p-2 sm:p-3 rounded-lg flex-shrink-0">
-              <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+        {/* Rating Badge */}
+        <div className="flex justify-center">
+          <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white/[0.04] border border-white/10 text-xs">
+            <span className="font-semibold text-white">Excellent</span>
+            <div className="flex items-center gap-0.5 text-emerald-400">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} size={12} className="fill-emerald-400 text-emerald-400" />
+              ))}
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-gray-400 text-xs sm:text-sm">Total Assets Under Management</p>
-              <p className="text-2xl sm:text-3xl font-bold text-white mt-1 sm:mt-2">$250M+</p>
-              <p className="text-green-400 text-xs sm:text-sm mt-1">↑ 25% this month</p>
+            <span className="text-[#8E8E93] text-[11px]">TurstPilot</span>
+          </div>
+        </div>
+
+        {/* 5 Stats Row */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-4 gap-y-7 sm:gap-8 text-center">
+          {stats.map((stat, idx) => (
+            <div key={idx} className="space-y-1.5">
+              <h3 className="text-2xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight">
+                {stat.value}
+              </h3>
+              <p className="text-xs sm:text-sm text-[#8E8E93] font-normal">
+                {stat.label}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* Trust Marquee */}
+        <div className="pt-8 space-y-6">
+          <p className="text-center text-xs text-[#8E8E93] font-medium tracking-wider uppercase">
+            Trusted by 240+ Companies
+          </p>
+
+          <div
+            className="group relative w-full overflow-hidden [mask-image:linear-gradient(to_right,transparent_0,black_96px,black_calc(100%-96px),transparent_100%)]"
+          >
+            <div className="flex items-center w-max animate-marquee group-hover:[animation-play-state:paused]">
+              {logoTrack.map((logo, index) => (
+                <span
+                  key={index}
+                  className="px-6 sm:px-10 shrink-0 text-base sm:text-lg font-bold tracking-widest text-white/70 uppercase grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-300"
+                >
+                  {logo}
+                </span>
+              ))}
             </div>
           </div>
-        </Card>
+        </div>
 
-        <Card hover>
-          <div className="flex items-start gap-3 sm:gap-4">
-            <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-2 sm:p-3 rounded-lg flex-shrink-0">
-              <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-gray-400 text-xs sm:text-sm">Active Users</p>
-              <p className="text-2xl sm:text-3xl font-bold text-white mt-1 sm:mt-2">12,450+</p>
-              <p className="text-green-400 text-xs sm:text-sm mt-1">↑ 15% growth</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card hover>
-          <div className="flex items-start gap-3 sm:gap-4">
-            <div className="bg-gradient-to-br from-pink-500 to-pink-600 p-2 sm:p-3 rounded-lg flex-shrink-0">
-              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-gray-400 text-xs sm:text-sm">Average Monthly ROI</p>
-              <p className="text-2xl sm:text-3xl font-bold text-white mt-1 sm:mt-2">12.5%</p>
-              <p className="text-green-400 text-xs sm:text-sm mt-1">Consistent growth</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card hover>
-          <div className="flex items-start gap-3 sm:gap-4">
-            <div className="bg-gradient-to-br from-green-500 to-green-600 p-2 sm:p-3 rounded-lg flex-shrink-0">
-              <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-gray-400 text-xs sm:text-sm">Win Rate</p>
-              <p className="text-2xl sm:text-3xl font-bold text-white mt-1 sm:mt-2">87%</p>
-              <p className="text-green-400 text-xs sm:text-sm mt-1">Industry leading</p>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-        <Card>
-          <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-4 sm:mb-6">Portfolio Growth</h3>
-          <div className="w-full h-64 sm:h-72 md:h-80">
-            <ResponsiveContainer width="100%" height={chartHeight}>
-              <LineChart data={portfolioData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(99, 102, 241, 0.1)" />
-                <XAxis stroke="#999" tick={{ fontSize: isMobile ? 10 : 12 }} />
-                <YAxis stroke="#999" tick={{ fontSize: isMobile ? 10 : 12 }} />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #4f46e5', borderRadius: '8px' }}
-                  labelStyle={{ color: '#e0e7ff' }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="value" 
-                  stroke="#818cf8" 
-                  strokeWidth={isMobile ? 2 : 3}
-                  dot={{ fill: '#6366f1', r: isMobile ? 3 : 5 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        <Card>
-          <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-4 sm:mb-6">Weekly Performance</h3>
-          <div className="w-full h-64 sm:h-72 md:h-80">
-            <ResponsiveContainer width="100%" height={chartHeight}>
-              <BarChart data={performanceData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(99, 102, 241, 0.1)" />
-                <XAxis stroke="#999" tick={{ fontSize: isMobile ? 10 : 12 }} />
-                <YAxis stroke="#999" tick={{ fontSize: isMobile ? 10 : 12 }} />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #4f46e5', borderRadius: '8px' }}
-                  labelStyle={{ color: '#e0e7ff' }}
-                />
-                <Bar dataKey="profit" fill="#ec4899" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
       </div>
     </section>
   );

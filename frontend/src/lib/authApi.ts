@@ -14,6 +14,7 @@ export const authApi = {
     name: string;
     email: string;
     password: string;
+    phone?: string;
     userType?: 'user' | 'investor';
   }) => {
     try {

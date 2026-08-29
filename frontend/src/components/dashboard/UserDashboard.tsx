@@ -37,6 +37,7 @@ import {
 } from 'recharts';
 import { useForex } from '@/hooks/use-forex';
 import { signalsApi } from '@/lib/signalsApi';
+import investmentApi from '@/lib/investmentApi';
 import LatestArticlesWidget from '@/components/dashboard/LatestArticlesWidget';
 
 
@@ -78,6 +79,35 @@ const TICKER_PAIRS = ['EUR/USD', 'GBP/USD', 'USD/JPY', 'AUD/USD', 'BTC/USD', 'ET
 
 
 export default function UserDashboard() {
+  const [portfolio, setPortfolio] = React.useState<{ totalInvested?: number; totalReturns?: number; recentTransactions?: any[] } | null>(null);
+
+  React.useEffect(() => {
+    const loadPortfolio = async () => {
+      try {
+        const rawUser = localStorage.getItem('user');
+        const user = rawUser ? JSON.parse(rawUser) : null;
+        const userId = user?.id || user?.userId;
+        if (!userId) return;
+        const response = await investmentApi.getPortfolioOverview(userId);
+        setPortfolio(response?.data ?? null);
+      } catch (error) {
+        console.error('Error fetching dashboard portfolio:', error);
+      }
+    };
+    void loadPortfolio();
+  }, []);
+
+  const totalInvested = Number(portfolio?.totalInvested ?? 0);
+  const totalReturns = Number(portfolio?.totalReturns ?? 0);
+  const currentMonth = new Date();
+  const monthlyProfit = (portfolio?.recentTransactions ?? [])
+    .filter((transaction) => String(transaction.type).toLowerCase() === 'profit')
+    .filter((transaction) => {
+      const date = new Date(transaction.createdAt);
+      return date.getFullYear() === currentMonth.getFullYear() && date.getMonth() === currentMonth.getMonth();
+    })
+    .reduce((sum, transaction) => sum + Number(transaction.amount || 0), 0);
+
   // --- Data ---
   const portfolioData = [
     { month: 'Jan', value: 2000, profit: 0 },
@@ -300,20 +330,18 @@ export default function UserDashboard() {
         <div className="stat-card-stagger">
           <StatCard
             label="Account Balance"
-            value="$10,500"
+            value={`$${totalInvested.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
             icon={<DollarSign className="w-5 h-5" />}
             color="blue"
-            trend={{ value: 12.5, isPositive: true }}
             subtitle="vs last month"
           />
         </div>
         <div className="stat-card-stagger">
           <StatCard
             label="Monthly Profit"
-            value="$2,450"
+            value={`$${monthlyProfit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
             icon={<TrendingUp className="w-5 h-5" />}
             color="green"
-            trend={{ value: 8.3, isPositive: true }}
             subtitle="vs last month"
           />
         </div>

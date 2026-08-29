@@ -48,8 +48,8 @@ router.get('/portfolio/overview/:userId', async (req: AuthRequest, res: Response
       orderBy: { createdAt: 'desc' },
     });
 
-    const totalInvested = investments.reduce((sum, inv) => sum + Number(inv.amount || 0), 0);
-    const totalReturns = investments.reduce((sum, inv) => sum + Number(inv.roi || 0), 0);
+    const totalInvested = investments.reduce((sum: number, inv) => sum + Number(inv.amount || 0), 0);
+    const totalReturns = investments.reduce((sum: number, inv) => sum + Number(inv.roi || 0), 0);
     const activeInvestments = investments.filter((inv) => inv.status === 'active').length;
     const completedInvestments = investments.filter((inv) => inv.status === 'completed').length;
 
@@ -222,8 +222,8 @@ router.get('/stats/:userId', async (req: AuthRequest, res: Response) => {
 
     const activeCount = investments.filter((i) => i.status === 'active').length;
     const completedCount = investments.filter((i) => i.status === 'completed').length;
-    const totalAmount = investments.reduce((sum, i) => sum + Number(i.amount || 0), 0);
-    const totalReturns = investments.reduce((sum, i) => sum + Number(i.roi || 0), 0);
+    const totalAmount = investments.reduce((sum: number, i) => sum + Number(i.amount || 0), 0);
+    const totalReturns = investments.reduce((sum: number, i) => sum + Number(i.roi || 0), 0);
 
     res.json({
       success: true,

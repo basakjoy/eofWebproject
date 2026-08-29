@@ -38,13 +38,15 @@ const baseSignalSchema = z.object({
   takeProfits: z.array(z.coerce.number().positive()).max(3).optional(),
   accuracy: z.coerce.number().min(0).max(100).optional(),
   reliability: z.coerce.number().min(0).max(1).optional(),
-  timeframe: z.string().max(10).optional().default('4H'),
-  status: z.enum(['active', 'closed', 'pending']).optional().default('active'),
+  timeframe: z.string().max(10).optional(),
+  status: z.enum(['active', 'closed', 'pending']).optional(),
 }).passthrough();
 
 const createSignalSchema = baseSignalSchema.extend({
   pair: z.string().trim().min(3).max(20),
   entryPrice: z.coerce.number().positive('Entry price must be positive'),
+  timeframe: z.string().max(10).optional().default('4H'),
+  status: z.enum(['active', 'closed', 'pending']).optional().default('active'),
 }).superRefine((data, ctx) => {
   if (!data.type && !data.direction) {
     ctx.addIssue({
@@ -63,7 +65,7 @@ const createSignalSchema = baseSignalSchema.extend({
   }
 });
 
-const updateSignalSchema = baseSignalSchema.partial();
+const updateSignalSchema = baseSignalSchema;
 
 const querySchema = z.object({
   status: z.string().optional(),
@@ -143,6 +145,11 @@ const coerceNumber = (value: unknown): number | undefined => {
   return Number.isFinite(parsed) ? parsed : undefined;
 };
 
+const numberOrNull = (value: unknown): number | null => {
+  const parsed = coerceNumber(value);
+  return parsed === undefined ? null : parsed;
+};
+
 const getSignalDirection = (body: any): string | undefined => {
   const rawDirection = body?.type ?? body?.direction;
   if (typeof rawDirection === 'string' && rawDirection.trim()) {
@@ -165,16 +172,39 @@ const getSignalTakeProfits = (body: any): Array<number> => {
     .filter((value: number | undefined): value is number => value !== undefined);
 };
 
+const getPriceValidationMessage = (
+  direction: string | undefined,
+  entryPrice: number | undefined,
+  stopLoss: number | undefined,
+  takeProfits: Array<number>,
+): string | undefined => {
+  if (!direction || entryPrice === undefined || stopLoss === undefined) return undefined;
+
+  if (direction === 'BUY') {
+    if (entryPrice <= stopLoss) return 'For BUY signals, entry price must be greater than stop loss';
+    if (takeProfits.some((value) => value <= entryPrice)) {
+      return 'For BUY signals, take profit must be greater than entry price';
+    }
+  } else if (direction === 'SELL') {
+    if (entryPrice >= stopLoss) return 'For SELL signals, entry price must be less than stop loss';
+    if (takeProfits.some((value) => value >= entryPrice)) {
+      return 'For SELL signals, take profit must be less than entry price';
+    }
+  }
+
+  return undefined;
+};
+
 // Sanitize signal data for response
 const sanitizeSignal = (signal: any) => {
-  const direction = signal?.type || signal?.direction || null;
-  const stopLossValue = signal?.stopLoss ? parseFloat(signal.stopLoss) : null;
+  const direction = getSignalDirection(signal) ?? null;
+  const stopLossValue = numberOrNull(signal?.stopLoss ?? signal?.stoploss);
   const takeProfitValues = [
     signal?.takeProfit1 ?? signal?.takeProfit ?? null,
     signal?.takeProfit2 ?? null,
     signal?.takeProfit3 ?? null,
   ]
-    .map((value) => (value !== null && value !== undefined ? parseFloat(value) : null))
+    .map(numberOrNull)
     .filter((value): value is number => value !== null);
 
   return {
@@ -182,16 +212,16 @@ const sanitizeSignal = (signal: any) => {
     pair: signal.pair,
     direction,
     type: direction,
-    entryPrice: signal.entryPrice ? parseFloat(signal.entryPrice) : null,
+    entryPrice: numberOrNull(signal.entryPrice),
     stopLoss: stopLossValue,
     stoploss: stopLossValue,
-    takeProfit: signal.takeProfit ? parseFloat(signal.takeProfit) : null,
-    takeProfit1: signal.takeProfit1 ? parseFloat(signal.takeProfit1) : null,
-    takeProfit2: signal.takeProfit2 ? parseFloat(signal.takeProfit2) : null,
-    takeProfit3: signal.takeProfit3 ? parseFloat(signal.takeProfit3) : null,
+    takeProfit: numberOrNull(signal.takeProfit ?? signal.takeProfit1),
+    takeProfit1: numberOrNull(signal.takeProfit1 ?? signal.takeProfit),
+    takeProfit2: numberOrNull(signal.takeProfit2),
+    takeProfit3: numberOrNull(signal.takeProfit3),
     takeProfits: takeProfitValues,
-    accuracy: signal.accuracy ? parseFloat(signal.accuracy) : null,
-    reliability: signal.reliability ? parseFloat(signal.reliability) : null,
+    accuracy: numberOrNull(signal.accuracy),
+    reliability: numberOrNull(signal.reliability),
     timeframe: signal.timeframe,
     status: signal.status,
     createdAt: signal.createdAt,
@@ -272,6 +302,7 @@ router.get('/', validateQuery(querySchema), async (req: AuthRequest, res: Respon
           id: true,
           pair: true,
           type: true,
+          direction: true,
           entryPrice: true,
           stopLoss: true,
           takeProfit: true,
@@ -327,6 +358,7 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
         id: true,
         pair: true,
         type: true,
+        direction: true,
         entryPrice: true,
         stopLoss: true,
         takeProfit: true,
@@ -380,6 +412,7 @@ router.post(
       const takeProfitValue = coerceNumber(body.takeProfit ?? body.takeProfit1);
       const takeProfitsValue = getSignalTakeProfits(body);
       const reliability = coerceNumber(body.reliability);
+      const accuracy = coerceNumber(body.accuracy);
       const timeframe = typeof body.timeframe === 'string' ? body.timeframe : '4H';
 
       if (!normalizedType) {
@@ -403,35 +436,17 @@ router.post(
         } as ErrorResponse);
       }
 
-      // Type-aware logic validation.
-      // BUY: stop loss below entry, take profit above entry.
-      // SELL: stop loss above entry, take profit below entry.
-      if (normalizedType === 'BUY') {
-        if (entryPrice <= stopLossValue) {
-          return res.status(400).json({
-            success: false,
-            message: 'For BUY signals, entry price must be greater than stop loss',
-          } as ErrorResponse);
-        }
-        if (takeProfitValue && takeProfitValue <= entryPrice) {
-          return res.status(400).json({
-            success: false,
-            message: 'For BUY signals, take profit must be greater than entry price',
-          } as ErrorResponse);
-        }
-      } else {
-        if (entryPrice >= stopLossValue) {
-          return res.status(400).json({
-            success: false,
-            message: 'For SELL signals, entry price must be less than stop loss',
-          } as ErrorResponse);
-        }
-        if (takeProfitValue && takeProfitValue >= entryPrice) {
-          return res.status(400).json({
-            success: false,
-            message: 'For SELL signals, take profit must be less than entry price',
-          } as ErrorResponse);
-        }
+      const priceValidationMessage = getPriceValidationMessage(
+        normalizedType,
+        entryPrice,
+        stopLossValue,
+        takeProfitsValue,
+      );
+      if (priceValidationMessage) {
+        return res.status(400).json({
+          success: false,
+          message: priceValidationMessage,
+        } as ErrorResponse);
       }
 
       let tp1 = takeProfitValue ?? null;
@@ -451,21 +466,24 @@ router.post(
           id: signalId,
           pair: normalizedPair,
           type: normalizedType,
+          direction: normalizedType,
           entryPrice: String(entryPrice),
           stopLoss: String(stopLossValue),
           takeProfit: tp1 ? String(tp1) : null,
           takeProfit1: tp1 ? String(tp1) : null,
           takeProfit2: tp2 ? String(tp2) : null,
           takeProfit3: tp3 ? String(tp3) : null,
-          accuracy: String(reliability ? reliability * 100 : 85),
+          accuracy: String(accuracy ?? (reliability !== undefined ? reliability * 100 : 85)),
           reliability: String(reliability ?? 0.85),
           timeframe,
           status: normalizedStatus,
+          createdBy: req.user?.userId,
         },
         select: {
           id: true,
           pair: true,
           type: true,
+          direction: true,
           entryPrice: true,
           stopLoss: true,
           takeProfit: true,
@@ -558,6 +576,26 @@ router.put(
         } as ErrorResponse);
       }
 
+      const effectiveDirection = normalizedType ?? getSignalDirection(signal);
+      const effectiveEntryPrice = entryPriceValue ?? coerceNumber(signal.entryPrice);
+      const effectiveStopLoss = stopLossValue ?? coerceNumber(signal.stopLoss);
+      const effectiveTakeProfits = Array.isArray(takeProfits)
+        ? takeProfitsValue
+        : takeProfitsValue.length > 0
+          ? takeProfitsValue
+          : [coerceNumber(signal.takeProfit1 ?? signal.takeProfit)].filter(
+              (value): value is number => value !== undefined,
+            );
+      const priceValidationMessage = getPriceValidationMessage(
+        effectiveDirection,
+        effectiveEntryPrice,
+        effectiveStopLoss,
+        effectiveTakeProfits,
+      );
+      if (priceValidationMessage) {
+        return res.status(400).json({ success: false, message: priceValidationMessage } as ErrorResponse);
+      }
+
       // Prevent updating closed signals (unless explicitly re-confirming closed)
       if (signal.status === 'closed' && normalizedStatus !== 'closed') {
         return res.status(400).json({
@@ -566,24 +604,31 @@ router.put(
         } as ErrorResponse);
       }
 
-      const updateData: any = {};
+      const updateData: Record<string, string | null> = {};
       if (normalizedStatus !== undefined) updateData.status = normalizedStatus;
       if (reliability !== undefined) updateData.reliability = String(reliability);
       if (accuracy !== undefined) updateData.accuracy = String(accuracy);
       if (normalizedPair !== undefined) updateData.pair = normalizedPair;
-      if (normalizedType !== undefined) updateData.type = normalizedType;
+      if (normalizedType !== undefined) {
+        updateData.type = normalizedType;
+        updateData.direction = normalizedType;
+      }
       if (entryPriceValue !== undefined) updateData.entryPrice = String(entryPriceValue);
       if (stopLossValue !== undefined) updateData.stopLoss = String(stopLossValue);
-      if (timeframe !== undefined) updateData.timeframe = timeframe;
+      if (timeframe !== undefined) updateData.timeframe = String(timeframe);
 
-      if (takeProfitsValue.length > 0) {
-        updateData.takeProfit = String(takeProfitsValue[0]);
-        updateData.takeProfit1 = String(takeProfitsValue[0]);
-        if (takeProfitsValue[1] !== undefined) updateData.takeProfit2 = String(takeProfitsValue[1]);
-        if (takeProfitsValue[2] !== undefined) updateData.takeProfit3 = String(takeProfitsValue[2]);
+      if (Array.isArray(takeProfits)) {
+        updateData.takeProfit = takeProfitsValue[0] !== undefined ? String(takeProfitsValue[0]) : null;
+        updateData.takeProfit1 = takeProfitsValue[0] !== undefined ? String(takeProfitsValue[0]) : null;
+        updateData.takeProfit2 = takeProfitsValue[1] !== undefined ? String(takeProfitsValue[1]) : null;
+        updateData.takeProfit3 = takeProfitsValue[2] !== undefined ? String(takeProfitsValue[2]) : null;
       } else if (takeProfitValue !== undefined) {
         updateData.takeProfit = String(takeProfitValue);
         updateData.takeProfit1 = String(takeProfitValue);
+      } else {
+        if (takeProfit1 !== undefined) updateData.takeProfit1 = String(takeProfit1);
+        if (takeProfit2 !== undefined) updateData.takeProfit2 = String(takeProfit2);
+        if (takeProfit3 !== undefined) updateData.takeProfit3 = String(takeProfit3);
       }
 
       if (Object.keys(updateData).length === 0) {
@@ -600,6 +645,7 @@ router.put(
           id: true,
           pair: true,
           type: true,
+          direction: true,
           entryPrice: true,
           stopLoss: true,
           takeProfit: true,
