@@ -53,6 +53,7 @@ export default function Navbar() {
     { name: 'Services', href: '/services' },
     { name: 'Plans', href: '/investment-plans' },
     { name: 'Blog', href: '/blog' },
+    { name: 'Brokers', href: '/brokers' },
   ];
 
   const handleLogout = () => {

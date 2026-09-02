@@ -99,17 +99,17 @@ export default function LiveSignalsSection() {
             viewport={{ once: true }}
             className="text-center lg:text-left"
           >
-            {/* <div className="inline-flex items-center gap-2 mb-6 justify-center lg:justify-start">
+            <div className="inline-flex items-center gap-2 mb-6 justify-center lg:justify-start">
               <div className="w-2 h-2 rounded-full bg-[#FF6B00] animate-pulse" />
-              <span className="text-xs font-black text-[#FF8C00] uppercase tracking-widest">Global Intelligence Live</span>
-            </div> */}
+              <span className="text-xl  text-[#FF8C00] uppercase tracking-widest">Global Intelligence Live</span>
+            </div>
             
-            <h2 className="text-3xl sm:text-4xl lg:text-6xl font-black text-white leading-tight mb-6 sm:mb-8">
+            <h2 className="text-5xl sm:text-6xl font-semibold tracking-tight  text-white leading-tight mb-6 sm:mb-8">
               Real-Time Signals <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] via-[#FF8C00] to-[#FFb800]">for Modern Traders.</span>
             </h2>
             
-            <p className="text-base sm:text-lg text-zinc-300 leading-relaxed max-w-xl mb-8 sm:mb-12 mx-auto lg:mx-0 font-light">
+            <p className="text-base sm:text-lg text-zinc-300 leading-relaxed max-w-xl mb-8 sm:mb-12 mx-auto lg:mx-0 ">
               Our advanced proprietary algorithms analyze over 50 currency pairs concurrently to identify high-probability trading opportunities.
             </p>
 
@@ -118,9 +118,9 @@ export default function LiveSignalsSection() {
                 <div key={i} className="space-y-2 text-center sm:text-left">
                   <div className="flex items-center gap-2 justify-center sm:justify-start">
                     <Zap className="w-4 h-4 text-base" />
-                    <h4 className="text-sm font-bold text-white uppercase tracking-wider">{feature.title}</h4>
+                    <h4 className="text-sm  text-white uppercase tracking-wider">{feature.title}</h4>
                   </div>
-                  <p className="text-xs text-zinc-500">{feature.desc}</p>
+                  <p className="text-xs text-zinc-300">{feature.desc}</p>
                 </div>
               ))}
             </div>

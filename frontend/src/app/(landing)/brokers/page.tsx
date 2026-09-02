@@ -10,7 +10,6 @@ import {
   ShieldCheck, 
   TrendingUp, 
   ExternalLink,
-  ChevronRight,
   Award
 } from 'lucide-react';
 import { brokersApi } from '@/lib/brokersApi';
@@ -37,30 +36,30 @@ export default function BrokersPromotionalPage() {
   }, []);
 
   return (
-    <div className="w-full pt-16 min-h-screen ">
+    <div className="w-full pt-16 min-h-screen bg-[#0a0a0a]">
       {/* Hero Section */} 
       <section className="w-full px-4 py-24 relative overflow-hidden">
         {/* Background elements */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-indigo-500/10 rounded-full blur-[100px] -z-10"></div>
-        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-amber-500/10 rounded-full blur-[80px] -z-10"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-amber-500/10 rounded-full blur-[100px] -z-10"></div>
+        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-orange-500/10 rounded-full blur-[80px] -z-10"></div>
         
         <div className="max-w-7xl mx-auto text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 text-white border border-white/10 text-sm font-medium mb-6">
-            <Award className="w-4 h-4" />
+            <Award className="w-4 h-4 text-amber-400" />
             <span>Trusted & Verified Partners</span>
           </div>
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-white/40 tracking-tight mb-8 leading-tight">
             Top Forex <br className="hidden md:block" />
-            <span className=" from-amber-400 to-orange-500 bg-clip-text text-transparent">Brokers 2026</span>
+            <span className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">Brokers 2026</span>
           </h1>
           <p className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto mb-10 leading-relaxed">
             Trade with confidence using our carefully curated list of industry-leading forex brokers. Enjoy tight spreads, high leverage, and unmatched reliability.
           </p>
           <div className="flex items-center justify-center gap-4">
-            <Button variant="gradient" className="px-8 py-4 rounded-full font-bold text-lg">
+            <Button className="px-8 py-4 rounded-full font-bold text-lg bg-white text-black hover:bg-gray-200 transition-colors">
               Compare Brokers
             </Button>
-            <Button variant="outline" className="px-8 py-4 rounded-full font-bold text-lg">
+            <Button variant="outline" className="px-8 py-4 rounded-full font-bold text-lg border border-white/20 text-white hover:bg-white/10 transition-colors">
               Read Methodology
             </Button>
           </div>
@@ -68,8 +67,10 @@ export default function BrokersPromotionalPage() {
       </section>
 
       {/* Brokers List */}
-      <section className="w-full px-4 py-16 bg-black/40">
-        <div className="max-w-7xl mx-auto">
+      <section className="w-full px-4 py-16 bg-black/40 relative overflow-hidden">
+        <div className="absolute top-1/3 left-0 w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-[120px] -z-10"></div>
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-orange-500/5 rounded-full blur-[120px] -z-10"></div>
+        <div className="max-w-7xl mx-auto relative z-10">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20">
               <div className="w-12 h-12 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin"></div>
@@ -99,7 +100,7 @@ export default function BrokersPromotionalPage() {
                   <Card 
                     key={broker.id} 
                     hover 
-                    className="group relative border border-white/5 bg-white/5 backdrop-blur-xl overflow-hidden flex flex-col"
+                    className="group relative border border-white/5 bg-white/5 backdrop-blur-xl overflow-hidden flex flex-col hover:shadow-[0_0_40px_rgba(245,158,11,0.08)] transition-shadow"
                   >
                     {/* Highlight Top Broker */}
                     {index === 0 && (
@@ -116,7 +117,7 @@ export default function BrokersPromotionalPage() {
                             <img src={broker.logo} alt={broker.name} className="max-w-full max-h-full object-contain" />
                           </div>
                         ) : (
-                          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-bold text-xl shadow-lg">
                             {broker.name.charAt(0)}
                           </div>
                         )}
@@ -146,7 +147,7 @@ export default function BrokersPromotionalPage() {
                       </div>
                       <div className="bg-white/5 rounded-xl p-3 border border-white/5 text-center">
                         <p className="text-xs text-gray-400 uppercase tracking-wider mb-1 font-semibold">Max Leverage</p>
-                        <p className="text-lg font-bold text-indigo-400">{broker.leverage || '1:100'}</p>
+                        <p className="text-lg font-bold text-amber-400">{broker.leverage || '1:100'}</p>
                       </div>
                     </div>
 
@@ -170,7 +171,7 @@ export default function BrokersPromotionalPage() {
                         href={broker.website || '#'} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_30px_rgba(79,70,229,0.5)] group-hover:scale-[1.02]"
+                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-black font-bold py-3 px-4 rounded-xl transition-all duration-300 shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] group-hover:scale-[1.02]"
                       >
                         Open Account
                         <ExternalLink className="w-4 h-4" />
@@ -185,8 +186,9 @@ export default function BrokersPromotionalPage() {
       </section>
 
       {/* Why Choose Us Section */}
-      <section className="w-full px-4 py-24 border-t border-white/5 relative">
-        <div className="max-w-7xl mx-auto">
+      <section className="w-full px-4 py-24 border-t border-white/5 relative overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-amber-500/5 rounded-full blur-[100px] -z-10"></div>
+        <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Why Trust Our Recommendations?</h2>
             <p className="text-gray-400 max-w-2xl mx-auto">Our rigorous selection process ensures you only trade with the best.</p>
@@ -204,13 +206,13 @@ export default function BrokersPromotionalPage() {
                 icon: TrendingUp, 
                 title: 'Exceptional Trading Conditions', 
                 desc: 'Our partnered brokers offer the lowest spreads, zero-commission accounts, and ultra-fast execution speeds.',
-                color: 'text-indigo-400'
+                color: 'text-amber-400'
               },
               { 
                 icon: Star, 
                 title: 'Verified User Reviews', 
                 desc: 'Real feedback from real traders. Our transparent review system helps you make an informed decision.',
-                color: 'text-amber-400'
+                color: 'text-orange-400'
               },
             ].map((item, idx) => (
               <div key={idx} className="bg-white/5 border border-white/5 rounded-2xl p-8 hover:bg-white/10 transition-colors">

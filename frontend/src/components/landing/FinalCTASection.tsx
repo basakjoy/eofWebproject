@@ -25,11 +25,12 @@ export default function FinalCTASection() {
                <div className="p-3 rounded-2xl bg-white/[0.03] text-[#FF8C00] border border-white/[0.05]"><Sparkles size={20} /></div>
             </div>
             
-            <span className="text-[10px] sm:text-xs font-black text-[#FF8C00] uppercase tracking-[0.35em] sm:tracking-[0.6em] block">Sovereign Potential</span>
-            <h2 className="text-4xl sm:text-5xl md:text-7xl font-black text-white leading-tight uppercase tracking-tighter">
+            <span className="text-[10px] sm:text-xs 
+             text-[#FF8C00] uppercase tracking-[0.35em] sm:tracking-[0.6em] block">Sovereign Potential</span>
+            <h2 className="text-4xl sm:text-5xl md:text-7xl  text-white leading-tight uppercase tracking-tighter">
               Your Empire <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] via-[#FF8C00] to-[#FFb800]">Starts Today.</span>
             </h2>
-            <p className="text-lg text-zinc-400 max-w-2xl mx-auto leading-relaxed font-light">
+            <p className="text-lg text-zinc-300 max-w-2xl mx-auto leading-relaxed font-light">
               Join an elite global community of traders focused on precision, discipline, and sustained growth. Experience the Empire of Forex edge.
             </p>
           </motion.div>
@@ -42,7 +43,7 @@ export default function FinalCTASection() {
           >
             <Link
               href="/register"
-              className="group relative px-6 sm:px-12 py-4 sm:py-6 bg-white text-black font-black uppercase tracking-widest text-[10px] sm:text-xs rounded-full transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.15)] overflow-hidden"
+              className="group relative px-6 sm:px-12 py-4 sm:py-6 bg-white text-black  uppercase tracking-widest text-[10px] sm:text-sm rounded-full transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.15)] overflow-hidden"
             >
               <span className="relative z-10 flex items-center gap-2">
                 Begin Deployment <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
@@ -50,7 +51,7 @@ export default function FinalCTASection() {
             </Link>
             <Link
               href="/investment-plans"
-              className="px-6 sm:px-12 py-4 sm:py-6 bg-white/[0.03] border border-white/[0.08] text-white font-black uppercase tracking-widest text-[10px] sm:text-xs rounded-full transition-all hover:bg-white/[0.08] hover:border-[#FF6B00]/30 active:scale-95"
+              className="px-6 sm:px-12 py-4 sm:py-6 bg-white/[0.03] border border-white/[0.08] text-white  uppercase tracking-widest text-[10px] sm:text-sm rounded-full transition-all hover:bg-white/[0.08] hover:border-[#FF6B00]/30 active:scale-95"
             >
               Explore Ventures
             </Link>
@@ -65,7 +66,7 @@ export default function FinalCTASection() {
                   { label: 'Accuracy', value: '84.2%' }
                 ].map((stat, i) => (
                   <div key={i}>
-                    <p className="text-xl font-black text-white">{stat.value}</p>
+                    <p className="text-xl  text-white">{stat.value}</p>
                     <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mt-1">{stat.label}</p>
                   </div>
                 ))}

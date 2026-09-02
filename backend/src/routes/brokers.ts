@@ -1,10 +1,8 @@
-import express, { Request, Response } from 'express';
-import { verifyToken } from '../middleware/auth';
-import { requireRole } from '../middleware/auth';
-import { validateBroker, validateBrokerReview } from '../middleware/brokers.middleware';
+import express from 'express';
+import { verifyToken, requireRole } from '../middleware/auth';
+import { validateBroker, validateBrokerReview, validateConnectAccount } from '../middleware/brokers.middleware';
 import * as brokersController from '../controllers/brokers.controller';
 import { apiLimiter, reviewLimiter } from '../middleware/rateLimiter';
-
 
 const router = express.Router();
 
@@ -20,23 +18,24 @@ router.get('/:id/reviews', brokersController.getBrokerReviews);
 /**
  * Protected endpoints - require authentication
  */
+router.use(verifyToken);
 
 /**
- * Broker Management (Admin only - could add requireAdmin middleware)
+ * Broker Management (Admin only) - requires 'admin' or 'super_admin' role, or SUPER_ADMIN scope
  */
-router.post('/', verifyToken, requireRole(['SUPER_ADMIN', 'ADMIN    ']), validateBroker, brokersController.createBroker);
-router.put('/:id', verifyToken, requireRole(['SUPER_ADMIN', 'ADMIN']), validateBroker, brokersController.updateBroker);
-router.delete('/:id', verifyToken, requireRole(['SUPER_ADMIN', 'ADMIN']), brokersController.deleteBroker);
+router.post('/', requireRole(['super_admin', 'admin']), validateBroker, brokersController.createBroker);
+router.put('/:id', requireRole(['super_admin', 'admin']), validateBroker, brokersController.updateBroker);
+router.delete('/:id', requireRole(['super_admin', 'admin']), brokersController.deleteBroker);
 
 /**
  * Reviews
  */
-router.post('/:id/reviews', verifyToken, validateBrokerReview, reviewLimiter, brokersController.addReview);
+router.post('/:id/reviews', validateBrokerReview, reviewLimiter, brokersController.addReview);
 
 /**
  * User Broker Accounts
  */
-router.post('/accounts/connect', verifyToken, apiLimiter, brokersController.connectBrokerAccount);
-router.get('/accounts/my-accounts', verifyToken, brokersController.getUserBrokerAccounts);
+router.post('/accounts/connect', apiLimiter, validateConnectAccount, brokersController.connectBrokerAccount);
+router.get('/accounts/my-accounts', brokersController.getUserBrokerAccounts);
 
 export default router;

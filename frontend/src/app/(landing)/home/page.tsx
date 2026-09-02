@@ -354,7 +354,6 @@ export default function HomePage() {
       <IntroSection />
       <KeyMetrics />
       <BrokerTrustSection />
-      <FeaturedToolsSection />
       <PaymentMethodsSection />
       <LiveSignalsSection />
       <PremiumAccountSection />

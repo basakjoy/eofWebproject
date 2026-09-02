@@ -52,12 +52,12 @@ export default function PremiumAccountSection() {
 
                    <div className="relative z-10">
                      <Gem className="text-[#FF8C00] mb-6" size={48} />
-                     <h3 className="text-4xl font-black text-white uppercase tracking-tighter">Gold<br />Membership</h3>
+                     <h3 className="text-4xl font-semibold text-white uppercase tracking-tighter">Gold<br />Membership</h3>
                    </div>
 
                    <div className="relative z-10 space-y-4">
                       <div className="h-0.5 w-12 bg-gradient-to-r from-[#FF6B00] to-[#FFb800]" />
-                      <p className="text-xs font-black text-[#FF8C00]/70 uppercase tracking-[0.4em]">Elite Ecosystem</p>
+                      <p className="text-[#FF8C00]/70 uppercase tracking-[0.4em]">Elite Ecosystem</p>
                       <div className="flex items-center gap-3">
                         <div className="flex -space-x-3">
                            {eliteMemberAvatars.map((src, i) => (
@@ -85,7 +85,7 @@ export default function PremiumAccountSection() {
                  <motion.div 
                    animate={{ y: [0, -10, 0] }}
                    transition={{ duration: 3, repeat: Infinity }}
-                   className="absolute -top-6 -right-6 px-6 py-3 rounded-2xl bg-gradient-to-r from-[#FF6B00] to-[#FFb800] text-black font-black uppercase text-[10px] tracking-widest shadow-[0_0_20px_rgba(255,107,0,0.4)]"
+                   className="absolute -top-6 -right-6 px-6 py-3 rounded-2xl bg-gradient-to-r from-[#FF6B00] to-[#FFb800] text-black  uppercase text-[20px] tracking-widest shadow-[0_0_20px_rgba(255,107,0,0.4)]"
                  >
                    Limited Slots
                  </motion.div>
@@ -102,11 +102,11 @@ export default function PremiumAccountSection() {
           >
             <div>
               <span className="text-xs font-black text-[#FF8C00] uppercase tracking-[0.4em] block mb-4">Elite Tier</span>
-              <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight uppercase tracking-tighter">
+              <h2 className="text-4xl md:text-5xl lg:text-6xl  text-white leading-tight uppercase tracking-tighter">
                 Sovereign <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] via-[#FF8C00] to-[#FFb800]">Financial Edge.</span>
               </h2>
-              <p className="text-lg text-zinc-400 mt-6 max-w-lg mx-auto lg:mx-0 font-light">
+              <p className="text-lg text-zinc-400 mt-6 max-w-lg mx-auto lg:mx-0 ">
                 Unlock the ultimate trading environment with personalized infrastructure, zero latency, and dedicated institutional insights.
               </p>
             </div>
@@ -118,16 +118,16 @@ export default function PremiumAccountSection() {
                   <div key={i} className="space-y-2">
                     <div className="flex items-center gap-2 justify-center lg:justify-start text-[#FF8C00]">
                        <Icon size={18} />
-                       <h4 className="text-sm font-black uppercase tracking-widest text-white">{b.title}</h4>
+                       <h4 className="text-sm text-semibold uppercase tracking-widest text-white">{b.title}</h4>
                     </div>
-                    <p className="text-xs text-zinc-500">{b.desc}</p>
+                    <p className="text-xs text-zinc-300">{b.desc}</p>
                   </div>
                 );
               })}
             </div>
 
             <div className="pt-6">
-               <button className="group relative w-full sm:w-auto px-10 py-5 bg-gradient-to-r from-[#FF6B00] to-[#FFb800] hover:opacity-90 text-black font-black uppercase tracking-widest text-xs rounded-2xl transition-all active:scale-95 shadow-[0_0_20px_rgba(255,107,0,0.2)] overflow-hidden">
+               <button className="group relative px-6 sm:px-10 py-4 sm:py-6 bg-white text-black  uppercase tracking-widest text-[10px] sm:text-sm rounded-full transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.15)] overflow-hidden">
                  <span className="relative z-10">Application for Tier 1 Access</span>
                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                </button>

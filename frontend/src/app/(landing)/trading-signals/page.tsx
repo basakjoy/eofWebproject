@@ -354,7 +354,7 @@ export default function TradingSignalsPage() {
       <div className="relative z-10">
 
         {/* ══ HERO ══ */}
-        <section className="min-h-[78vh] flex flex-col justify-center pt-24 pb-16 px-4 sm:px-8 lg:px-14">
+        <section className="min-h-[100vh] flex flex-col justify-center pt-24 pb-16 px-4 sm:px-8 lg:px-14">
           <div className="max-w-[1600px] mx-auto">
             <div className="text-center max-w-5xl mx-auto rounded-lg border border-white/10 py-14 px-6 shadow-2xl liquid-panel">
               
@@ -398,9 +398,9 @@ export default function TradingSignalsPage() {
               >
                 <Link
                   href="/register"
-                 className="inline-flex items-center gap-2 px-8 py-3 rounded-sm bg-fiery-orange text-black hover:brightness-110 border border-fiery-orange text-black font-bold text-sm tracking-wide transition-all"
+                 className="inline-flex items-center gap-2 px-8 py-3 rounded-sm bg-transparent hover:bg-white/5 border border-white/20  text-white font-bold text-sm tracking-wide transition-all"
                 >
-                  <Zap className="w-4 h-4 fill-black" />
+                  <Zap className="w-4 h-4 fill-black text-white" />
                   Access Full Signals
                 </Link>
                 <Link
@@ -436,9 +436,9 @@ export default function TradingSignalsPage() {
         {/* ══ ANALYTICS OVERVIEW ══ */}
         <section className="py-10 px-4 sm:px-8 lg:px-14">
           <div className="max-w-[1600px] mx-auto">
-            <div className="flex items-center gap-2 mb-6">
-              <BarChart3 className="w-5 h-5 text-fiery-orange" />
-                <h2 className="text-xl font-extrabold text-white tracking-tight">Signal Analytics</h2>
+            <div className="text-center mb-14">
+                <p className="text-xs font-bold text-fiery-orange uppercase tracking-[0.2em] mb-3 font-mono">Try our Forex Trading Signals</p>
+                <h2 className="text-4xl sm:text-5xl text-white text-center tracking-tight">Signal Analytics</h2>
             </div>
             <SignalAnalyticsOverview />
           </div>
@@ -451,10 +451,7 @@ export default function TradingSignalsPage() {
             {/* Section Header + Controls */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
               <div>
-                <h2 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
-                  <Activity className="w-6 h-6 text-fiery-orange" />
-                  Live Signals Feed
-                </h2>
+                <h2 className="text-4xl sm:text-4xl text-white tracking-tight">Live Signals Feed</h2>
                 <p className="text-sm text-zinc-400 mt-0.5">
                   {filtered.length} active setups · refreshed continuously
                 </p>
@@ -536,11 +533,11 @@ export default function TradingSignalsPage() {
           <div className="max-w-[1600px] mx-auto">
             <div className="text-center mb-14">
               <p className="text-xs font-bold text-fiery-orange uppercase tracking-[0.2em] mb-3 font-mono">How It Works</p>
-              <h2 className="text-4xl sm:text-5xl font-black text-white mb-4 tracking-tight">
+              <h2 className="text-3xl sm:text-5xl  text-white mb-4 tracking-tight">
                 Every Signal, Perfectly Structured
               </h2>
               <p className="text-zinc-400 max-w-xl mx-auto text-base leading-relaxed">
-                From market screening to alert delivery — our system handles everything with zero noise.
+                From market screening to alert delivery our system handles everything with zero noise.
               </p>
             </div>
 
@@ -581,7 +578,7 @@ export default function TradingSignalsPage() {
                   <Star className="w-3.5 h-3.5 fill-amber-300" />
                   Premium Membership
                 </div>
-                <h2 className="text-4xl sm:text-5xl font-black text-white mb-4 leading-tight tracking-tight">
+                <h2 className="text-4xl sm:text-5xl  text-white mb-4 leading-tight tracking-tight">
                   Unlock the Full Signal Suite
                 </h2>
                 <p className="text-zinc-300 text-base max-w-lg mx-auto mb-8 font-normal leading-relaxed">
@@ -591,7 +588,7 @@ export default function TradingSignalsPage() {
                 <div className="flex flex-wrap items-center justify-center gap-4">
                   <Link
                     href="/register"
-                    className="inline-flex items-center gap-2 px-10 py-3 rounded-sm bg-fiery-orange text-black font-extrabold text-sm shadow-[0_0_20px_rgba(255,107,0,0.2)] hover:brightness-110 transition-transform"
+                    className="inline-flex items-center gap-2 px-10 py-3 rounded-sm bg-fiery-orange text-white  text-sm shadow-[0_0_20px_rgba(255,107,0,0.2)] hover:brightness-110 transition-transform"
                   >
                     <Lock className="w-4 h-4" /> Get Premium Access
                   </Link>

@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import prisma from '../lib/prisma';
-import { broadcastToUser } from '../websocket/supportHandler';
 
 interface AuthRequest extends Request {
   user?: {
@@ -269,18 +268,8 @@ export const addMessage = async (req: AuthRequest, res: Response) => {
       data: { updatedAt: new Date() },
     });
 
-    // Broadcast message to user in real-time if online
-    const isAgent = req.user?.role === 'admin' || req.user?.role === 'super_admin' || req.user?.role === 'support_agent';
-    broadcastToUser(ticket.userId, {
-      type: 'message',
-      id: savedMessage.id,
-      ticketId,
-      userId,
-      userName: req.user?.name || (isAgent ? 'Support Specialist' : 'Customer'),
-      senderType: isAgent ? 'agent' : 'customer',
-      content: message.trim(),
-      timestamp: new Date(savedMessage.createdAt).getTime(),
-    });
+    // WebSocket support chat is disabled for now.
+    // The message is persisted to the database and returned via the standard API response.
 
     res.status(201).json({
       success: true,

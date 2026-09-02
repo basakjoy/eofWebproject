@@ -25,10 +25,18 @@ const brokerSchema = z.object({
     .min(2, 'code must be at least 2 characters')
     .max(20, 'code cannot exceed 20 characters')
     .regex(/^[A-Z0-9_-]+$/, 'code must be uppercase letters, numbers, - or _ only'),
-  // add other real fields here (e.g. website, description, rating fields)
-  // with .optional() where appropriate, but keep them explicit —
-  // never spread req.body directly into Prisma.
-}).strict(); // rejects any field not explicitly listed above
+  website: z.string().url('website must be a valid URL').optional().or(z.literal('')),
+  logo: z.string().url('logo must be a valid URL').optional().or(z.literal('')),
+  email: z.string().email('email must be valid').optional().or(z.literal('')),
+  phone: z.string().optional(),
+  country: z.string().optional(),
+  status: z.enum(['active', 'inactive', 'suspended']).optional(),
+  rating: z.number().min(0).max(5).optional(),
+  minimumDeposit: z.number().nonnegative().optional(),
+  leverage: z.string().optional(),
+  spreads: z.string().optional(),
+  features: z.array(z.string()).optional(),
+}).strict();
 
 export const validateBroker = (req: any, res: Response, next: NextFunction) => {
   const result = brokerSchema.safeParse(req.body);

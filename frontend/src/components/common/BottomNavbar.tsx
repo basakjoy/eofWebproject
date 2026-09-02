@@ -12,7 +12,8 @@ import {
   BookOpen,
   ArrowUp,
   UserPlus,
-  LayoutDashboard
+  LayoutDashboard,
+  DiamondIcon
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 
@@ -55,6 +56,7 @@ export default function BottomNavbar() {
     { name: 'Services', href: '/services', icon: Layers },
     { name: 'Plans', href: '/investment-plans', icon: ShieldCheck },
     { name: 'Blog', href: '/blog', icon: BookOpen },
+    { name: 'Brokers', href: '/brokers', icon: DiamondIcon },
   ];
 
   return (

@@ -10,6 +10,7 @@ export interface AuthRequest extends Request {
     name: string;
     role: string;
     roleId: string;
+    adminScope?: string;
     permissions: Permission[];
   };
 }
@@ -72,6 +73,7 @@ export const verifyToken = async (
       name: user.name,
       role: user.role,
       roleId: user.roleId || '',
+      adminScope: user.adminScope || undefined,
       permissions
     };
 
@@ -194,7 +196,13 @@ export const requireRole = (allowedRoles: string[]) => {
       });
     }
 
-    if (!allowedRoles.includes(req.user.role)) {
+    // Check if user's role is in allowed roles
+    const hasRole = allowedRoles.includes(req.user.role);
+    
+    // Also check if user has SUPER_ADMIN scope (super admin can do everything)
+    const isSuperAdmin = req.user.adminScope === 'SUPER_ADMIN';
+
+    if (!hasRole && !isSuperAdmin) {
       return res.status(403).json({
         success: false,
         message: 'Insufficient role',
