@@ -363,7 +363,7 @@ export default function TradingSignalsPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="text-xs font-bold text-fiery-orange uppercase tracking-[0.2em] mb-5 font-mono"
+                className="text-sm font-bold text-fiery-orange uppercase tracking-[0.2em] mb-5 font-mono"
               >
                 Institutional-Grade Signal Desk
               </motion.p>
@@ -372,7 +372,7 @@ export default function TradingSignalsPage() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.1 }}
-                className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-white leading-[1.05] tracking-tight [text-shadow:0_2px_24px_rgba(0,0,0,0.35)]"
+                className="text-5xl sm:text-6xl lg:text-10xl text-white leading-[1.05] tracking-tight [text-shadow:0_2px_24px_rgba(0,0,0,0.35)]"
               >
                 Institutional{' '}
                 <span className="text-fiery-orange pb-2 inline-block">

@@ -354,8 +354,6 @@ export default function ArticleDetailPage() {
           </form>
         </div>
       </section>
-
-      <Footer />
     </div>
   );
 }

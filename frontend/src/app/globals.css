@@ -88,6 +88,7 @@ button {
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -99,6 +100,7 @@ button {
     opacity: 0;
     transform: translateX(-40px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -110,6 +112,7 @@ button {
     opacity: 0;
     transform: translateX(40px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -121,6 +124,7 @@ button {
     opacity: 0;
     transform: translateY(40px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -128,18 +132,24 @@ button {
 }
 
 @keyframes pulse-glow {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 20px rgba(13, 115, 237, 0.5);
   }
+
   50% {
     box-shadow: 0 0 40px rgba(26, 86, 49, 0.5);
   }
 }
 
 @keyframes gradient-shift {
-  0%, 100% {
+
+  0%,
+  100% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
@@ -276,6 +286,7 @@ html.dark .stat-card:hover {
   0% {
     transform: translateX(0);
   }
+
   100% {
     transform: translateX(-50%);
   }
@@ -291,6 +302,7 @@ html.dark .stat-card:hover {
   0% {
     background-color: rgba(37, 99, 235, 0.1);
   }
+
   100% {
     background-color: transparent;
   }
@@ -311,6 +323,7 @@ html.dark .stat-card:hover {
 
 /* Mobile-friendly touch targets */
 @media (max-width: 768px) {
+
   button,
   a[role="button"],
   input[type="submit"],
@@ -498,15 +511,16 @@ html.dark .stat-card:hover {
 /*  FIXED: Safe area for notched phones — no longer adds 12px padding to all devices */
 @supports (padding: max(0px)) {
   @media (max-width: 768px) {
-  body {
-    padding-left: env(safe-area-inset-left, 0px);
-    padding-right: env(safe-area-inset-right, 0px);
+    body {
+      padding-left: env(safe-area-inset-left, 0px);
+      padding-right: env(safe-area-inset-right, 0px);
+    }
   }
-}
 }
 
 /* Mobile-friendly form inputs — prevents iOS zoom */
 @media (max-width: 768px) {
+
   input[type="text"],
   input[type="email"],
   input[type="password"],

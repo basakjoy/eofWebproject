@@ -76,7 +76,7 @@ const VALUES = [
 
 export default function AboutPage() {
   return (
-    <div className="w-full min-h-screen bg-[#030305] text-white font-poppins overflow-x-hidden">
+    <div className="w-full  min-h-screen bg-[#030305] text-white font-poppins overflow-x-hidden">
 
       {/* ── Ambient Background ── */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
@@ -84,19 +84,19 @@ export default function AboutPage() {
         <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-[#FF3D00]/6 rounded-full blur-[150px]" />
       </div>
 
-      <div className="relative z-10">
+      <div className="relative z-10 ">
 
         {/* ══ HERO ══ */}
-        <section className="relative min-h-screen flex items-center pt-24 pb-20 px-4 sm:px-6 overflow-hidden">
+        <section className="relative min-h-screen flex items-center pt-40 pb-20 px-4 sm:px-6 overflow-hidden">
           {/* Cinematic BG image */}
           <div className="absolute inset-0 z-0">
             <img
-              src="https://images.unsplash.com/photo-1611974717482-98ea25251749?auto=format&fit=crop&q=80&w=2000"
+              src="https://res.cloudinary.com/bg6urken/image/upload/v1788524620/pexels-pavel-danilyuk-7658388.jpg"
               className="w-full h-full object-cover opacity-20"
               alt="Trading Desk"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-[#030305] via-[#030305]/50 to-[#030305]" />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#030305]/80 via-transparent to-[#030305]/80" />
+            
+           
           </div>
           {/* Diagonal fiery beam */}
           <div
@@ -120,7 +120,7 @@ export default function AboutPage() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.1 }}
-                className="text-6xl sm:text-7xl lg:text-[5.5rem] font-black text-white leading-[1.05] tracking-tight mb-6"
+                className="text-6xl sm:text-7xl lg:text-[5.5rem]  text-white leading-[1.05] tracking-tight mb-6"
               >
                 Built by Traders,{' '}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] via-[#FF8C00] to-[#FFB800]">
@@ -132,7 +132,7 @@ export default function AboutPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.2 }}
-                className="text-lg text-zinc-400 leading-relaxed max-w-xl font-light mb-10"
+                className="text-lg  leading-relaxed max-w-xl font-light mb-10"
               >
                 We've redefined the trading experience by bridging the gap between
                 institutional expertise and retail traders. Founded in 2020, powered by precision.
@@ -146,13 +146,14 @@ export default function AboutPage() {
               >
                 <Link
                   href="/register"
-                  className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-gradient-to-r from-fiery-orange to-fiery-amber text-black font-extrabold text-sm shadow-fiery hover:scale-105 transition-transform"
+                  className="inline-flex items-center gap-3 px-12 py-5 rounded-full bg-white/[0.2] hover:bg-white/[0.08] border border-white/[0.07] hover:border-fiery-orange/30 text-white font-semibold text-sm transition-all"
                 >
-                  Join the Empire <ArrowUpRight className="w-4 h-4" />
+                   <ArrowUpRight size={10} className=" fill-black translate-x-[1px]" />
+                  Join the Empire
                 </Link>
                 <Link
                   href="/trading-signals"
-                  className="inline-flex items-center gap-3 px-8 py-4 rounded-full bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.07] hover:border-fiery-orange/30 text-white font-semibold text-sm transition-all"
+                  className="inline-flex items-center gap-3 px-8 py-4 rounded-full bg-white/[0.2] hover:bg-white/[0.08] border border-white/[0.07] hover:border-fiery-orange/30 text-white font-semibold text-sm transition-all"
                 >
                   <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-fiery-orange to-fiery-amber flex items-center justify-center shadow-fiery">
                     <Play size={10} className="fill-black translate-x-[1px]" />
@@ -170,10 +171,10 @@ export default function AboutPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5 + i * 0.1 }}
-                  className="text-center p-6 rounded-2xl bg-[#0C0C10]/70 border border-white/[0.07] backdrop-blur-xl"
+                  className="text-center p-6 rounded-2xl  border border-white/[0.07] backdrop-blur-xl"
                 >
                   <stat.icon className="w-5 h-5 text-fiery-orange mx-auto mb-2" />
-                  <p className="text-2xl font-black text-white">{stat.value}</p>
+                  <p className="text-2xl  text-white">{stat.value}</p>
                   <p className="text-xs text-zinc-500 font-medium mt-0.5">{stat.label}</p>
                 </motion.div>
               ))}
@@ -195,19 +196,19 @@ export default function AboutPage() {
               >
                 <div className="relative rounded-[2rem] overflow-hidden border border-white/10 aspect-square shadow-[0_30px_80px_rgba(0,0,0,0.6)]">
                   <img
-                    src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=800"
+                    src="https://res.cloudinary.com/bg6urken/image/upload/v1788523321/pexels-cottonbro-5483188.jpg"
                     className="w-full h-full object-cover"
                     alt="Market Analysis"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#030305]/60 via-transparent to-transparent" />
+                  
                 </div>
                 {/* Floating badge */}
-                <div className="absolute -bottom-6 -right-6 hidden md:block p-5 rounded-2xl bg-[#0C0C10]/90 border border-fiery-orange/20 backdrop-blur-xl shadow-fiery">
-                  <div className="flex items-center gap-3 text-fiery-orange mb-2">
+                <div className="absolute -bottom-6 -right-6 hidden md:block p-5 rounded-2xl  border border-white/[0.07] backdrop-blur-xl shadow-fiery">
+                  <div className="flex items-center text-black gap-3 text- mb-2">
                     <TrendingUp className="w-5 h-5" />
                     <span className="font-bold text-sm">Growth Trajectory</span>
                   </div>
-                  <p className="text-xs text-zinc-400 italic max-w-[160px]">
+                  <p className="text-xs text-black italic max-w-[160px]">
                     "Scaling wealth through data-driven precision since day one."
                   </p>
                 </div>
@@ -225,10 +226,10 @@ export default function AboutPage() {
               >
                 <div>
                   <p className="text-xs font-bold text-fiery-orange uppercase tracking-widest mb-4">Our Legacy</p>
-                  <h2 className="text-4xl sm:text-5xl font-black text-white mb-6 leading-tight">
+                  <h2 className="text-4xl sm:text-5xl text-white mb-6 leading-tight">
                     Democratizing Professional Markets
                   </h2>
-                  <p className="text-zinc-400 text-lg leading-relaxed">
+                  <p className="text-lg leading-relaxed">
                     Founded in 2020, Empire of Forex emerged from a vision to provide retail
                     traders with the same technical arsenal used by institutional hedge funds.
                     We believe every serious trader deserves professional-grade tools.
@@ -245,8 +246,8 @@ export default function AboutPage() {
                         <item.icon className="w-5 h-5 text-fiery-orange" />
                       </div>
                       <div>
-                        <h4 className="font-extrabold text-white mb-1">{item.title}</h4>
-                        <p className="text-zinc-500 text-sm leading-relaxed">{item.desc}</p>
+                        <h4 className="font-semibold text-white mb-1">{item.title}</h4>
+                        <p className="text-sm leading-relaxed">{item.desc}</p>
                       </div>
                     </div>
                   ))}
@@ -266,8 +267,8 @@ export default function AboutPage() {
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
               <p className="text-xs font-bold text-fiery-orange uppercase tracking-widest mb-4">What We Stand For</p>
-              <h2 className="text-4xl sm:text-5xl font-black text-white mb-4">Our Core Values</h2>
-              <p className="text-zinc-500 max-w-xl mx-auto">
+              <h2 className="text-4xl sm:text-5xl  text-white mb-4">Our Core Values</h2>
+              <p className="text-zinc-300 max-w-xl mx-auto">
                 Everything we build is grounded in these four principles.
               </p>
             </div>
@@ -279,7 +280,7 @@ export default function AboutPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
-                  className="relative p-7 rounded-3xl bg-[#0C0C10]/80 border border-white/[0.07] hover:border-fiery-orange/30 hover:shadow-[0_8px_32px_rgba(255,107,0,0.1)] transition-all group"
+                  className="relative p-7 rounded-3xl border border-white/[0.07] hover:border-fiery-orange/30 hover:shadow-[0_8px_32px_rgba(255,107,0,0.1)] transition-all group backdrop-blur-2xl"
                 >
                   <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
                   <div className="p-3 rounded-2xl bg-fiery-orange/10 border border-fiery-orange/20 inline-flex mb-5 group-hover:bg-fiery-orange/20 transition-colors">
@@ -299,9 +300,9 @@ export default function AboutPage() {
             <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
               <div>
                 <p className="text-xs font-bold text-fiery-orange uppercase tracking-widest mb-4">The Minds</p>
-                <h2 className="text-4xl sm:text-5xl font-black text-white leading-tight">Guided by Experts</h2>
+                <h2 className="text-4xl sm:text-5xl text-white leading-tight">Guided by Experts</h2>
               </div>
-              <p className="text-zinc-500 max-w-sm text-sm">
+              <p className=" max-w-sm text-sm">
                 Our leadership brings decades of collective experience from top-tier financial institutions.
               </p>
             </div>
@@ -325,11 +326,11 @@ export default function AboutPage() {
                     {/* Bottom accent line */}
                     <div className={`absolute bottom-0 left-0 right-0 h-[3px] bg-gradient-to-r ${member.accent}`} />
                     <div className="absolute bottom-6 left-6 right-6">
-                      <h4 className="text-lg font-extrabold text-white">{member.name}</h4>
-                      <p className="text-fiery-orange text-xs font-bold mt-0.5">{member.role}</p>
+                      <h4 className="text-lg text-white">{member.name}</h4>
+                      <p className="text-fiery-orange text-xs font-semibold mt-0.5">{member.role}</p>
                     </div>
                   </div>
-                  <p className="text-sm text-zinc-500 leading-relaxed opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                  <p className="text-sm leading-relaxed opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
                     {member.bio}
                   </p>
                 </motion.div>
@@ -339,7 +340,7 @@ export default function AboutPage() {
         </section>
 
         {/* ══ MISSION / VISION ══ */}
-        <section className="py-24 px-4 sm:px-6 bg-[#0A0A0E]/50">
+        <section className="py-24 px-4 sm:px-6">
           <div className="max-w-7xl mx-auto">
             <div className="grid md:grid-cols-2 gap-0 rounded-3xl overflow-hidden border border-white/[0.07]">
               <motion.div
@@ -353,14 +354,14 @@ export default function AboutPage() {
                   <div className="p-3 rounded-2xl bg-fiery-orange/10 border border-fiery-orange/20 inline-flex mb-8">
                     <Target className="w-8 h-8 text-fiery-orange" />
                   </div>
-                  <h3 className="text-3xl font-black mb-6">Our Mission</h3>
+                  <h3 className="text-3xl mb-6">Our Mission</h3>
                   <p className="text-zinc-400 text-lg leading-relaxed mb-8">
                     To empower retail traders with professional-grade tools, education, and signals,
                     enabling them to build consistent wealth through forex trading. We're committed
                     to transparency, fairness, and continuous innovation.
                   </p>
                 </div>
-                <div className="flex items-center gap-2 text-fiery-orange font-bold cursor-pointer group/link">
+                <div className="flex items-center gap-2 text-fiery-orange cursor-pointer group/link">
                   Read our manifesto <ChevronRight className="w-5 h-5 group-hover/link:translate-x-1 transition-transform" />
                 </div>
               </motion.div>
@@ -376,14 +377,14 @@ export default function AboutPage() {
                   <div className="p-3 rounded-2xl bg-fiery-amber/10 border border-fiery-amber/20 inline-flex mb-8">
                     <Award className="w-8 h-8 text-fiery-amber" />
                   </div>
-                  <h3 className="text-3xl font-black mb-6">Our Vision</h3>
+                  <h3 className="text-3xl mb-6">Our Vision</h3>
                   <p className="text-zinc-400 text-lg leading-relaxed mb-8">
                     To become the world's most trusted forex trading platform, where every trader
                     has access to institutional-quality research, signals, and risk management
                     tools regardless of their capital size.
                   </p>
                 </div>
-                <div className="flex items-center gap-2 text-fiery-amber font-bold cursor-pointer group/link">
+                <div className="flex items-center gap-2 text-fiery-amber cursor-pointer group/link">
                   Future roadmap <ChevronRight className="w-5 h-5 group-hover/link:translate-x-1 transition-transform" />
                 </div>
               </motion.div>
@@ -396,8 +397,8 @@ export default function AboutPage() {
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
               <p className="text-xs font-bold text-fiery-orange uppercase tracking-widest mb-4">Performance</p>
-              <h2 className="text-4xl sm:text-5xl font-black text-white mb-4">Historical Excellence</h2>
-              <p className="text-zinc-500 max-w-xl mx-auto italic text-sm">
+              <h2 className="text-4xl sm:text-5xl text-white mb-4">Historical Excellence</h2>
+              <p className="text-zinc-400 max-w-xl mx-auto italic text-sm">
                 Independently audited results. Past performance is not indicative of future results.
               </p>
             </div>
@@ -435,7 +436,7 @@ export default function AboutPage() {
               <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-fiery-orange/50 to-transparent" />
 
               <div className="relative z-10">
-                <h2 className="text-5xl sm:text-6xl font-black text-white mb-6 leading-tight">
+                <h2 className="text-5xl sm:text-6xl  text-white mb-6 leading-tight">
                   BUILD YOUR EMPIRE TODAY
                 </h2>
                 <p className="text-zinc-400 text-lg max-w-2xl mx-auto mb-10 font-light leading-relaxed">
@@ -445,7 +446,7 @@ export default function AboutPage() {
                 <div className="flex flex-wrap items-center justify-center gap-5">
                   <Link
                     href="/register"
-                    className="inline-flex items-center gap-2 px-10 py-4 rounded-full bg-white hover:bg-zinc-100 text-black font-extrabold text-sm shadow-[0_0_40px_rgba(255,255,255,0.15)] hover:scale-105 transition-all"
+                    className="inline-flex items-center gap-2 px-10 py-4 rounded-full bg-white hover:bg-zinc-100 text-black font-semibold text-sm shadow-[0_0_40px_rgba(255,255,255,0.15)] hover:scale-105 transition-all"
                   >
                     Create Free Account <ArrowRight className="w-4 h-4" />
                   </Link>

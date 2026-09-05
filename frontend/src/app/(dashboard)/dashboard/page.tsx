@@ -60,9 +60,9 @@ const fmt = (n: number) =>
 
 const statusStyle: Record<string, string> = {
   completed: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
-  active:    'bg-blue-500/10 text-blue-400 border border-blue-500/20',
-  pending:   'bg-amber-500/10 text-amber-400 border border-amber-500/20',
-  failed:    'bg-rose-500/10 text-rose-400 border border-rose-500/20',
+  active: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
+  pending: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
+  failed: 'bg-rose-500/10 text-rose-400 border border-rose-500/20',
   cancelled: 'bg-slate-500/10 text-slate-400 border border-slate-500/20',
 };
 
@@ -109,9 +109,8 @@ function Modal({ title, onClose, children }: {
 function Toast({ message, type, onClose }: { message: string; type: 'success' | 'error'; onClose: () => void }) {
   useEffect(() => { const t = setTimeout(onClose, 4000); return () => clearTimeout(t); }, [onClose]);
   return (
-    <div className={`fixed bottom-6 right-6 z-[100] flex items-center gap-3 px-5 py-4 rounded-2xl shadow-2xl border animate-in slide-in-from-bottom-4 duration-300 ${
-      type === 'success' ? 'bg-emerald-950 border-emerald-800 text-emerald-300' : 'bg-rose-950 border-rose-800 text-rose-300'
-    }`}>
+    <div className={`fixed bottom-6 right-6 z-[100] flex items-center gap-3 px-5 py-4 rounded-2xl shadow-2xl border animate-in slide-in-from-bottom-4 duration-300 ${type === 'success' ? 'bg-emerald-950 border-emerald-800 text-emerald-300' : 'bg-rose-950 border-rose-800 text-rose-300'
+      }`}>
       {type === 'success' ? <CheckCircle className="w-5 h-5 shrink-0" /> : <AlertCircle className="w-5 h-5 shrink-0" />}
       <p className="text-sm font-medium">{message}</p>
     </div>
@@ -591,11 +590,10 @@ export default function UserDashboard() {
                   <button
                     key={p}
                     onClick={() => setInvestForm(f => ({ ...f, plan: p }))}
-                    className={`py-2.5 rounded-xl text-sm font-bold border transition-all ${
-                      investForm.plan === p
+                    className={`py-2.5 rounded-xl text-sm font-bold border transition-all ${investForm.plan === p
                         ? 'bg-blue-600 border-blue-500 text-white'
                         : 'bg-slate-800 border-slate-700 text-slate-300 hover:border-slate-600'
-                    }`}
+                      }`}
                   >
                     {p}
                   </button>
@@ -609,11 +607,10 @@ export default function UserDashboard() {
                   <button
                     key={d}
                     onClick={() => setInvestForm(f => ({ ...f, duration: d }))}
-                    className={`py-2.5 rounded-xl text-sm font-bold border transition-all ${
-                      investForm.duration === d
+                    className={`py-2.5 rounded-xl text-sm font-bold border transition-all ${investForm.duration === d
                         ? 'bg-blue-600 border-blue-500 text-white'
                         : 'bg-slate-800 border-slate-700 text-slate-300 hover:border-slate-600'
-                    }`}
+                      }`}
                   >
                     {d}mo
                   </button>
