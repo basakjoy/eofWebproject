@@ -1,53 +1,76 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import {
-  ArrowLeft, Clock, Eye, ThumbsUp, ThumbsDown, Calendar,
-  Share2, Loader2, ChevronRight, ArrowUpRight, User
+  ArrowLeft,
+  Clock,
+  Eye,
+  ThumbsUp,
+  ThumbsDown,
+  Calendar,
+  Share2,
+  Loader2,
+  ChevronRight,
+  ArrowUpRight,
+  User,
+  Sparkles,
+  BookOpen,
 } from 'lucide-react';
 import blogApi, { BlogArticle } from '@/lib/blogApi';
 import Navbar from '@/components/common/Navbar';
-import Footer from '@/components/common/Footer';
 
-/* ─── Content helpers ──────────────────────────────────────── */
+/* ─── Content Helpers ──────────────────────────────────────── */
 
 const slugify = (text: string) =>
-  text.toLowerCase().trim().replace(/[^\w]+/g, '-').replace(/(^-|-$)/g, '');
+  text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w]+/g, '-')
+    .replace(/(^-|-$)/g, '');
 
-// Pull the "## " headings out of the markdown-ish body so we can build
-// a table of contents that jumps to the matching heading in the article.
 function extractHeadings(content: string) {
   return content
     .split('\n')
-    .filter(line => line.startsWith('## '))
-    .map(line => {
+    .filter((line) => line.startsWith('## '))
+    .map((line) => {
       const text = line.slice(3).trim();
       return { id: slugify(text), text };
     });
 }
 
-// Simple markdown-like renderer
 function renderContent(content: string) {
   const lines = content.split('\n');
   return lines.map((line, i) => {
     if (line.startsWith('# '))
-      return <h1 key={i} className="mb-4 mt-8 text-3xl font-bold text-slate-900">{line.slice(2)}</h1>;
+      return (
+        <h1 key={i} className="text-3xl sm:text-4xl font-black text-white mt-10 mb-5 leading-tight">
+          {line.slice(2)}
+        </h1>
+      );
     if (line.startsWith('## ')) {
       const text = line.slice(3).trim();
       return (
-        <h2 key={i} id={slugify(text)} className="mb-3 mt-10 scroll-mt-28 text-2xl font-bold text-slate-900">
+        <h2
+          key={i}
+          id={slugify(text)}
+          className="text-2xl sm:text-3xl font-bold text-white mt-12 mb-4 scroll-mt-28 border-l-2 border-fiery-orange pl-4"
+        >
           {text}
         </h2>
       );
     }
     if (line.startsWith('### '))
-      return <h3 key={i} className="mb-2 mt-6 text-lg font-bold text-slate-900">{line.slice(4)}</h3>;
+      return (
+        <h3 key={i} className="text-xl font-bold text-white mt-8 mb-3">
+          {line.slice(4)}
+        </h3>
+      );
     if (line.startsWith('> '))
       return (
-        <blockquote key={i} className="my-8 max-w-2xl">
-          <p className="text-2xl font-bold leading-snug text-slate-900 sm:text-3xl">
+        <blockquote key={i} className="my-8 p-6 rounded-2xl bg-fiery-orange/10 border-l-4 border-fiery-orange backdrop-blur-md">
+          <p className="text-lg font-semibold italic text-white leading-relaxed">
             &ldquo;{line.slice(2)}&rdquo;
           </p>
         </blockquote>
@@ -55,19 +78,32 @@ function renderContent(content: string) {
     const image = line.match(/^!\[(.*)\]\((.*)\)$/);
     if (image)
       return (
-        <img
-          key={i}
-          src={image[2]}
-          alt={image[1]}
-          className="my-8 w-full rounded-2xl border border-slate-200 object-cover"
-        />
+        <div key={i} className="my-8 rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
+          <img
+            src={image[2]}
+            alt={image[1]}
+            className="w-full object-cover max-h-[500px]"
+          />
+        </div>
       );
     if (line.startsWith('- ') || line.startsWith('* '))
-      return <li key={i} className="ml-5 mb-1 list-disc leading-relaxed text-slate-600">{line.slice(2)}</li>;
+      return (
+        <li key={i} className="ml-6 mb-2 list-disc text-zinc-300 font-light leading-relaxed">
+          {line.slice(2)}
+        </li>
+      );
     if (line.startsWith('**') && line.endsWith('**'))
-      return <p key={i} className="my-2 font-bold text-slate-900">{line.slice(2, -2)}</p>;
-    if (line.trim() === '') return <div key={i} className="h-3" />;
-    return <p key={i} className="mb-2 leading-relaxed text-slate-600">{line}</p>;
+      return (
+        <p key={i} className="my-3 font-bold text-white text-base">
+          {line.slice(2, -2)}
+        </p>
+      );
+    if (line.trim() === '') return <div key={i} className="h-4" />;
+    return (
+      <p key={i} className="mb-4 text-zinc-300 font-light leading-relaxed text-base">
+        {line}
+      </p>
+    );
   });
 }
 
@@ -91,7 +127,7 @@ export default function ArticleDetailPage() {
         setArticle(res.data);
 
         const relRes = await blogApi.getArticles({ category: res.data.category, limit: 3 });
-        setRelated(relRes.data.filter(a => a.id !== res.data.id).slice(0, 2));
+        setRelated(relRes.data.filter((a) => a.id !== res.data.id).slice(0, 2));
       } catch {
         router.push('/blog');
       } finally {
@@ -107,7 +143,9 @@ export default function ArticleDetailPage() {
       await blogApi.markHelpful(article.id, helpful);
       setFeedback(helpful ? 'helpful' : 'unhelpful');
       setFeedbackSent(true);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   };
 
   const handleShare = () => {
@@ -120,8 +158,8 @@ export default function ArticleDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-white">
-        <Loader2 size={40} className="animate-spin text-slate-400" />
+      <div className="flex min-h-screen items-center justify-center bg-[#030305] text-white">
+        <Loader2 size={40} className="animate-spin text-fiery-orange" />
       </div>
     );
   }
@@ -130,230 +168,286 @@ export default function ArticleDetailPage() {
 
   const readTime = Math.max(1, Math.ceil(article.content.split(/\s+/).length / 200));
   const headings = extractHeadings(article.content);
-  const tags = article.keywords ? article.keywords.split(',').map(k => k.trim()).filter(Boolean) : [];
+  const tags = article.keywords ? article.keywords.split(',').map((k) => k.trim()).filter(Boolean) : [];
   const publishedDate = new Date(article.createdAt).toLocaleDateString('en-US', {
-    month: 'long', day: 'numeric', year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
   });
 
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <div className="w-full min-h-screen bg-[#030305] text-white font-poppins overflow-x-hidden">
       <Navbar />
 
-      {/* ── Hero ──────────────────────────────────────────── */}
-      <section className="bg-[#EAE7DB] pb-16 pt-28">
-        <div className="mx-auto max-w-3xl px-6">
-          <nav className="mb-8 flex items-center justify-center gap-2 text-xs font-medium text-slate-500">
-            <Link href="/" className="hover:text-slate-900">Home</Link>
-            <ChevronRight size={12} />
-            <Link href="/blog" className="hover:text-slate-900">Blog</Link>
-          </nav>
+      {/* ── Ambient Background & Image Overlay ── */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <img
+          src="https://res.cloudinary.com/xxx8fpey/image/upload/v1788764499/pexels-joaojesusdesign-925711.jpg"
+          alt="Markets Background"
+          className="w-full h-full object-cover opacity-15 mix-blend-luminosity scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#030305]/70 via-[#030305]/85 to-[#030305]" />
+        <div className="absolute -top-40 right-[-15%] w-[800px] h-[800px] bg-[#FF6B00]/10 rounded-full blur-[150px]" />
+        <div className="absolute top-[40%] left-[-10%] w-[600px] h-[600px] bg-[#FF3D00]/8 rounded-full blur-[150px]" />
+      </div>
 
-          <div className="flex flex-col items-center text-center">
-            <span className="mb-5 inline-block rounded-full border border-slate-400/50 px-4 py-1 text-xs font-semibold text-slate-600">
+      <div className="relative z-10">
+
+        {/* ══ HERO ══ */}
+        <section className="pt-36 pb-12 px-4 sm:px-6">
+          <div className="max-w-4xl mx-auto text-center">
+            <nav className="mb-6 flex items-center justify-center gap-2 text-xs font-medium text-zinc-400">
+              <Link href="/" className="hover:text-white transition-colors">Home</Link>
+              <ChevronRight size={12} className="text-zinc-600" />
+              <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
+              <ChevronRight size={12} className="text-zinc-600" />
+              <span className="text-fiery-orange font-bold">{article.category}</span>
+            </nav>
+
+            <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-fiery-orange/10 border border-fiery-orange/30 text-xs font-bold text-fiery-orange mb-6 backdrop-blur-md">
+              <Sparkles className="w-3.5 h-3.5" />
               {article.category}
             </span>
-            <h1 className="text-4xl font-bold leading-tight tracking-tight text-slate-900 sm:text-5xl">
+
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl text-white leading-tight tracking-tight mb-6">
               {article.title}
             </h1>
-            <p className="mx-auto mt-5 max-w-xl text-slate-500">
-              {article.excerpt ?? article.content.slice(0, 140).replace(/[#*`>]/g, '').trim() + '...'}
+
+            <p className="text-base sm:text-lg text-zinc-300 font-light leading-relaxed max-w-2xl mx-auto mb-8">
+              {article.excerpt ?? article.content.slice(0, 150).replace(/[#*`>]/g, '').trim() + '...'}
             </p>
-          </div>
-        </div>
-      </section>
 
-      {article.imageUrl && (
-        <div className="mx-auto -mt-0 max-w-5xl px-6 pt-12">
-          <img
-            src={article.imageUrl}
-            alt={article.title}
-            className="h-[300px] w-full rounded-3xl object-cover sm:h-[420px]"
-          />
-        </div>
-      )}
-
-      {/* ── Main content ──────────────────────────────────── */}
-      <section className="mx-auto max-w-6xl px-6 py-16">
-        <div className="grid grid-cols-1 gap-16 lg:grid-cols-[1fr_280px]">
-
-          {/* Article body */}
-          <article className="min-w-0">
-            {renderContent(article.content)}
-
-            {tags.length > 0 && (
-              <div className="mt-10 flex flex-wrap gap-2 border-t border-slate-100 pt-8">
-                {tags.map(tag => (
-                  <span key={tag} className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-500">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* Feedback */}
-            <div className="mt-10 border-t border-slate-100 pt-8">
-              <p className="mb-4 text-sm font-bold text-slate-700">Was this article helpful?</p>
-              <div className="flex flex-wrap items-center gap-3">
-                <button
-                  onClick={() => handleFeedback(true)}
-                  disabled={feedbackSent}
-                  className={`flex items-center gap-2 rounded-xl border px-5 py-2.5 text-xs font-bold transition-all ${
-                    feedback === 'helpful'
-                      ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
-                      : 'border-slate-200 text-slate-500 hover:border-emerald-300 hover:text-emerald-700'
-                  } disabled:opacity-50`}
-                >
-                  <ThumbsUp size={14} />
-                  Yes, helpful ({article.helpfulCount + (feedback === 'helpful' ? 1 : 0)})
-                </button>
-                <button
-                  onClick={() => handleFeedback(false)}
-                  disabled={feedbackSent}
-                  className={`flex items-center gap-2 rounded-xl border px-5 py-2.5 text-xs font-bold transition-all ${
-                    feedback === 'unhelpful'
-                      ? 'border-red-300 bg-red-50 text-red-700'
-                      : 'border-slate-200 text-slate-500 hover:border-red-300 hover:text-red-700'
-                  } disabled:opacity-50`}
-                >
-                  <ThumbsDown size={14} />
-                  Not helpful
-                </button>
-                {feedbackSent && <span className="text-xs text-slate-400">Thank you for your feedback!</span>}
-              </div>
-            </div>
-
-            <div className="mt-10 flex items-center gap-3 border-t border-slate-100 pt-8">
-              <Link
-                href="/blog"
-                className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-500 transition-all hover:border-slate-300 hover:text-slate-900"
-              >
-                <ArrowLeft size={13} />
-                Back to Blog
-              </Link>
-              <button
-                onClick={handleShare}
-                className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-500 transition-all hover:border-slate-300 hover:text-slate-900"
-              >
-                <Share2 size={13} />
-                Share
-              </button>
-            </div>
-          </article>
-
-          {/* Sidebar */}
-          <aside className="space-y-8 lg:pt-1">
-            {headings.length > 0 && (
-              <div>
-                <p className="mb-4 text-xs font-bold uppercase tracking-widest text-slate-400">Table of contents</p>
-                <ul className="space-y-3 border-l border-slate-200 pl-4">
-                  {headings.map(h => (
-                    <li key={h.id}>
-                      <a href={`#${h.id}`} className="text-sm font-medium text-slate-500 hover:text-slate-900">
-                        {h.text}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            <div>
-              <p className="mb-4 text-xs font-bold uppercase tracking-widest text-slate-400">Author</p>
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100">
-                  <User className="h-5 w-5 text-slate-400" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-slate-900">Admin</p>
-                  <p className="text-xs text-slate-500">{publishedDate}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 p-5 text-xs text-slate-500">
-              <span className="flex items-center gap-2"><Calendar size={13} /> {publishedDate}</span>
-              <span className="flex items-center gap-2"><Clock size={13} /> {readTime} min read</span>
-              <span className="flex items-center gap-2"><Eye size={13} /> {article.viewCount.toLocaleString()} views</span>
-            </div>
-
-            <div>
-              <p className="mb-3 text-xs font-bold uppercase tracking-widest text-slate-400">Subscribe to our newsletter</p>
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="mb-2 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-slate-400"
-              />
-              <button className="w-full rounded-xl bg-slate-900 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800">
-                Subscribe
-              </button>
-            </div>
-          </aside>
-        </div>
-      </section>
-
-      {/* ── From the blog ────────────────────────────────── */}
-      {related.length > 0 && (
-        <section className="bg-[#12321F] px-6 py-20 text-white">
-          <div className="mx-auto max-w-6xl">
-            <div className="mb-12 flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
-              <div>
-                <p className="mb-2 text-xs font-bold uppercase tracking-widest text-emerald-300/70">Latest</p>
-                <h2 className="text-3xl font-bold sm:text-4xl">From the blog</h2>
-                <p className="mt-3 max-w-md text-sm text-emerald-100/60">
-                  The latest industry news, interviews, and resources.
-                </p>
-              </div>
-              <Link
-                href="/blog"
-                className="shrink-0 rounded-xl border border-white/20 px-5 py-2.5 text-sm font-semibold transition-colors hover:bg-white/10"
-              >
-                View all posts
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
-              {related.map(a => (
-                <Link key={a.id} href={`/blog/${a.slug}`} className="group block">
-                  <div
-                    className="mb-4 h-56 w-full rounded-2xl bg-emerald-950 bg-cover bg-center"
-                    style={{ backgroundImage: a.imageUrl ? `url(${a.imageUrl})` : undefined }}
-                  />
-                  <h3 className="flex items-start gap-1.5 text-lg font-bold">
-                    {a.title}
-                    <ArrowUpRight size={16} className="mt-1 shrink-0 text-emerald-300 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                  </h3>
-                  <p className="mt-2 line-clamp-2 text-sm text-emerald-100/60">
-                    {a.excerpt ?? a.content.slice(0, 110).replace(/[#*`>]/g, '').trim() + '...'}
-                  </p>
-                </Link>
-              ))}
+            <div className="flex flex-wrap items-center justify-center gap-6 text-md text-zinc-400 pt-4 border-t border-white/10">
+              <span className="flex items-center gap-2">
+                <User className="w-4 h-4 text-fiery-orange" /> Empire Research Desk
+              </span>
+              <span className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-fiery-orange" /> {publishedDate}
+              </span>
+              <span className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-fiery-orange" /> {readTime} min read
+              </span>
+              <span className="flex items-center gap-2">
+                <Eye className="w-4 h-4 text-fiery-orange" /> {article.viewCount.toLocaleString()} views
+              </span>
             </div>
           </div>
         </section>
-      )}
 
-      {/* ── Newsletter band ──────────────────────────────── */}
-      <section className="border-t border-white/10 bg-[#12321F] px-6 py-12 text-white">
-        <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
-          <div>
-            <h3 className="text-xl font-bold">Join our newsletter</h3>
-            <p className="mt-1 text-sm text-emerald-100/60">We&rsquo;ll send you a nice letter once per week. No spam.</p>
+        {/* ══ COVER IMAGE BANNER ══ */}
+        {article.imageUrl && (
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 mb-16">
+            <div className="relative rounded-3xl overflow-hidden border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
+              <img
+                src={article.imageUrl}
+                alt={article.title}
+                className="w-full max-h-[500px] object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#030305]/60 via-transparent to-transparent" />
+            </div>
           </div>
-          <form
-            onSubmit={e => e.preventDefault()}
-            className="flex w-full max-w-md items-center gap-3 sm:w-auto"
-          >
-            <input
-              type="email"
-              placeholder="Enter your email"
-              className="w-full flex-1 rounded-xl border border-white/20 bg-transparent px-4 py-2.5 text-sm text-white placeholder:text-emerald-100/40 outline-none focus:border-white/50"
-            />
-            <button className="shrink-0 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-[#12321F] transition-colors hover:bg-emerald-50">
-              Subscribe
-            </button>
-          </form>
-        </div>
-      </section>
+        )}
+
+        {/* ══ MAIN ARTICLE CONTENT & SIDEBAR ══ */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
+
+            {/* Main Article Body */}
+            <div className="lg:col-span-2 p-8 sm:p-12 rounded-3xl border border-white/10 bg-[#0C0C10]/40 backdrop-blur shadow-2xl">
+              <article className="prose prose-invert max-w-none">
+                {renderContent(article.content)}
+              </article>
+
+              {/* Keywords / Tags */}
+              {tags.length > 0 && (
+                <div className="mt-12 pt-8 border-t border-white/10 flex flex-wrap gap-2 items-center">
+                  <span className="text-xs font-bold text-zinc-400 mr-2 uppercase tracking-wider">Tags:</span>
+                  {tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-xs font-semibold text-zinc-300"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Feedback Widget */}
+              <div className="mt-10 pt-8 border-t border-white/10 p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
+                <p className="text-sm font-bold text-white mb-4">Was this article helpful?</p>
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    onClick={() => handleFeedback(true)}
+                    disabled={feedbackSent}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl border text-xs font-bold transition-all ${
+                      feedback === 'helpful'
+                        ? 'border-emerald-500 bg-emerald-500/20 text-emerald-400'
+                        : 'border-white/10 bg-white/[0.04] text-zinc-300 hover:border-emerald-500/50 hover:text-emerald-400'
+                    } disabled:opacity-50`}
+                  >
+                    <ThumbsUp size={14} />
+                    Yes, helpful ({article.helpfulCount + (feedback === 'helpful' ? 1 : 0)})
+                  </button>
+                  <button
+                    onClick={() => handleFeedback(false)}
+                    disabled={feedbackSent}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl border text-xs font-bold transition-all ${
+                      feedback === 'unhelpful'
+                        ? 'border-rose-500 bg-rose-500/20 text-rose-400'
+                        : 'border-white/10 bg-white/[0.04] text-zinc-300 hover:border-rose-500/50 hover:text-rose-400'
+                    } disabled:opacity-50`}
+                  >
+                    <ThumbsDown size={14} />
+                    Not helpful
+                  </button>
+                  {feedbackSent && (
+                    <span className="text-xs text-fiery-orange font-semibold">
+                      Thank you for your feedback!
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Actions Footer */}
+              <div className="mt-10 pt-8 border-t border-white/10 flex items-center justify-between">
+                <Link
+                  href="/blog"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/10 bg-white/[0.04] hover:border-fiery-orange/40 text-xs font-bold text-white transition-all"
+                >
+                  <ArrowLeft size={14} />
+                  Back to Blog
+                </Link>
+                <button
+                  onClick={handleShare}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/10 bg-white/[0.04] hover:border-fiery-orange/40 text-xs font-bold text-white transition-all cursor-pointer"
+                >
+                  <Share2 size={14} />
+                  Share Article
+                </button>
+              </div>
+            </div>
+
+            {/* Sidebar */}
+            <aside className="space-y-8">
+              {/* Table of Contents */}
+              {headings.length > 0 && (
+                <div className="p-6 rounded-3xl border border-white/10 bg-[#0C0C10]/40 backdrop-blur-2xl shadow-xl">
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-fiery-orange mb-4 flex items-center gap-2">
+                    <BookOpen className="w-4 h-4" /> Table of Contents
+                  </h3>
+                  <ul className="space-y-2.5 border-l border-white/10 pl-4">
+                    {headings.map((h) => (
+                      <li key={h.id}>
+                        <a
+                          href={`#${h.id}`}
+                          className="text-xs font-medium text-zinc-400 hover:text-fiery-orange transition-colors block leading-relaxed"
+                        >
+                          {h.text}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Author & Info Card */}
+              <div className="p-6 rounded-3xl border border-white/10 bg-[#0C0C10]/40 backdrop-blur-2xl shadow-xl space-y-4">
+                <h3 className="text-xs font-bold uppercase tracking-widest text-fiery-orange border-b border-white/10 pb-3">
+                  Article Info
+                </h3>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-fiery-orange/10 border border-fiery-orange/30 flex items-center justify-center text-fiery-orange font-bold">
+                    <User className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-white">Empire Research Desk</p>
+                    <p className="text-xs text-zinc-400">{publishedDate}</p>
+                  </div>
+                </div>
+                <div className="pt-2 text-xs text-zinc-400 space-y-2 border-t border-white/[0.06]">
+                  <div className="flex justify-between">
+                    <span>Category:</span>
+                    <span className="text-white font-semibold">{article.category}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Reading Time:</span>
+                    <span className="text-white font-semibold">{readTime} min</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Views:</span>
+                    <span className="text-white font-semibold">{article.viewCount.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Newsletter Callout */}
+              <div className="p-6 rounded-3xl border border-fiery-orange/30 bg-gradient-to-br from-[#0C0C10]/80 via-[#0C0C10]/50 to-[#111116]/80 backdrop-blur-2xl shadow-2xl">
+                <h4 className="text-base font-bold text-white mb-2">Subscribe to Research Desk</h4>
+                <p className="text-xs text-zinc-400 mb-4  leading-relaxed">
+                  Get our weekly market analysis and trade breakdowns delivered to your inbox.
+                </p>
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-zinc-500 mb-3 focus:outline-none focus:border-fiery-orange/50"
+                />
+                <button className="w-full py-2.5 rounded-xl bg-gradient-to-r from-fiery-orange to-fiery-amber text-white font-bold text-xs shadow-fiery">
+                  Subscribe
+                </button>
+              </div>
+            </aside>
+
+          </div>
+        </section>
+
+        {/* ══ RELATED ARTICLES BANNER ══ */}
+        {related.length > 0 && (
+          <section className="py-20 px-4 sm:px-6 bg-[#0A0A0E]/50 border-t border-white/10">
+            <div className="max-w-7xl mx-auto">
+              <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-6 mb-12">
+                <div>
+                  <p className="text-xs font-bold text-fiery-orange uppercase tracking-widest mb-2">More Research</p>
+                  <h2 className="text-3xl sm:text-4xl font-black text-white">From the Blog</h2>
+                </div>
+                <Link
+                  href="/blog"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-white/20 hover:border-fiery-orange/40 text-xs font-bold text-white transition-all"
+                >
+                  View All Articles <ArrowUpRight className="w-4 h-4 text-fiery-orange" />
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                {related.map((rel) => (
+                  <Link
+                    key={rel.id}
+                    href={`/blog/${rel.slug}`}
+                    className="group flex flex-col justify-between p-6 rounded-3xl border border-white/10 bg-[#0C0C10]/40 hover:border-fiery-orange/40 hover:bg-[#0C0C10]/70 backdrop-blur-2xl transition-all duration-300"
+                  >
+                    <div>
+                      <div
+                        className="h-48 w-full rounded-2xl bg-zinc-800 bg-cover bg-center mb-5 border border-white/10 overflow-hidden group-hover:scale-[1.02] transition-transform"
+                        style={{ backgroundImage: rel.imageUrl ? `url(${rel.imageUrl})` : undefined }}
+                      />
+                      <span className="text-[10px] font-bold text-fiery-orange uppercase tracking-wider block mb-2">
+                        {rel.category}
+                      </span>
+                      <h3 className="text-xl font-bold text-white group-hover:text-fiery-orange transition-colors mb-2">
+                        {rel.title}
+                      </h3>
+                      <p className="text-xs text-zinc-400 font-light line-clamp-2 leading-relaxed">
+                        {rel.excerpt ?? rel.content.slice(0, 110).replace(/[#*`>]/g, '').trim() + '...'}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+      </div>
     </div>
   );
 }

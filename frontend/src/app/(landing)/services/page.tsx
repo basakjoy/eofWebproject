@@ -114,7 +114,7 @@ const TIERS = [
     price: 'Free',
     period: '',
     desc: 'Essential tools for the retail trader starting their journey.',
-    services: ['Basic Signals (Limited)', 'Daily Market Briefing', 'Educational Hub Access', 'Community Forum'],
+    services: ['Basic Signals (Limited)', 'Daily Market Briefing', 'Educational Hub Access', 'Community Forum','24/7 Customer Support ', 'Backtesting Workshops with real data'],
     cta: 'Get Started Free',
     href: '/register',
     featured: false,
@@ -152,12 +152,19 @@ const WHY_US = [
 
 export default function ServicesPage() {
   return (
-    <div className="w-full min-h-screen bg-[#030305] text-white font-poppins overflow-x-hidden">
+    <div className="w-full min-h-screen bg-[#030305] py-15 text-white font-poppins overflow-x-hidden">
 
-      {/* ── Ambient Background ── */}
+      {/* ── Ambient Background & Image Overlay ── */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="absolute -top-40 right-[-15%] w-[700px] h-[700px] bg-[#FF6B00]/8 rounded-full blur-[140px]" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-[#FF3D00]/6 rounded-full blur-[150px]" />
+        <img
+          src="https://res.cloudinary.com/xxx8fpey/image/upload/v1788764499/pexels-joaojesusdesign-925711.jpg"
+          alt="Markets Background"
+          className="w-full h-full object-cover opacity-300  backdrop-blur-xs backdrop-saturate-300  mix-blend-luminosity scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#030305]/70 via-[#030305]/85 to-[#030305]" />
+        <div className="absolute -top-40 right-[-15%] w-[700px] h-[700px] bg-[#FF6B00]/12 rounded-full blur-[140px]" />
+        <div className="absolute top-[40%] left-[-10%] w-[600px] h-[600px] bg-[#FF3D00]/8 rounded-full blur-[150px]" />
+        <div className="absolute bottom-[-10%] right-[5%] w-[600px] h-[600px] bg-[#FF6B00]/10 rounded-full blur-[150px]" />
       </div>
 
       <div className="relative z-10">
@@ -179,7 +186,7 @@ export default function ServicesPage() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.1 }}
-              className="text-6xl sm:text-7xl lg:text-[5.5rem] font-black text-white leading-[1.05] tracking-tight mb-6"
+              className="text-6xl sm:text-7xl lg:text-[5.5rem] text-white leading-[1.05] tracking-tight mb-6"
             >
               Our{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] via-[#FF8C00] to-[#FFB800]">
@@ -191,9 +198,9 @@ export default function ServicesPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.2 }}
-              className="text-lg text-zinc-400 leading-relaxed max-w-2xl mx-auto font-light"
+              className="text-lg  leading-relaxed max-w-2xl mx-auto font-light"
             >
-              From algorithmic signals to fully managed capital solutions—we provide the
+              From algorithmic signals to fully managed capital solutions we provide the
               institutional infrastructure required to dominate the global markets.
             </motion.p>
           </div>
@@ -219,16 +226,16 @@ export default function ServicesPage() {
                     <service.icon className={`w-8 h-8 ${service.iconColor}`} />
                   </div>
                   <div>
-                    <p className={`text-xs font-bold uppercase tracking-widest mb-2 ${service.iconColor}`}>
+                    <p className={`text-xs text-fiery-orange uppercase tracking-widest mb-2 ${service.iconColor}`}>
                       {service.subtitle}
                     </p>
-                    <h2 className="text-4xl sm:text-5xl font-black mb-5 leading-tight">{service.title}</h2>
-                    <p className="text-zinc-400 text-base leading-relaxed mb-6">
+                    <h2 className="text-4xl sm:text-5xl mb-5 leading-tight">{service.title}</h2>
+                    <p className="text-base leading-relaxed mb-6">
                       {service.description}
                     </p>
                     <Link
                       href="/register"
-                      className={`inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-fiery-orange/30 text-white font-semibold text-sm transition-all`}
+                      className={`inline-flex items-center gap-2 px-6 py-3 rounded-full hover:bg-white/[0.08] border border-white/10 hover:border-fiery-orange/30 text-white font-semibold text-sm transition-all`}
                     >
                       Inquire for Details <ChevronRight className="w-4 h-4" />
                     </Link>
@@ -243,7 +250,7 @@ export default function ServicesPage() {
                   transition={{ duration: 0.8 }}
                   className={`${idx % 2 === 1 ? 'lg:order-1' : ''}`}
                 >
-                  <div className={`relative p-8 rounded-3xl bg-gradient-to-br ${service.highlight} border ${service.highlightBorder} backdrop-blur-xl overflow-hidden`}>
+                  <div className={`relative p-8 rounded-3xl bg-[#0C0C10]/40 bg-gradient-to-br ${service.highlight} border ${service.highlightBorder} backdrop-blur shadow-[0_16px_40px_rgba(0,0,0,0.4)] overflow-hidden hover:border-fiery-orange/30 transition-all`}>
                     <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
                     {/* Glow accent */}
                     <div className={`absolute top-0 right-0 w-48 h-48 bg-gradient-to-br ${service.accent} opacity-10 blur-[60px] rounded-full`} />
@@ -258,7 +265,7 @@ export default function ServicesPage() {
                           <div className={`mt-0.5 p-0.5 rounded-full ${service.iconBg} border ${service.iconBorder} flex-shrink-0`}>
                             <CheckCircle2 className={`w-4 h-4 ${service.iconColor}`} />
                           </div>
-                          <span className="text-sm text-zinc-300 font-medium group-hover:text-white transition-colors">
+                          <span className="text-sm font-medium group-hover:text-white transition-colors">
                             {benefit}
                           </span>
                         </li>
@@ -276,10 +283,10 @@ export default function ServicesPage() {
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
               <p className="text-xs font-bold text-fiery-orange uppercase tracking-widest mb-4">Why Empire of Forex</p>
-              <h2 className="text-4xl sm:text-5xl font-black text-white mb-4">
+              <h2 className="text-4xl sm:text-5xl text-white mb-4">
                 The Edge That Separates Us
               </h2>
-              <p className="text-zinc-500 max-w-xl mx-auto">
+              <p className="text-base max-w-xl mx-auto">
                 We don't just deliver signals — we deliver a complete trading infrastructure.
               </p>
             </div>
@@ -291,14 +298,14 @@ export default function ServicesPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: i * 0.08 }}
-                  className="relative p-7 rounded-3xl bg-[#0C0C10]/80 border border-white/[0.07] hover:border-fiery-orange/30 hover:shadow-[0_8px_32px_rgba(255,107,0,0.1)] transition-all group"
+                  className="relative p-7 rounded-3xl border border-white/10 hover:border-fiery-orange/40 hover:bg-[#0C0C10]/60 hover:shadow-[0_12px_40px_rgba(255,107,0,0.15)] backdrop-blur transition-all duration-300 group" 
                 >
                   <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
                   <div className="p-3 rounded-2xl bg-fiery-orange/10 border border-fiery-orange/20 inline-flex mb-5 group-hover:bg-fiery-orange/20 transition-colors">
                     <item.icon className="w-5 h-5 text-fiery-orange" />
                   </div>
-                  <h3 className="text-base font-extrabold text-white mb-2">{item.title}</h3>
-                  <p className="text-sm text-zinc-500 leading-relaxed">{item.desc}</p>
+                  <h3 className="text-base  text-white mb-2">{item.title}</h3>
+                  <p className="text-sm text-zinc-400 leading-relaxed">{item.desc}</p>
                 </motion.div>
               ))}
             </div>
@@ -310,10 +317,10 @@ export default function ServicesPage() {
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
               <p className="text-xs font-bold text-fiery-orange uppercase tracking-widest mb-4">Access Levels</p>
-              <h2 className="text-4xl sm:text-5xl font-black text-white mb-4">
+              <h2 className="text-4xl sm:text-6xl  text-white mb-4">
                 Simple, Transparent Pricing
               </h2>
-              <p className="text-zinc-500 max-w-xl mx-auto">
+              <p className="text-zinc-400 max-w-xl mx-auto">
                 Scalable solutions for every stage of your trading journey.
               </p>
             </div>
@@ -326,10 +333,10 @@ export default function ServicesPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
-                  className={`relative flex flex-col rounded-3xl overflow-hidden border transition-all ${
+                  className={`relative flex flex-col rounded-3xl overflow-hidden border backdrop-blur-md transition-all duration-300 ${
                     tier.featured
-                      ? 'border-fiery-orange/40 bg-gradient-to-b from-fiery-orange/5 to-[#0C0C10] shadow-fiery-lg md:scale-105 md:-translate-y-2 z-10'
-                      : 'border-white/[0.07] bg-[#0C0C10]/80'
+                      ? 'border-fiery-orange/50 bg-gradient-to-b from-fiery-orange/15 via-[#0C0C10]/70 to-[#0C0C10]/90 shadow-[0_0_50px_rgba(255,107,0,0.2)] md:scale-105 md:-translate-y-2 z-10'
+                      : 'border-white/10 bg-[#0C0C10]/40 hover:border-white/20 hover:bg-[#0C0C10]/60 shadow-xl'
                   }`}
                 >
                   {/* Top accent */}
@@ -340,7 +347,7 @@ export default function ServicesPage() {
                   {/* Most Popular badge */}
                   {tier.featured && (
                     <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20">
-                      <div className="flex items-center gap-1.5 bg-gradient-to-r from-fiery-orange to-fiery-amber text-black px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-fiery">
+                      <div className="flex items-center gap-1.5 bg-gradient-to-r from-fiery-orange to-fiery-amber  px-4 py-1 rounded-full text-[10px] uppercase tracking-widest shadow-fiery">
                         <Star className="w-3 h-3 fill-black" />
                         Most Popular
                       </div>
@@ -350,13 +357,13 @@ export default function ServicesPage() {
                   <div className="p-8 flex flex-col flex-grow">
                     {/* Plan header */}
                     <div className="mb-6 pt-2">
-                      <h3 className="text-xl font-black mb-1">{tier.name}</h3>
-                      <p className="text-zinc-500 text-xs leading-snug">{tier.desc}</p>
+                      <h3 className="text-xl  mb-1">{tier.name}</h3>
+                      <p className=" text-xs leading-snug">{tier.desc}</p>
                     </div>
 
                     {/* Price */}
                     <div className="mb-8 flex items-baseline gap-1">
-                      <span className={`text-4xl font-black ${tier.featured ? 'text-transparent bg-clip-text bg-gradient-to-r from-fiery-orange to-fiery-amber' : 'text-white'}`}>
+                      <span className={`text-4xl text-white ${tier.featured ? 'text-transparent bg-clip-text bg-gradient-to-r from-fiery-orange to-fiery-amber' : 'text-white'}`}>
                         {tier.price}
                       </span>
                       {tier.period && (
@@ -381,9 +388,9 @@ export default function ServicesPage() {
                     {/* CTA */}
                     <Link
                       href={tier.href}
-                      className={`w-full py-3.5 rounded-2xl text-sm font-extrabold text-center transition-all hover:scale-[1.02] active:scale-[0.98] ${
+                      className={`w-full py-3.5 rounded-2xl border-1 text-sm font-extrabold text-center transition-all hover:scale-[1.02] active:scale-[0.98] ${
                         tier.featured
-                          ? 'bg-gradient-to-r from-fiery-orange to-fiery-amber text-black shadow-fiery'
+                          ? 'bg-gradient-to-r from-fiery-orange to-fiery-amber text-white shadow-fiery'
                           : 'bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 hover:border-fiery-orange/30 text-white'
                       }`}
                     >
@@ -399,23 +406,23 @@ export default function ServicesPage() {
         {/* ══ CTA ══ */}
         <section className="py-20 px-4 sm:px-6">
           <div className="max-w-5xl mx-auto">
-            <div className="relative rounded-[2.5rem] overflow-hidden bg-gradient-to-br from-[#0C0C10] to-[#111116] border border-fiery-orange/20 p-12 sm:p-16 text-center">
+            <div className="relative rounded-[2.5rem] overflow-hidden bg-gradient-to-br from-[#0C0C10]/80 via-[#0C0C10]/50 to-[#111116]/80 border border-fiery-orange/30 backdrop-blur-2xl p-12 sm:p-16 text-center shadow-[0_20px_60px_rgba(0,0,0,0.6)]">
               <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-fiery-orange/10 rounded-full blur-[100px]" />
               </div>
               <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-fiery-orange/50 to-transparent" />
               <div className="relative z-10">
-                <h2 className="text-4xl sm:text-5xl font-black text-white mb-4">
+                <h2 className="text-4xl sm:text-5xl text-white mb-4">
                   Ready to Trade Like an Institution?
                 </h2>
-                <p className="text-zinc-400 max-w-lg mx-auto mb-8 font-light leading-relaxed">
+                <p className=" max-w-lg mx-auto mb-8  leading-relaxed">
                   Start with a free account and unlock the tools that 12,000+ traders
                   use to dominate the markets every day.
                 </p>
                 <div className="flex flex-wrap justify-center gap-4">
                   <Link
                     href="/register"
-                    className="inline-flex items-center gap-2 px-10 py-4 rounded-full bg-gradient-to-r from-fiery-orange to-fiery-amber text-black font-extrabold text-sm shadow-fiery hover:scale-105 transition-transform"
+                    className="inline-flex items-center gap-2 px-8 py-4 rounded-full border border-white/20 hover:border-fiery-orange/40 text-white font-semibold text-sm transition-all"
                   >
                     Start Free Today <ArrowRight className="w-4 h-4" />
                   </Link>
