@@ -48,7 +48,7 @@ export default function LoginForm() {
       } else if (user.role === 'investor') {
         router.push('/dashboard/investor');
       } else {
-        router.push('/dashboard');
+        router.push('/dashboard/user');
       }
     }
   }, [status, session, setToken, setUser, router]);

@@ -140,9 +140,8 @@ export default function IntroSection() {
                 transition={{ duration: 0.5, delay: 0.2 }}
                 className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] backdrop-blur-md shadow-[0_0_15px_rgba(255,107,0,0.15)]"
               >
-               
-                
-                
+                <Activity className="w-4 h-4 text-[#FF6B00] animate-pulse" />
+                <span className="text-xs font-semibold text-zinc-300">Institutional Trading Signals &amp; Market Intelligence</span>
               </motion.div>
 
               {/* Main Headline */}

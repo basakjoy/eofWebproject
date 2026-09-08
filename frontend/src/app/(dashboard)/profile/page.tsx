@@ -1,14 +1,34 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { usersApi } from '@/lib/usersApi';
 import {
-  User, Mail, Phone, MapPin, Lock, Shield,
-  Camera, Save, RefreshCw, CheckCircle, AlertCircle,
-  Eye, EyeOff, Pencil, X, Key
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Lock,
+  Shield,
+  Camera,
+  Save,
+  RefreshCw,
+  CheckCircle,
+  AlertCircle,
+  Eye,
+  EyeOff,
+  Pencil,
+  X,
+  Key,
+  Award,
+  Sparkles,
+  TrendingUp,
+  Sliders,
+  ShieldCheck,
+  Check,
+  Building,
 } from 'lucide-react';
-
-// ─── Types ────────────────────────────────────────────────────────────────────
+import { toast } from 'sonner';
+import { useAuthStore } from '@/store/authStore';
 
 interface UserProfile {
   id: string;
@@ -27,119 +47,58 @@ interface ProfileForm {
   phone: string;
   location: string;
   bio: string;
+  preferredAsset?: string;
+  riskAppetite?: string;
 }
 
-interface PasswordForm {
-  current: string;
-  next: string;
-  confirm: string;
-}
-
-// ─── Toast ────────────────────────────────────────────────────────────────────
-
-function Toast({ message, type, onClose }: { message: string; type: 'success' | 'error'; onClose: () => void }) {
-  useEffect(() => { const t = setTimeout(onClose, 4000); return () => clearTimeout(t); }, [onClose]);
-  return (
-    <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-4 rounded-2xl shadow-2xl border animate-in slide-in-from-bottom-4 duration-300 max-w-sm ${
-      type === 'success' ? 'bg-emerald-950 border-emerald-800 text-emerald-300' : 'bg-rose-950 border-rose-800 text-rose-300'
-    }`}>
-      {type === 'success' ? <CheckCircle className="w-5 h-5 shrink-0" /> : <AlertCircle className="w-5 h-5 shrink-0" />}
-      <p className="text-sm font-medium">{message}</p>
-    </div>
-  );
-}
-
-// ─── Input Field ─────────────────────────────────────────────────────────────
-
-function FieldInput({
-  label, icon: Icon, value, onChange, type = 'text', disabled = false, placeholder = ''
-}: {
-  label: string; icon: React.ElementType; value: string;
-  onChange: (v: string) => void; type?: string; disabled?: boolean; placeholder?: string;
-}) {
-  const [showPw, setShowPw] = useState(false);
-  const isPassword = type === 'password';
-
-  return (
-    <div>
-      <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">{label}</label>
-      <div className="relative">
-        <Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-        <input
-          type={isPassword && !showPw ? 'password' : 'text'}
-          value={value}
-          onChange={e => onChange(e.target.value)}
-          disabled={disabled}
-          placeholder={placeholder}
-          className={`w-full pl-10 ${isPassword ? 'pr-10' : 'pr-4'} py-3 bg-slate-800 border border-slate-700 rounded-xl text-sm transition-all focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 ${
-            disabled ? 'text-slate-500 cursor-not-allowed' : 'text-white'
-          }`}
-        />
-        {isPassword && (
-          <button
-            type="button"
-            onClick={() => setShowPw(!showPw)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
-          >
-            {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ─── Section Card ─────────────────────────────────────────────────────────────
-
-function SectionCard({ title, icon: Icon, children }: {
-  title: string; icon: React.ElementType; children: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-2xl bg-slate-900/60 border border-slate-800/60 backdrop-blur-sm overflow-hidden">
-      <div className="flex items-center gap-3 px-6 py-5 border-b border-slate-800">
-        <div className="w-8 h-8 rounded-xl bg-blue-600/20 flex items-center justify-center border border-blue-500/20">
-          <Icon className="w-4 h-4 text-blue-400" />
-        </div>
-        <h2 className="font-bold text-white">{title}</h2>
-      </div>
-      <div className="p-6">{children}</div>
-    </div>
-  );
-}
-
-// ─── Main Page ────────────────────────────────────────────────────────────────
-
-export default function ProfilePage() {
+export default function RefinedProfilePage() {
+  const { user } = useAuthStore();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [changingPw, setChangingPw] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-  const showToast = (message: string, type: 'success' | 'error') => setToast({ message, type });
-
-  const [form, setForm] = useState<ProfileForm>({ name: '', phone: '', location: '', bio: '' });
-  const [pwForm, setPwForm] = useState<PasswordForm>({ current: '', next: '', confirm: '' });
   const [editing, setEditing] = useState(false);
-  const [pwSection, setPwSection] = useState(false);
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
+
+  const [form, setForm] = useState<ProfileForm>({
+    name: '',
+    phone: '',
+    location: '',
+    bio: '',
+    preferredAsset: 'Forex Majors (EUR/USD, GBP/USD)',
+    riskAppetite: 'Moderate (1-2% Risk / Trade)',
+  });
+
+  const [pwForm, setPwForm] = useState({ current: '', next: '', confirm: '' });
+  const [changingPw, setChangingPw] = useState(false);
 
   const loadProfile = useCallback(async () => {
     try {
       const res = await usersApi.getCurrentUserProfile();
       const u: UserProfile = res?.data ?? {};
-      setProfile(u);
-      setForm({
-        name: u.name ?? '',
-        phone: (u as any).phone ?? '',
-        location: (u as any).location ?? '',
-        bio: (u as any).bio ?? '',
-      });
+      if (u.id) {
+        setProfile(u);
+        setForm({
+          name: u.name ?? '',
+          phone: u.phone ?? '',
+          location: u.location ?? '',
+          bio: u.bio ?? '',
+          preferredAsset: 'Forex Majors (EUR/USD, GBP/USD)',
+          riskAppetite: 'Moderate (1-2% Risk / Trade)',
+        });
+      }
     } catch {
-      // Try from localStorage fallback
       const raw = localStorage.getItem('user');
       if (raw) {
         const u = JSON.parse(raw);
         setProfile(u);
-        setForm({ name: u.name ?? '', phone: '', location: '', bio: '' });
+        setForm({
+          name: u.name ?? '',
+          phone: u.phone ?? '',
+          location: u.location ?? '',
+          bio: u.bio ?? '',
+          preferredAsset: 'Forex Majors (EUR/USD, GBP/USD)',
+          riskAppetite: 'Moderate (1-2% Risk / Trade)',
+        });
       }
     }
   }, []);
@@ -148,249 +107,339 @@ export default function ProfilePage() {
     loadProfile().finally(() => setLoading(false));
   }, [loadProfile]);
 
-  const handleSave = async () => {
-    if (!form.name.trim()) { showToast('Name cannot be empty.', 'error'); return; }
+  const handleSaveProfile = async () => {
+    if (!form.name.trim()) {
+      toast.error('Name cannot be empty');
+      return;
+    }
     setSaving(true);
     try {
-      const response = await usersApi.updateUser(profile!.id, { name: form.name, phone: form.phone });
-      setProfile(p => p ? { ...p, name: form.name, phone: form.phone } : p);
+      if (profile?.id) {
+        await usersApi.updateUser(profile.id, { name: form.name, phone: form.phone });
+      }
+      setProfile((p) => (p ? { ...p, name: form.name, phone: form.phone, location: form.location, bio: form.bio } : p));
       setEditing(false);
-      showToast('Profile updated successfully!', 'success');
+      toast.success('Profile updated successfully!');
     } catch {
-      showToast('Failed to update profile. Please try again.', 'error');
+      toast.error('Failed to update profile');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleChangePassword = async () => {
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!pwForm.current || !pwForm.next || !pwForm.confirm) {
-      showToast('All password fields are required.', 'error'); return;
+      toast.error('Please fill in all password fields');
+      return;
     }
     if (pwForm.next !== pwForm.confirm) {
-      showToast('New passwords do not match.', 'error'); return;
+      toast.error('New passwords do not match');
+      return;
     }
     if (pwForm.next.length < 6) {
-      showToast('New password must be at least 6 characters.', 'error'); return;
+      toast.error('New password must be at least 6 characters');
+      return;
     }
+
     setChangingPw(true);
     try {
       await usersApi.changePassword({ currentPassword: pwForm.current, newPassword: pwForm.next });
+      toast.success('Password updated successfully!');
+      setShowPasswordChange(false);
       setPwForm({ current: '', next: '', confirm: '' });
-      setPwSection(false);
-      showToast('Password changed successfully!', 'success');
     } catch {
-      showToast('Failed to change password. Check your current password.', 'error');
+      toast.error('Failed to change password. Verify your current password.');
     } finally {
       setChangingPw(false);
     }
   };
 
-  const avatarUrl = profile
-    ? `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=1d4ed8&color=fff&size=128&bold=true`
-    : '';
-
-  const roleColors: Record<string, string> = {
-    SUPER_ADMIN: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    ADMIN: 'bg-violet-500/10 text-violet-400 border-violet-500/20',
-    USER: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  };
+  const avatarUrl = profile?.name
+    ? `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=FF6B00&color=fff&size=128&bold=true`
+    : `https://ui-avatars.com/api/?name=Trader&background=FF6B00&color=fff&size=128&bold=true`;
 
   if (loading) {
     return (
-      <div className="min-h-full flex items-center justify-center bg-slate-950">
-        <div className="w-12 h-12 rounded-full border-4 border-blue-600 border-t-transparent animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-[#030305]">
+        <RefreshCw className="w-8 h-8 text-fiery-orange animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-full p-6 space-y-6 bg-slate-950 text-white">
+    <div className="space-y-8 p-2 sm:p-4 text-white font-poppins selection:bg-fiery-orange selection:text-white">
+      
+      {/* ══ HEADER ══ */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-white/10">
+        <div>
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-fiery-orange/10 border border-fiery-orange/20 text-xs font-bold text-fiery-amber mb-2">
+            <ShieldCheck className="w-3.5 h-3.5 text-fiery-orange" />
+            VERIFIED TRADER IDENTITY
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+            User <span className="text-transparent bg-clip-text bg-gradient-to-r from-fiery-orange to-fiery-amber">Profile</span>
+          </h1>
+          <p className="text-xs sm:text-sm text-zinc-400 mt-1">
+            Manage your personal identity, contact info, trading preferences, and security credentials.
+          </p>
+        </div>
 
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-black text-white">My Profile</h1>
-        <p className="text-slate-400 text-sm mt-1">Manage your account information and security settings</p>
+        <button
+          onClick={() => {
+            setEditing(!editing);
+            setShowPasswordChange(false);
+          }}
+          className={`px-5 py-3 rounded-2xl font-extrabold text-xs sm:text-sm flex items-center gap-2 transition-all shadow-md ${
+            editing
+              ? 'bg-panel-dark border border-white/10 text-zinc-300 hover:text-white'
+              : 'bg-gradient-to-r from-fiery-orange via-fiery-red to-fiery-amber text-black shadow-fiery hover:scale-105'
+          }`}
+        >
+          {editing ? <X className="w-4 h-4" /> : <Pencil className="w-4 h-4 text-black" />}
+          {editing ? 'Cancel Editing' : 'Edit Profile Info'}
+        </button>
       </div>
 
-      {/* Profile Hero */}
-      <div className="rounded-2xl bg-gradient-to-br from-blue-600/10 to-indigo-600/5 border border-blue-500/10 p-6">
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-          {/* Avatar */}
-          <div className="relative group shrink-0">
+      {/* ══ HERO COMMAND BANNER ══ */}
+      <div className="relative rounded-3xl bg-card-dark/80 backdrop-blur-xl border border-white/10 p-6 sm:p-8 overflow-hidden group">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-fiery-orange/10 rounded-full blur-[100px] pointer-events-none" />
+
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 relative z-10">
+          
+          {/* Avatar Container */}
+          <div className="relative group/avatar">
             <img
               src={avatarUrl}
               alt={profile?.name ?? 'User'}
-              className="w-24 h-24 rounded-2xl object-cover border-2 border-blue-500/30 shadow-xl"
+              className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl object-cover border-2 border-fiery-orange/40 shadow-2xl"
             />
-            <button className="absolute inset-0 rounded-2xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <Camera className="w-6 h-6 text-white" />
+            <button
+              onClick={() => toast.info('Avatar generator sync active')}
+              className="absolute inset-0 rounded-3xl bg-black/50 opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center text-white"
+            >
+              <Camera className="w-6 h-6 text-fiery-amber" />
             </button>
           </div>
 
-          {/* Info */}
-          <div className="flex-1 text-center sm:text-left">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">
-              <h2 className="text-2xl font-black text-white">{profile?.name ?? '—'}</h2>
-              {profile?.role && (
-                <span className={`inline-flex text-xs font-bold px-3 py-1 rounded-full border ${roleColors[profile.role] ?? roleColors.USER}`}>
-                  {profile.role}
-                </span>
-              )}
-              {profile?.status && (
-                <span className="inline-flex items-center gap-1 text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  {profile.status}
-                </span>
-              )}
+          {/* Info & Badges */}
+          <div className="flex-1 text-center sm:text-left space-y-2">
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
+              <h2 className="text-2xl sm:text-3xl font-black text-white">{profile?.name || 'Trader Member'}</h2>
+              
+              <span className="px-3 py-1 rounded-full bg-fiery-orange/15 border border-fiery-orange/30 text-fiery-amber text-xs font-black uppercase tracking-wider">
+                {profile?.role || 'VIP Investor'}
+              </span>
+
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold">
+                <CheckCircle className="w-3.5 h-3.5" />
+                Verified Desk
+              </span>
             </div>
-            <p className="text-slate-400 text-sm">{profile?.email}</p>
-            {profile?.createdAt && (
-              <p className="text-slate-600 text-xs mt-1">
-                Member since {new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-              </p>
-            )}
+
+            <p className="text-xs sm:text-sm text-zinc-400 font-mono">{profile?.email}</p>
+
+            <p className="text-[11px] text-zinc-500 font-light flex items-center justify-center sm:justify-start gap-1 pt-1">
+              <Award className="w-3.5 h-3.5 text-fiery-amber" />
+              Member registered since {profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '2026'}
+            </p>
           </div>
 
-          {/* Edit toggle */}
-          <button
-            onClick={() => { setEditing(!editing); setPwSection(false); }}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all shrink-0 ${
-              editing
-                ? 'bg-slate-700 hover:bg-slate-600 text-white'
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
-            }`}
-          >
-            {editing ? <X className="w-4 h-4" /> : <Pencil className="w-4 h-4" />}
-            {editing ? 'Cancel' : 'Edit Profile'}
-          </button>
         </div>
       </div>
 
-      {/* Profile Form */}
-      <SectionCard title="Personal Information" icon={User}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <FieldInput
-            label="Full Name" icon={User} value={form.name}
-            onChange={v => setForm(f => ({ ...f, name: v }))}
-            disabled={!editing} placeholder="Your full name"
-          />
-          <FieldInput
-            label="Email Address" icon={Mail} value={profile?.email ?? ''}
-            onChange={() => {}} disabled={true}
-          />
-          <FieldInput
-            label="Phone Number" icon={Phone} value={form.phone}
-            onChange={v => setForm(f => ({ ...f, phone: v }))}
-            disabled={!editing} placeholder="+1 (555) 000-0000"
-          />
-          <FieldInput
-            label="Location" icon={MapPin} value={form.location}
-            onChange={v => setForm(f => ({ ...f, location: v }))}
-            disabled={!editing} placeholder="City, Country"
-          />
-        </div>
-
-        <div className="mt-5">
-          <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Bio</label>
-          <textarea
-            value={form.bio}
-            onChange={e => setForm(f => ({ ...f, bio: e.target.value }))}
-            disabled={!editing}
-            rows={3}
-            placeholder="Tell us a little about yourself..."
-            className={`w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-sm transition-all focus:outline-none focus:border-blue-500 resize-none ${
-              !editing ? 'text-slate-500 cursor-not-allowed' : 'text-white'
-            }`}
-          />
-        </div>
-
-        {editing && (
-          <div className="mt-5 flex justify-end">
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-sm transition-all"
-            >
-              {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              {saving ? 'Saving…' : 'Save Changes'}
-            </button>
+      {/* ══ PERSONAL INFORMATION & TRADING PREFERENCES ══ */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/* Left: Personal Information Form (7 cols) */}
+        <div className="lg:col-span-7 bg-card-dark/80 backdrop-blur-xl p-6 rounded-3xl border border-white/10 space-y-6">
+          <div className="flex items-center justify-between border-b border-white/10 pb-4">
+            <h2 className="text-lg font-extrabold text-white flex items-center gap-2">
+              <User className="w-5 h-5 text-fiery-orange" />
+              Personal Identification
+            </h2>
+            {editing && <span className="text-xs text-fiery-amber font-bold">Editing Mode Active</span>}
           </div>
-        )}
-      </SectionCard>
 
-      {/* Security Section */}
-      <SectionCard title="Security" icon={Shield}>
-        <div className="space-y-3">
-          {/* Change password CTA */}
-          <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/40 border border-slate-700/60 hover:border-slate-600 transition-all">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-slate-700 flex items-center justify-center">
-                <Key className="w-4 h-4 text-slate-400" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-white">Change Password</p>
-                <p className="text-xs text-slate-500">Update your login credentials</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Full Name</label>
+              <div className="relative">
+                <User className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <input
+                  type="text"
+                  value={form.name}
+                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  disabled={!editing}
+                  className={`w-full bg-panel-dark border rounded-2xl pl-10 pr-4 py-3 text-xs sm:text-sm transition-all focus:outline-none focus:border-fiery-orange ${
+                    !editing ? 'border-white/5 text-zinc-400 cursor-not-allowed' : 'border-white/20 text-white'
+                  }`}
+                />
               </div>
             </div>
-            <button
-              onClick={() => { setPwSection(!pwSection); setEditing(false); }}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                pwSection ? 'bg-slate-700 text-white' : 'bg-blue-600/20 border border-blue-500/30 text-blue-400 hover:bg-blue-600/30'
-              }`}
-            >
-              {pwSection ? 'Cancel' : 'Change'}
-            </button>
+
+            <div>
+              <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Email Address</label>
+              <div className="relative">
+                <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <input
+                  type="email"
+                  value={profile?.email ?? ''}
+                  disabled
+                  className="w-full bg-panel-dark border border-white/5 rounded-2xl pl-10 pr-4 py-3 text-xs sm:text-sm text-zinc-500 cursor-not-allowed"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Phone Number</label>
+              <div className="relative">
+                <Phone className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <input
+                  type="text"
+                  value={form.phone}
+                  onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                  disabled={!editing}
+                  placeholder="+1 (555) 000-0000"
+                  className={`w-full bg-panel-dark border rounded-2xl pl-10 pr-4 py-3 text-xs sm:text-sm transition-all focus:outline-none focus:border-fiery-orange ${
+                    !editing ? 'border-white/5 text-zinc-400 cursor-not-allowed' : 'border-white/20 text-white'
+                  }`}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Location / City</label>
+              <div className="relative">
+                <MapPin className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <input
+                  type="text"
+                  value={form.location}
+                  onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
+                  disabled={!editing}
+                  placeholder="New York, USA"
+                  className={`w-full bg-panel-dark border rounded-2xl pl-10 pr-4 py-3 text-xs sm:text-sm transition-all focus:outline-none focus:border-fiery-orange ${
+                    !editing ? 'border-white/5 text-zinc-400 cursor-not-allowed' : 'border-white/20 text-white'
+                  }`}
+                />
+              </div>
+            </div>
           </div>
 
-          {/* Password change form */}
-          {pwSection && (
-            <div className="p-5 rounded-xl border border-slate-700/60 bg-slate-800/30 space-y-4">
-              <FieldInput
-                label="Current Password" icon={Lock} value={pwForm.current}
-                onChange={v => setPwForm(f => ({ ...f, current: v }))} type="password"
-              />
-              <FieldInput
-                label="New Password" icon={Lock} value={pwForm.next}
-                onChange={v => setPwForm(f => ({ ...f, next: v }))} type="password"
-                placeholder="Min. 6 characters"
-              />
-              <FieldInput
-                label="Confirm New Password" icon={Lock} value={pwForm.confirm}
-                onChange={v => setPwForm(f => ({ ...f, confirm: v }))} type="password"
-              />
-              <div className="flex justify-end">
-                <button
-                  onClick={handleChangePassword}
-                  disabled={changingPw}
-                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-sm transition-all"
-                >
-                  {changingPw ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
-                  {changingPw ? 'Updating…' : 'Update Password'}
-                </button>
-              </div>
+          <div>
+            <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Investor Bio / Notes</label>
+            <textarea
+              rows={3}
+              value={form.bio}
+              onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
+              disabled={!editing}
+              placeholder="Institutional trader focused on Forex & Commodities..."
+              className={`w-full bg-panel-dark border rounded-2xl p-4 text-xs sm:text-sm transition-all focus:outline-none focus:border-fiery-orange resize-none ${
+                !editing ? 'border-white/5 text-zinc-400 cursor-not-allowed' : 'border-white/20 text-white'
+              }`}
+            />
+          </div>
+
+          {editing && (
+            <div className="flex justify-end pt-2">
+              <button
+                onClick={handleSaveProfile}
+                disabled={saving}
+                className="px-6 py-3 rounded-2xl bg-gradient-to-r from-fiery-orange to-fiery-amber text-black font-extrabold text-xs shadow-fiery hover:scale-105 transition-all disabled:opacity-50 flex items-center gap-2"
+              >
+                {saving ? <RefreshCw className="w-4 h-4 animate-spin text-black" /> : <Save className="w-4 h-4 text-black" />}
+                {saving ? 'Saving...' : 'Save Profile Changes'}
+              </button>
             </div>
           )}
+        </div>
 
-          {/* 2FA row */}
-          <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/40 border border-slate-700/60">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
-                <Shield className="w-4 h-4 text-amber-400" />
+        {/* Right: Security & Trading Profile (5 cols) */}
+        <div className="lg:col-span-5 space-y-6">
+          
+          {/* Trading Profile Card */}
+          <div className="bg-card-dark/80 backdrop-blur-xl p-6 rounded-3xl border border-white/10 space-y-4">
+            <h2 className="text-lg font-extrabold text-white flex items-center gap-2 border-b border-white/10 pb-4">
+              <TrendingUp className="w-5 h-5 text-fiery-amber" />
+              Trading Preferences
+            </h2>
+
+            <div className="space-y-3 text-xs">
+              <div className="p-3.5 rounded-2xl bg-panel-dark border border-white/5">
+                <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Preferred Assets</span>
+                <span className="text-white font-bold block mt-1">{form.preferredAsset}</span>
               </div>
-              <div>
-                <p className="text-sm font-bold text-white">Two-Factor Authentication</p>
-                <p className="text-xs text-slate-500">Add an extra layer of security to your account</p>
+
+              <div className="p-3.5 rounded-2xl bg-panel-dark border border-white/5">
+                <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Risk Appetite Tier</span>
+                <span className="text-emerald-400 font-bold block mt-1">{form.riskAppetite}</span>
               </div>
             </div>
-            <span className="px-3 py-1 rounded-full text-xs font-bold bg-slate-700 text-slate-400 border border-slate-600">
-              Coming soon
-            </span>
           </div>
+
+          {/* Security Credentials Trigger */}
+          <div className="bg-card-dark/80 backdrop-blur-xl p-6 rounded-3xl border border-white/10 space-y-4">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <h2 className="text-lg font-extrabold text-white flex items-center gap-2">
+                <Lock className="w-5 h-5 text-fiery-orange" />
+                Security Credentials
+              </h2>
+              <button
+                onClick={() => setShowPasswordChange(!showPasswordChange)}
+                className="px-3.5 py-1.5 rounded-xl bg-fiery-orange/10 border border-fiery-orange/30 text-fiery-amber text-xs font-bold hover:bg-fiery-orange/20 transition-all"
+              >
+                {showPasswordChange ? 'Close' : 'Change Password'}
+              </button>
+            </div>
+
+            {showPasswordChange && (
+              <form onSubmit={handleChangePassword} className="space-y-3 pt-2">
+                <div>
+                  <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Current Password</label>
+                  <input
+                    type="password"
+                    value={pwForm.current}
+                    onChange={(e) => setPwForm((f) => ({ ...f, current: e.target.value }))}
+                    className="w-full bg-panel-dark border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-fiery-orange"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">New Password</label>
+                  <input
+                    type="password"
+                    value={pwForm.next}
+                    onChange={(e) => setPwForm((f) => ({ ...f, next: e.target.value }))}
+                    placeholder="Min 6 characters"
+                    className="w-full bg-panel-dark border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-fiery-orange"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Confirm New Password</label>
+                  <input
+                    type="password"
+                    value={pwForm.confirm}
+                    onChange={(e) => setPwForm((f) => ({ ...f, confirm: e.target.value }))}
+                    className="w-full bg-panel-dark border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-fiery-orange"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={changingPw}
+                  className="w-full py-3 rounded-xl bg-fiery-orange text-black font-extrabold text-xs shadow-fiery hover:scale-105 transition-all disabled:opacity-50 mt-2"
+                >
+                  {changingPw ? 'Updating...' : 'Update Security Credentials'}
+                </button>
+              </form>
+            )}
+          </div>
+
         </div>
-      </SectionCard>
+
+      </div>
+
     </div>
   );
 }
