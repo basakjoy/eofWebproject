@@ -7,9 +7,11 @@ import apiClient from '@/lib/api';
 
 export function useRequireAuth(redirectTo = '/login') {
   const router = useRouter();
-  const { isAuthenticated, user, token } = useAuthStore();
+  const { isAuthenticated, user, token, hasHydrated } = useAuthStore();
 
   useEffect(() => {
+    if (!hasHydrated) return;
+
     const hasStoredSession =
       typeof window !== 'undefined' &&
       !!localStorage.getItem('token') &&
@@ -18,7 +20,7 @@ export function useRequireAuth(redirectTo = '/login') {
     if (!isAuthenticated && !hasStoredSession) {
       router.replace(redirectTo);
     }
-  }, [isAuthenticated, token, router, redirectTo]);
+  }, [hasHydrated, isAuthenticated, token, router, redirectTo]);
 
   return { isAuthenticated, user };
 }
