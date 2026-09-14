@@ -36,8 +36,27 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'authStore',
+      partialize: (state) => ({
+        user: state.user,
+        token: state.token,
+      }),
       onRehydrateStorage: () => (state) => {
-        state?.setHasHydrated(true);
+        if (!state) return;
+
+        const tokenInStorage = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const userInStorage = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+
+        if (!tokenInStorage || !userInStorage || !state.user || !state.token) {
+          state.user = null;
+          state.token = null;
+          state.isAuthenticated = false;
+          state.setHasHydrated(true);
+          clearAuthSession();
+          return;
+        }
+
+        state.isAuthenticated = Boolean(state.user && state.token);
+        state.setHasHydrated(true);
       },
       storage: {
         getItem: (key) => {

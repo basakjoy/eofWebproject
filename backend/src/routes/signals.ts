@@ -284,7 +284,8 @@ router.get('/stats', verifyToken, requireAdminScope(['SIGNAL_ADMIN', 'SUPER_ADMI
 });
 
 // GET /signals — list with filters + pagination
-router.get('/', verifyToken, requireAdminScope(['SIGNAL_ADMIN', 'SUPER_ADMIN']), validateQuery(querySchema), async (req: AuthRequest, res: Response) => {
+// Public read endpoint for the landing page and trading signal preview flows.
+router.get('/', validateQuery(querySchema), async (req: Request, res: Response) => {
   try {
     const { status, pair, type, limit, offset } = req.query as any;
 
@@ -342,7 +343,8 @@ router.get('/', verifyToken, requireAdminScope(['SIGNAL_ADMIN', 'SUPER_ADMIN']),
 });
 
 // GET /signals/:id — fetch one
-router.get('/:id', verifyToken, requireAdminScope(['SIGNAL_ADMIN', 'SUPER_ADMIN']), async (req: AuthRequest, res: Response) => {
+// Public read endpoint for trading signal cards and detail modals.
+router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 

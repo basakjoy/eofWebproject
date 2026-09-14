@@ -9,7 +9,6 @@ const apiClient = axios.create({
   },
 });
 
-// Add token to requests
 apiClient.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('token');
@@ -20,7 +19,6 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle errors
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -30,11 +28,29 @@ apiClient.interceptors.response.use(
         requestUrl.includes('/auth/login') ||
         requestUrl.includes('/auth/register');
 
-      if (!isAuthRequest && typeof window !== 'undefined') {
+      // Do not bounce anonymous visitors to /login when a public route is loading.
+      const isPublicSignalRead =
+        requestUrl.includes('/signals') ||
+        requestUrl.includes('/signals/') ||
+        requestUrl.includes('/signals?');
+
+      const hasStoredUser = typeof window !== 'undefined' && !!localStorage.getItem('user');
+      const hasStoredToken = typeof window !== 'undefined' && !!localStorage.getItem('token');
+
+      if (
+        !isAuthRequest &&
+        !isPublicSignalRead &&
+        typeof window !== 'undefined' &&
+        hasStoredUser &&
+        hasStoredToken
+      ) {
         clearAuthSession();
-        window.location.href = '/login';
+        if (!window.location.pathname.startsWith('/home')) {
+          window.location.href = '/login';
+        }
       }
     }
+
     return Promise.reject(error);
   }
 );
