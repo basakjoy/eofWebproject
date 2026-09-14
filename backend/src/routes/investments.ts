@@ -114,11 +114,11 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 
 // Create investment
 const createInvestmentSchema = z.object({
-  amount: z.number().min(100, 'Minimum investment amount is $100'),
+  amount: z.coerce.number().min(100, 'Minimum investment amount is $100'),
   plan: z.string().trim().min(1),
-  duration: z.number().int().positive(),
-  returnRate: z.number().min(0).max(5).optional(), // cap return rate to a sane range you define
-}).strict();
+  duration: z.coerce.number().int().positive(),
+  returnRate: z.coerce.number().min(0).max(5).optional(),
+});
 
 router.post('/', async (req: AuthRequest, res: Response) => {
   try {
@@ -131,7 +131,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
     }
 
     const { amount, plan, duration, returnRate = 0.5 } = parsed.data;
-    
+
     const userId = req.user.userId;
 
     const investmentId = uuidv4();
@@ -145,6 +145,24 @@ router.post('/', async (req: AuthRequest, res: Response) => {
         plan,
         status: 'active',
         roi: estimatedReturns,
+      },
+    });
+
+    await prisma.transaction.create({
+      data: {
+        id: uuidv4(),
+        userId,
+        type: 'investment',
+        amount,
+        description: `Investment created for ${plan}`,
+        status: 'completed',
+        metadata: JSON.stringify({
+          investmentId: investment.id,
+          plan,
+          duration,
+          returnRate,
+          roi: estimatedReturns,
+        }),
       },
     });
 

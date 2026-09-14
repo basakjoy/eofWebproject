@@ -108,6 +108,38 @@ const adminMenuItems: MenuItem[] = [
 
 const adminPageCount = adminMenuItems.reduce((total, menu) => total + menu.subItems.length, 0);
 
+const getAdminMenuItemsForScope = (scope?: string): MenuItem[] => {
+  const normalizedScope = String(scope || '').toUpperCase();
+
+  if (normalizedScope === 'SUPER_ADMIN') {
+    return adminMenuItems;
+  }
+
+  if (normalizedScope === 'SIGNAL_ADMIN') {
+    return [
+      {
+        id: 'analytics',
+        label: 'ANALYTICS',
+        icon: BarChart3,
+        subItems: [{ id: 'signals', label: 'Signals', path: '/admin/signals' }],
+      },
+    ];
+  }
+
+  if (normalizedScope === 'CONTENT_ADMIN') {
+    return [
+      {
+        id: 'content',
+        label: 'CONTENT',
+        icon: FileText,
+        subItems: [{ id: 'articles', label: 'Articles', path: '/admin/articles' }],
+      },
+    ];
+  }
+
+  return adminMenuItems;
+};
+
 const investorMenuItems: MenuItem[] = [
   {
     id: "investor-dashboard",
@@ -190,14 +222,14 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
   const getMenuItems = (): MenuItem[] => {
     if (pathname.startsWith("/admin")) {
-      return adminMenuItems;
+      return getAdminMenuItemsForScope(user?.adminScope);
     }
 
     if (!user) return adminMenuItems;
 
     switch (user.role) {
       case "admin":
-        return adminMenuItems;
+        return getAdminMenuItemsForScope(user.adminScope);
       case "investor":
         return investorMenuItems;
       case "premium":

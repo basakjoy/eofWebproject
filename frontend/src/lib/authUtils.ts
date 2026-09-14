@@ -20,12 +20,18 @@ export function toAuthUser(data: AuthUserInput): User {
 
 export function normalizeAuthUser(data: Record<string, unknown>): User {
   const role = (data.role as UserRole) || 'user';
+  const adminScope = typeof data.adminScope === 'string'
+    ? data.adminScope
+    : typeof data.scope === 'string'
+      ? data.scope
+      : undefined;
 
   return {
     id: String(data.id ?? data.userId ?? ''),
     email: String(data.email ?? ''),
     name: String(data.name ?? ''),
     role,
+    adminScope,
     createdAt: String(data.createdAt ?? ''),
     updatedAt: String(data.updatedAt ?? ''),
   };

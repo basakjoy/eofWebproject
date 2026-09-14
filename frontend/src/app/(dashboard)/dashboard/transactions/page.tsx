@@ -466,8 +466,8 @@ export default function RefinedTransactionsPage() {
                 }}
                 className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all border ${
                   typeFilter === btn.id
-                    ? 'bg-fiery-orange text-black border-fiery-orange shadow-md'
-                    : 'bg-panel-dark text-zinc-400 border-white/10 hover:text-white hover:bg-white/5'
+                    ? 'bg-fiery-orange  border-fiery-orange shadow-md'
+                    : 'bg-panel-dark  border-white/10 hover:text-white hover:bg-white/5'
                 }`}
               >
                 {btn.label}

@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import investmentApi from '@/lib/investmentApi';
+import { transactionsApi } from '@/lib/transactionsApi';
 import { useAuthStore } from '@/store/authStore';
 
 const formatMoney = (val: number) => `$${val.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
@@ -57,14 +58,18 @@ const SAMPLE_PLANS = [
   },
 ];
 
+const PAYMENT_OPTIONS = ['card', 'binance', 'bkash', 'nagad'];
+
 export default function RefinedInvestmentsPage() {
   const { user } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [portfolio, setPortfolio] = useState<{ totalInvested?: number; totalReturns?: number; activePlansCount?: number } | null>(null);
-  
+
   // Interactive Calculator State
   const [calcAmount, setCalcAmount] = useState<string>('5000');
   const [calcMonths, setCalcMonths] = useState<number>(6);
+  const [selectedPlan, setSelectedPlan] = useState<string>('Institutional Forex Pool');
+  const [paymentMethod, setPaymentMethod] = useState<string>('card');
   const [isSubmittingInvest, setIsSubmittingInvest] = useState(false);
 
   // Load portfolio stats
@@ -99,18 +104,57 @@ export default function RefinedInvestmentsPage() {
     return principal * 0.038 * calcMonths;
   }, [calcAmount, calcMonths]);
 
-  const handleCreateInvestment = () => {
+  const handleCreateInvestment = async () => {
     const num = parseFloat(calcAmount);
+
+    if (!user?.id) {
+      toast.error('Please sign in to invest.');
+      return;
+    }
+
     if (!num || num < 100) {
       toast.error('Minimum investment amount is $100');
       return;
     }
+
     setIsSubmittingInvest(true);
-    setTimeout(() => {
+
+    try {
+      await transactionsApi.createTransaction({
+        userId: user.id,
+        type: 'deposit',
+        amount: num,
+        description: `Investment deposit via ${paymentMethod.toUpperCase()} for ${selectedPlan}`,
+        status: 'pending',
+        metadata: {
+          provider: paymentMethod,
+          plan: selectedPlan,
+          duration: calcMonths,
+          source: 'investment_page',
+        },
+      });
+
+      const response = await investmentApi.createInvestment({
+        userId: user.id,
+        amount: num,
+        plan: selectedPlan,
+        duration: calcMonths,
+        returnRate: 0.038,
+      });
+
+      if (response?.success) {
+        toast.success(`Investment request for ${formatMoney(num)} (${calcMonths} Months) submitted successfully via ${paymentMethod.toUpperCase()}!`);
+        setCalcAmount('5000');
+        await loadPortfolioData();
+      } else {
+        toast.error(response?.message || 'Investment request could not be submitted.');
+      }
+    } catch (err: any) {
+      const message = err?.response?.data?.message || err?.message || 'Failed to create investment. Please try again.';
+      toast.error(message);
+    } finally {
       setIsSubmittingInvest(false);
-      toast.success(`Investment request for $${num.toLocaleString()} (${calcMonths} Months) submitted successfully!`);
-      setCalcAmount('5000');
-    }, 800);
+    }
   };
 
   return (
@@ -327,11 +371,34 @@ export default function RefinedInvestmentsPage() {
                     onClick={() => setCalcMonths(m)}
                     className={`py-2.5 rounded-xl text-xs font-bold border transition-all ${
                       calcMonths === m
-                        ? 'bg-fiery-orange text-black border-fiery-orange'
+                        ? 'bg-fiery-orange  border-fiery-orange'
                         : 'bg-panel-dark text-zinc-400 border-white/10 hover:text-white'
                     }`}
                   >
                     {m} Months
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Payment Method Selector */}
+            <div>
+              <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">
+                Payment Method
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {PAYMENT_OPTIONS.map((method) => (
+                  <button
+                    key={method}
+                    type="button"
+                    onClick={() => setPaymentMethod(method)}
+                    className={`py-2.5 rounded-xl text-xs font-bold border transition-all uppercase ${
+                      paymentMethod === method
+                        ? 'bg-emerald-400 text-black border-emerald-400'
+                        : 'bg-panel-dark text-zinc-400 border-white/10 hover:text-white'
+                    }`}
+                  >
+                    {method}
                   </button>
                 ))}
               </div>
@@ -355,16 +422,16 @@ export default function RefinedInvestmentsPage() {
             <button
               onClick={handleCreateInvestment}
               disabled={isSubmittingInvest}
-              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-fiery-orange via-fiery-red to-fiery-amber text-black font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-fiery hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-fiery-orange via-fiery-red to-fiery-amber  font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-fiery hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
             >
               {isSubmittingInvest ? (
                 <>
-                  <RefreshCw className="w-4 h-4 animate-spin text-black" />
+                  <RefreshCw className="w-4 h-4 animate-spin text-white" />
                   Processing Allocation...
                 </>
               ) : (
                 <>
-                  <ArrowUpRight className="w-4 h-4 text-black" />
+                  <ArrowUpRight className="w-4 h-4 text-white" />
                   Submit Investment Request
                 </>
               )}

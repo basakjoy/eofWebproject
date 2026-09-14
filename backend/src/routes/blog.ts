@@ -4,6 +4,7 @@ import path from 'path';
 import { prisma } from '../database';
 import { v4 as uuidv4 } from 'uuid';
 import { verifyToken } from '../middleware/auth';
+import { requireAdminScope } from '../middleware/superadmin.middleware';
 
 const router = express.Router();
 
@@ -122,7 +123,7 @@ router.get('/categories', async (_req: Request, res: Response) => {
 });
 
 // ─── POST /api/blog/upload — Admin: upload cover image ───────
-router.post('/upload', verifyToken, upload.single('image'), async (req: Request, res: Response) => {
+router.post('/upload', verifyToken, requireAdminScope(['CONTENT_ADMIN', 'SUPER_ADMIN']), upload.single('image'), async (req: Request, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'No image file provided' });
@@ -168,7 +169,7 @@ router.get('/:slug', async (req: Request, res: Response) => {
 });
 
 // ─── POST /api/blog — Admin: create article ─────────────────
-router.post('/', verifyToken, async (req: Request, res: Response) => {
+router.post('/', verifyToken, requireAdminScope(['CONTENT_ADMIN', 'SUPER_ADMIN']), async (req: Request, res: Response) => {
   try {
     const { title, category, content, keywords, imageUrl, published = false, authorId } = req.body;
 
@@ -213,7 +214,7 @@ router.post('/', verifyToken, async (req: Request, res: Response) => {
 });
 
 // ─── PUT /api/blog/:id — Admin: update article ──────────────
-router.put('/:id', verifyToken, async (req: Request, res: Response) => {
+router.put('/:id', verifyToken, requireAdminScope(['CONTENT_ADMIN', 'SUPER_ADMIN']), async (req: Request, res: Response) => {
   try {
     const { title, category, content, keywords, imageUrl, published } = req.body;
 
@@ -253,7 +254,7 @@ router.put('/:id', verifyToken, async (req: Request, res: Response) => {
 });
 
 // ─── DELETE /api/blog/:id — Admin: delete article ───────────
-router.delete('/:id', verifyToken, async (req: Request, res: Response) => {
+router.delete('/:id', verifyToken, requireAdminScope(['CONTENT_ADMIN', 'SUPER_ADMIN']), async (req: Request, res: Response) => {
   try {
     const existing = await prisma.faqArticle.findUnique({ where: { id: req.params.id } });
     if (!existing) {

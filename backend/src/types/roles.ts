@@ -102,6 +102,22 @@ export const rolePermissions: Record<string, Permission[]> = {
     Permission.VIEW_REPORTS,
     Permission.VIEW_ACTIVITY_LOGS
   ],
+  'signal_admin': [
+    Permission.CREATE_SIGNAL,
+    Permission.VIEW_SIGNALS,
+    Permission.EDIT_SIGNALS,
+    Permission.DELETE_SIGNALS,
+    Permission.VIEW_ANALYTICS,
+    Permission.VIEW_REPORTS,
+  ],
+  'content_admin': [
+    Permission.CREATE_INSIGHTS,
+    Permission.VIEW_INSIGHTS,
+    Permission.EDIT_INSIGHTS,
+    Permission.DELETE_INSIGHTS,
+    Permission.VIEW_ANALYTICS,
+    Permission.VIEW_REPORTS,
+  ],
   'marketing_admin': [
     Permission.CREATE_SIGNAL,
     Permission.VIEW_SIGNALS,

@@ -53,10 +53,11 @@ export const transactionsApi = {
   // Create transaction
   createTransaction: async (data: {
     userId: string;
-    type: string;
+    type: 'deposit' | 'withdrawal';
     amount: number;
     description?: string;
-    status?: string;
+    status?: 'pending' | 'completed' | 'failed' | 'cancelled';
+    metadata?: Record<string, any>;
   }) => {
     try {
       const response = await apiClient.post('/transactions', data);

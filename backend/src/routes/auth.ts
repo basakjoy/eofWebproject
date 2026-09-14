@@ -158,6 +158,7 @@ router.post('/login', authLimiter, async (req: Request, res: Response) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        adminScope: user.adminScope,
         phone: user.phone,
         token,
       },
@@ -186,7 +187,7 @@ router.get('/verify', async (req: AuthRequest, res: Response) => {
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'secret');
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
-      select: { id: true, name: true, email: true, role: true },
+      select: { id: true, name: true, email: true, role: true, adminScope: true },
     });
 
     if (!user) {
@@ -224,7 +225,7 @@ router.get('/me', async (req: AuthRequest, res: Response) => {
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'secret');
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
-      select: { id: true, name: true, email: true, role: true, status: true },
+      select: { id: true, name: true, email: true, role: true, status: true, adminScope: true },
     });
 
     if (!user) {

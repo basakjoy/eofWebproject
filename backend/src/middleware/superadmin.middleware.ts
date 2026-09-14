@@ -19,8 +19,13 @@ export const requireSuperAdmin = (req: AuthRequest, res: Response, next: NextFun
     });
   }
 
-  // For now, we'll just check that they're an admin
-  // In a full implementation, check req.user.adminScope
+  if ((req.user.adminScope || '').toUpperCase() !== 'SUPER_ADMIN') {
+    return res.status(403).json({
+      success: false,
+      message: 'Super admin scope required',
+    });
+  }
+
   next();
 };
 
@@ -29,6 +34,7 @@ export const requireSuperAdmin = (req: AuthRequest, res: Response, next: NextFun
  */
 export const requireAdminScope = (requiredScopes: string | string[]) => {
   const scopes = Array.isArray(requiredScopes) ? requiredScopes : [requiredScopes];
+  const normalizedScopes = scopes.map((scope) => String(scope).toUpperCase());
 
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
@@ -45,7 +51,20 @@ export const requireAdminScope = (requiredScopes: string | string[]) => {
       });
     }
 
-    // Check scope (this will be enhanced when adminScope is added to the JWT)
+    const userScope = String(req.user.adminScope || '').toUpperCase();
+    if (userScope === 'SUPER_ADMIN') {
+      return next();
+    }
+
+    if (!normalizedScopes.includes(userScope)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Insufficient admin scope',
+        requiredScopes: normalizedScopes,
+        userScope,
+      });
+    }
+
     next();
   };
 };

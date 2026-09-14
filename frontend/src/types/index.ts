@@ -1,5 +1,6 @@
 // User Types
 export type UserRole = 'user' | 'premium' | 'investor' | 'admin';
+export type AdminScope = 'SIGNAL_ADMIN' | 'CONTENT_ADMIN' | 'SUPER_ADMIN' | string;
 
 export interface User {
   id: string;
@@ -7,6 +8,7 @@ export interface User {
   phone?: string;
   name: string;
   role: UserRole;
+  adminScope?: AdminScope;
   avatar?: string;
   createdAt: string;
   updatedAt: string;

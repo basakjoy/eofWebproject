@@ -3,6 +3,7 @@ import { prisma } from '../database';
 import { v4 as uuidv4 } from 'uuid';
 import { z } from 'zod';
 import { verifyToken, AuthRequest as AuthMiddlewareRequest } from '../middleware/auth';
+import { requireAdminScope } from '../middleware/superadmin.middleware';
 
 const router = express.Router();
 
@@ -243,7 +244,7 @@ const logRouteError = (label: string, error: any) => {
 // GET /signals/stats against the '/:id' handler with id="stats" first.
 
 // GET /signals/stats — signal statistics
-router.get('/stats', async (req: AuthRequest, res: Response) => {
+router.get('/stats', verifyToken, requireAdminScope(['SIGNAL_ADMIN', 'SUPER_ADMIN']), async (req: AuthRequest, res: Response) => {
   try {
     const [activeCount, closedCount, pendingCount, buyCount, sellCount] = await Promise.all([
       prisma.signal.count({ where: { status: 'active' } }),
@@ -283,7 +284,7 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
 });
 
 // GET /signals — list with filters + pagination
-router.get('/', validateQuery(querySchema), async (req: AuthRequest, res: Response) => {
+router.get('/', verifyToken, requireAdminScope(['SIGNAL_ADMIN', 'SUPER_ADMIN']), validateQuery(querySchema), async (req: AuthRequest, res: Response) => {
   try {
     const { status, pair, type, limit, offset } = req.query as any;
 
@@ -341,7 +342,7 @@ router.get('/', validateQuery(querySchema), async (req: AuthRequest, res: Respon
 });
 
 // GET /signals/:id — fetch one
-router.get('/:id', async (req: AuthRequest, res: Response) => {
+router.get('/:id', verifyToken, requireAdminScope(['SIGNAL_ADMIN', 'SUPER_ADMIN']), async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -399,6 +400,7 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
 router.post(
   '/',
   verifyToken,
+  requireAdminScope(['SIGNAL_ADMIN', 'SUPER_ADMIN']),
   requireAdmin,
   validateRequest(createSignalSchema),
   async (req: AuthRequest, res: Response) => {
@@ -527,6 +529,7 @@ router.post(
 router.put(
   '/:id',
   verifyToken,
+  requireAdminScope(['SIGNAL_ADMIN', 'SUPER_ADMIN']),
   requireAdmin,
   validateRequest(updateSignalSchema),
   async (req: AuthRequest, res: Response) => {
@@ -678,7 +681,7 @@ router.put(
 );
 
 // PUT /signals/:id/close — mark closed
-router.put('/:id/close', verifyToken, requireAdmin, async (req: AuthRequest, res: Response) => {
+router.put('/:id/close', verifyToken, requireAdminScope(['SIGNAL_ADMIN', 'SUPER_ADMIN']), requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -718,7 +721,7 @@ router.put('/:id/close', verifyToken, requireAdmin, async (req: AuthRequest, res
 });
 
 // DELETE /signals/:id
-router.delete('/:id', verifyToken, requireAdmin, async (req: AuthRequest, res: Response) => {
+router.delete('/:id', verifyToken, requireAdminScope(['SIGNAL_ADMIN', 'SUPER_ADMIN']), requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
