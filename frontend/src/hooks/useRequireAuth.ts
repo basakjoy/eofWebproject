@@ -22,7 +22,11 @@ export function useRequireAuth(redirectTo = '/login') {
     }
   }, [hasHydrated, isAuthenticated, token, router, redirectTo]);
 
-  return { isAuthenticated, user };
+  return {
+    isAuthenticated,
+    user,
+    isReady: hasHydrated && isAuthenticated && !!token && !!user,
+  };
 }
 
 export function useRequireAdmin(redirectTo = '/home') {

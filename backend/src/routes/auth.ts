@@ -103,7 +103,8 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
 // Login endpoint
 router.post('/login', authLimiter, async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    const password = typeof req.body.password === 'string' ? req.body.password : '';
 
     // Validation
     if (!email || !password) {

@@ -28,7 +28,7 @@ const COUNTRY_CODES = [
 
 export default function RegisterForm() {
   const router = useRouter();
-  const { setUser, setToken } = useAuthStore();
+  const { setSession } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [userType, setUserType] = useState<'user' | 'investor'>('user');
@@ -82,8 +82,7 @@ export default function RegisterForm() {
       const user = normalizeAuthUser(userData);
 
       authApi.saveSession(token, userData);
-      setToken(token);
-      setUser(user);
+      setSession(token, user);
 
       // Redirect based on user type
       if (userType === 'investor') {

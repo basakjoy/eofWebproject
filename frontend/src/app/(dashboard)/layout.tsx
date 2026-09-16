@@ -63,7 +63,7 @@ function getPageTitle(pathname: string): string {
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user } = useRequireAuth();
+  const { user, isReady } = useRequireAuth();
   const { logout } = useAuthStore();
 
   const [collapsed, setCollapsed]       = useState(false);
@@ -74,6 +74,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => { if (collapsed) setUserMenuOpen(false); }, [collapsed]);
   // Close mobile sidebar on route change
   useEffect(() => { setMobileSidebarOpen(false); }, [pathname]);
+
+  if (!isReady) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#050508] text-sm text-white/50">
+        Loading your account...
+      </div>
+    );
+  }
 
   const displayUser = {
     name:   user?.name  || 'User',

@@ -1,8 +1,6 @@
 import { Router, Response, NextFunction } from "express";
 import { verifyToken, AuthRequest }  from "../middleware/auth";
 import { z } from "zod";
-import { title } from "process";
-import { validate } from "uuid";
 
 
 const router = Router();
@@ -84,25 +82,17 @@ router.get('/', verifyToken, (req: AuthRequest, res: Response)=> {
 
 
 
-//POST /api/analysis/:id - get single analysis
+// GET /api/analysis/:id - get a single analysis
 router.get("/:id", verifyToken,
-  validateBody(createAnalysisSchema),
+  validateParams(IdParamSchema),
+  requireOwnership,
  (req: AuthRequest, res: Response) => {
-  res.json({ success: true, message:'Analysis created'});
+  res.json({ success: true, data: {} });
  }
 );
 
-// GET / API/ANALYSIS/:ID
-router.get ('/', verifyToken, validateParams(IdParamSchema),requireOwnership,
-(req: AuthRequest, res: Response) => {
-  res.json({ success: true, data:{} });
-}
-);
-
-
-
 // Put / api/analysis/:id
-router.put('/ :id', verifyToken, validateParams(IdParamSchema),requireOwnership,
+router.put('/:id', verifyToken, validateParams(IdParamSchema),requireOwnership,
 validateBody(updateAnalysisSchema), (req: AuthRequest, res: Response) => {
   res.json({success: true, message: "Analysis updated"});
 });

@@ -202,7 +202,6 @@ export default function RefinedSettingsPage() {
 
   const handleLogout = () => {
     logout();
-    router.push('/home');
   };
 
   if (loading) {

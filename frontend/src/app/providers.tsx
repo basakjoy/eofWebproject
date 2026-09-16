@@ -3,27 +3,14 @@
 import { useEffect } from "react";
 import { SessionProvider } from "next-auth/react";
 import { useAuthStore } from "@/store/authStore";
-import { normalizeAuthUser } from "@/lib/authUtils";
 import FloatingSupport from "@/components/common/FloatingSupport";
 
 function AuthInitializer({ children }: { children: React.ReactNode }) {
-  const { setUser, setToken, isAuthenticated } = useAuthStore();
+  const { setHasHydrated } = useAuthStore();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const storedUser = localStorage.getItem("user");
-
-    if (token && storedUser && !isAuthenticated) {
-      try {
-        const user = normalizeAuthUser(JSON.parse(storedUser));
-        setToken(token);
-        setUser(user);
-      } catch {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-      }
-    }
-  }, [isAuthenticated, setToken, setUser]);
+    setHasHydrated(true);
+  }, [setHasHydrated]);
 
   return <>{children}</>;
 }

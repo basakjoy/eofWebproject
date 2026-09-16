@@ -74,7 +74,7 @@ export const notificationsApi = {
   // Get notification preferences
   getPreferences: async () => {
     try {
-      const response = await apiClient.get('/notifications/preferences/get');
+      const response = await apiClient.get('/notifications/preferences');
       return response.data;
     } catch (error) {
       console.error('Error fetching notification preferences:', error);
@@ -90,7 +90,7 @@ export const notificationsApi = {
     preferences?: Record<string, boolean>;
   }) => {
     try {
-      const response = await apiClient.put('/notifications/preferences/update', data);
+      const response = await apiClient.put('/notifications/preferences', data);
       return response.data;
     } catch (error) {
       console.error('Error updating notification preferences:', error);

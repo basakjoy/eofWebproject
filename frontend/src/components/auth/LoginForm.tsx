@@ -14,7 +14,7 @@ import { signIn, useSession } from "next-auth/react";
 export default function LoginForm() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { setUser, setToken } = useAuthStore();
+  const { setUser, setToken, setSession } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOAuthLoading] = useState(false);
   const [error, setError] = useState('');
@@ -23,6 +23,14 @@ export default function LoginForm() {
     email: '',
     password: '',
   });
+
+  useEffect(() => {
+    const rememberedEmail = localStorage.getItem('rememberEmail');
+    if (rememberedEmail) {
+      setFormData((previous) => ({ ...previous, email: rememberedEmail }));
+      setRememberMe(true);
+    }
+  }, []);
 
   // Handle session changes (OAuth login success)
   useEffect(() => {
@@ -60,12 +68,22 @@ export default function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const email = formData.email.trim().toLowerCase();
+
+    if (!email || !formData.password) {
+      setError('Enter your email and password to continue.');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
     try {
-      const response = await authApi.login(formData);
+      const response = await authApi.login({ email, password: formData.password });
       const { data } = response;
+      if (!data?.token) {
+        throw new Error('The server did not return a login session.');
+      }
       const { token, ...userData } = data;
       const user = normalizeAuthUser(userData);
 
@@ -73,14 +91,13 @@ export default function LoginForm() {
 
       // Save remember me preference
       if (rememberMe) {
-        localStorage.setItem('rememberEmail', formData.email);
+        localStorage.setItem('rememberEmail', email);
       } else {
         localStorage.removeItem('rememberEmail');
       }
 
       // Set user and token in store
-      setToken(token);
-      setUser(user);
+      setSession(token, user);
 
       // Redirect based on role
       if (user.role === 'admin') {
@@ -91,7 +108,7 @@ export default function LoginForm() {
         router.push('/dashboard/user');
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
+      setError(err.response?.data?.message || err.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -129,6 +146,9 @@ export default function LoginForm() {
             placeholder="Enter your email address"
             value={formData.email}
             onChange={handleChange}
+            autoComplete="email"
+            autoCapitalize="none"
+            spellCheck={false}
             required
             className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-300 transition-all font-medium"
           />
@@ -144,6 +164,7 @@ export default function LoginForm() {
             placeholder="Enter your password"
             value={formData.password}
             onChange={handleChange}
+            autoComplete="current-password"
             required
             className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-300 transition-all font-medium"
           />
@@ -199,12 +220,14 @@ export default function LoginForm() {
           </button>
           <button
             type="button"
-            className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white border border-gray-200 rounded-full hover:bg-gray-50 transition-all font-bold text-gray-700 text-sm shadow-sm"
+            disabled
+            aria-disabled="true"
+            className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-gray-50 border border-gray-200 rounded-full font-bold text-gray-400 text-sm cursor-not-allowed"
           >
             <svg className="w-5 h-5 text-[#1877F2]" fill="currentColor" viewBox="0 0 24 24">
               <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.248h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
             </svg>
-            Continue with Facebook
+            Facebook sign-in unavailable
           </button>
         </div>
       </form>

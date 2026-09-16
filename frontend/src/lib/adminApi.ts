@@ -135,7 +135,16 @@ export const adminApi = {
 
   updateWithdrawalStatus: async (withdrawalId: string, status: string) => {
     try {
-      const response = await apiClient.put(`/withdrawals/${withdrawalId}`, { status });
+      const actionByStatus: Record<string, string> = {
+        approved: 'approve',
+        rejected: 'reject',
+        completed: 'complete',
+      };
+      const action = actionByStatus[status.toLowerCase()];
+      if (!action) {
+        throw new Error(`Unsupported withdrawal status: ${status}`);
+      }
+      const response = await apiClient.put(`/withdrawals/${withdrawalId}/${action}`);
       return response.data;
     } catch (error) {
       console.error('Error updating withdrawal status:', error);

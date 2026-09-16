@@ -65,7 +65,7 @@ npm start
 - `PUT /api/signals/:id` - Update signal
 
 ### Health Check
-- `GET /api/health` - Server health status
+- `GET /health` - Server health status
 
 ## 📝 Example Requests
 
@@ -157,3 +157,19 @@ For production:
 3. Use a production database (PostgreSQL recommended)
 4. Configure proper HTTPS
 5. Set up environment variables securely
+
+### Render sleep behavior
+
+Render Free web services sleep after a period without traffic. The API cannot
+prevent this from inside the same service because the process is suspended
+while it is idle. To keep the service warm, create an external uptime monitor
+(for example, UptimeRobot or Better Uptime) with these settings:
+
+- Monitor type: HTTP(s)
+- URL: `https://YOUR-RENDER-SERVICE.onrender.com/health`
+- Method: GET
+- Interval: every 5 minutes (10 minutes is also acceptable)
+
+The endpoint is public and does not require authentication. The first request
+after a sleep may still take longer while Render starts the service. A paid
+Render instance avoids the free-tier spin-down behavior.

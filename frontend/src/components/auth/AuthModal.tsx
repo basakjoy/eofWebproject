@@ -33,7 +33,7 @@ interface AuthModalProps {
 
 export default function AuthModal({ initialTab = 'signup', onClose }: AuthModalProps) {
   const router = useRouter();
-  const { setUser, setToken } = useAuthStore();
+  const { setSession } = useAuthStore();
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>(initialTab);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -100,8 +100,7 @@ export default function AuthModal({ initialTab = 'signup', onClose }: AuthModalP
       const user = normalizeAuthUser(userData);
 
       authApi.saveSession(token, userData);
-      setToken(token);
-      setUser(user);
+      setSession(token, user);
 
       if (userType === 'investor') {
         router.push('/dashboard/user');
@@ -134,8 +133,7 @@ export default function AuthModal({ initialTab = 'signup', onClose }: AuthModalP
         localStorage.removeItem('rememberEmail');
       }
       
-      setToken(token);
-      setUser(user);
+      setSession(token, user);
 
       if (user.role === 'admin') {
         router.push('/admin');

@@ -70,7 +70,7 @@ export function Header() {
                 Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive" onClick={() => { logout(); window.location.assign('/home'); }}>
+              <DropdownMenuItem className="text-destructive" onClick={logout}>
                 <LogOut className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                 Log out
               </DropdownMenuItem>

@@ -44,6 +44,11 @@ function validateParams(schema: z.ZodTypeAny) {
 
 router.get('/', verifyToken, requireWithdrawalAdmin, withdrawalsController.getAllWithdrawals);
 
+router.get('/methods/list', verifyToken, withdrawalsController.getWithdrawalMethods);
+router.get('/accounts/my-accounts', verifyToken, withdrawalsController.getUserWithdrawalAccounts);
+router.get('/report/:period', verifyToken, requireWithdrawalAdmin, validateParams(periodParamSchema), withdrawalsController.getWithdrawalReport);
+router.post('/method', verifyToken, requireWithdrawalAdmin, withdrawalsController.addWithdrawalMethod);
+
 router.get('/:id', verifyToken, validateParams(idParamSchema), withdrawalsController.getWithdrawalById);
 
 router.post('/', verifyToken, createWithdrawalLimiter, validateWithdrawalRequest, withdrawalsController.requestWithdrawal);
@@ -53,13 +58,5 @@ router.put('/:id/approve', verifyToken, requireWithdrawalAdmin, adminActionLimit
 router.put('/:id/reject', verifyToken, requireWithdrawalAdmin, adminActionLimiter, validateParams(idParamSchema), withdrawalsController.rejectWithdrawal);
 
 router.put('/:id/complete', verifyToken, requireWithdrawalAdmin, adminActionLimiter, validateParams(idParamSchema), withdrawalsController.completeWithdrawal);
-
-router.get('/methods/list', verifyToken, withdrawalsController.getWithdrawalMethods);
-
-router.post('/method', verifyToken, requireWithdrawalAdmin, withdrawalsController.addWithdrawalMethod);
-
-router.get('/accounts/my-accounts', verifyToken, withdrawalsController.getUserWithdrawalAccounts);
-
-router.get('/report/:period', verifyToken, requireWithdrawalAdmin, validateParams(periodParamSchema), withdrawalsController.getWithdrawalReport);
 
 export default router;

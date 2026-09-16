@@ -47,7 +47,6 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
 
   const handleLogout = () => {
     logout();
-    window.location.assign('/home');
   };
 
   const isActive = (itemId: string) => {

@@ -18,14 +18,15 @@ const sendNotificationLimiter = rateLimit({
 // user notifications
 router.get('/', verifyToken, notificationController.getNotifications);
 router.get('/unread-count', verifyToken, notificationController.getUnreadCount);
-router.get('/:id', verifyToken, notificationController.getNotificationById);
-router.put('/:id/read', verifyToken, notificationController.markAsRead);
 router.put('/mark-all-read', verifyToken, notificationController.markAllAsRead);
-router.delete('/:id', verifyToken, notificationController.deleteNotification);
 
 // Preferences
 router.get('/preferences', verifyToken, notificationController.getPreferences);
 router.put('/preferences', verifyToken, notificationController.updatePreferences);
+
+router.get('/:id', verifyToken, notificationController.getNotificationById);
+router.put('/:id/read', verifyToken, notificationController.markAsRead);
+router.delete('/:id', verifyToken, notificationController.deleteNotification);
 
 
 // Admin Notification API (Broadcast / User targeted)

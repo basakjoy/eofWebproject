@@ -99,7 +99,7 @@ export const withdrawalsApi = {
     maxAmount?: number;
   }) => {
     try {
-      const response = await apiClient.post('/withdrawals/methods', data);
+      const response = await apiClient.post('/withdrawals/method', data);
       return response.data;
     } catch (error) {
       console.error('Error adding withdrawal method:', error);
