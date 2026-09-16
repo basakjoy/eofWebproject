@@ -6,11 +6,11 @@ import { useAuthStore } from "@/store/authStore";
 import FloatingSupport from "@/components/common/FloatingSupport";
 
 function AuthInitializer({ children }: { children: React.ReactNode }) {
-  const { setHasHydrated } = useAuthStore();
+  const { hydrateSession } = useAuthStore();
 
   useEffect(() => {
-    setHasHydrated(true);
-  }, [setHasHydrated]);
+    hydrateSession();
+  }, [hydrateSession]);
 
   return <>{children}</>;
 }
@@ -21,7 +21,7 @@ export default function Providers({
   children: React.ReactNode;
 }) {
   return (
-    <SessionProvider>
+    <SessionProvider refetchOnWindowFocus={false} refetchInterval={0}>
       <AuthInitializer>
         {children}
         <FloatingSupport />
@@ -29,3 +29,4 @@ export default function Providers({
     </SessionProvider>
   );
 }
+

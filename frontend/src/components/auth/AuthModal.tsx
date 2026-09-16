@@ -138,10 +138,15 @@ export default function AuthModal({ initialTab = 'signup', onClose }: AuthModalP
       if (user.role === 'admin') {
         router.push('/admin');
       } else if (user.role === 'investor') {
-        router.push('/dashboard/investor');
+        router.push('/dashboard/investments');
+      } else if (user.role === 'premium') {
+        router.push('/dashboard/premium');
       } else {
         router.push('/dashboard/user');
       }
+      onClose?.();
+
+
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');
     } finally {

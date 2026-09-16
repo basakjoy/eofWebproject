@@ -56,12 +56,12 @@ export default function Navbar() {
     { name: 'Brokers', href: '/brokers' },
   ];
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
     setProfileOpen(false);
     setIsOpen(false);
-    router.push('/home');
+    await logout();
   };
+
 
   return (
     <AnimatePresence>

@@ -12,39 +12,35 @@ export function useRequireAuth(redirectTo = '/login') {
   useEffect(() => {
     if (!hasHydrated) return;
 
-    const hasStoredSession =
-      typeof window !== 'undefined' &&
-      !!localStorage.getItem('token') &&
-      !!localStorage.getItem('user');
-
-    if (!isAuthenticated && !hasStoredSession) {
+    if (!isAuthenticated || !token || !user) {
       router.replace(redirectTo);
     }
-  }, [hasHydrated, isAuthenticated, token, router, redirectTo]);
+  }, [hasHydrated, isAuthenticated, token, user, router, redirectTo]);
 
   return {
     isAuthenticated,
     user,
+    token,
     isReady: hasHydrated && isAuthenticated && !!token && !!user,
   };
 }
 
 export function useRequireAdmin(redirectTo = '/home') {
   const router = useRouter();
-  const { isAuthenticated, user, token } = useAuthStore();
+  const { isAuthenticated, user, token, hasHydrated } = useAuthStore();
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
-    setIsAuthorized(false);
-    const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
-    const storedToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (!hasHydrated) return;
 
-    if (!isAuthenticated || !token || !user || !storedUser || !storedToken) {
+    setIsAuthorized(false);
+
+    if (!isAuthenticated || !token || !user) {
       router.replace('/login');
       return;
     }
 
-    const role = String(user.role).toLowerCase();
+    const role = String(user.role || '').toLowerCase();
     if (role !== 'admin' && role !== 'superadmin') {
       router.replace(redirectTo);
       return;
@@ -56,7 +52,8 @@ export function useRequireAdmin(redirectTo = '/home') {
       .catch(() => { if (active) router.replace(redirectTo); });
 
     return () => { active = false; };
-  }, [isAuthenticated, token, user, router, redirectTo]);
+  }, [hasHydrated, isAuthenticated, token, user, router, redirectTo]);
 
-  return { isAuthorized, user };
+  return { isAuthorized, user, isReady: hasHydrated };
 }
+
