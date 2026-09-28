@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { useLanguage } from '@/context/LanguageContext';
 
 /* ── Service Data ── */
 const SERVICES = [
@@ -151,6 +152,35 @@ const WHY_US = [
 ];
 
 export default function ServicesPage() {
+  const { t } = useLanguage();
+
+  const services = [
+    {
+      ...SERVICES[0],
+      title: t('services.service1Title', 'Trading Signals'),
+      subtitle: t('services.service1Subtitle', 'Real-Time Institutional Alerts'),
+      description: t('services.service1Desc', SERVICES[0].description),
+    },
+    {
+      ...SERVICES[1],
+      title: t('services.service2Title', 'Fund Management'),
+      subtitle: t('services.service2Subtitle', 'Passive Institutional Exposure'),
+      description: t('services.service2Desc', SERVICES[1].description),
+    },
+    {
+      ...SERVICES[2],
+      title: t('services.service3Title', 'Portfolio Optimization'),
+      subtitle: t('services.service3Subtitle', 'Advanced Capital Allocation'),
+      description: t('services.service3Desc', SERVICES[2].description),
+    },
+    {
+      ...SERVICES[3],
+      title: t('services.service4Title', 'Trading Education'),
+      subtitle: t('services.service4Subtitle', 'From Beginner to Institutional'),
+      description: t('services.service4Desc', SERVICES[3].description),
+    },
+  ];
+
   return (
     <div className="w-full min-h-screen bg-[#030305] py-15 text-white font-poppins overflow-x-hidden">
 
@@ -179,7 +209,7 @@ export default function ServicesPage() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-fiery-orange/10 border border-fiery-orange/20 text-xs font-bold text-fiery-orange mb-8"
             >
               <Activity className="w-3.5 h-3.5" />
-              COMPLETE SUITE · INSTITUTIONAL INFRASTRUCTURE
+              {t('nav.services', 'Services')} · {t('services.heroBadge', 'Institutional Infrastructure')}
             </motion.div>
 
             <motion.h1
@@ -188,20 +218,16 @@ export default function ServicesPage() {
               transition={{ duration: 0.7, delay: 0.1 }}
               className="text-6xl sm:text-7xl lg:text-[5.5rem] text-white leading-[1.05] tracking-tight mb-6"
             >
-              Our{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] via-[#FF8C00] to-[#FFB800]">
-                Services
-              </span>
+              {t('services.heroTitle', 'Our Services')}
             </motion.h1>
 
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.2 }}
-              className="text-lg  leading-relaxed max-w-2xl mx-auto font-light"
+              className="text-lg leading-relaxed max-w-2xl mx-auto font-light"
             >
-              From algorithmic signals to fully managed capital solutions we provide the
-              institutional infrastructure required to dominate the global markets.
+              {t('services.description', 'From algorithmic signals to fully managed capital solutions we provide the institutional infrastructure required to dominate the global markets.')}
             </motion.p>
           </div>
         </section>
@@ -209,7 +235,7 @@ export default function ServicesPage() {
         {/* ══ SERVICES (Alternating) ══ */}
         <section className="py-12 px-4 sm:px-6">
           <div className="max-w-7xl mx-auto space-y-20 md:space-y-32">
-            {SERVICES.map((service, idx) => (
+            {services.map((service, idx) => (
               <div
                 key={service.title}
                 className={`grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center`}
@@ -237,7 +263,7 @@ export default function ServicesPage() {
                       href="/register"
                       className={`inline-flex items-center gap-2 px-6 py-3 rounded-full hover:bg-white/[0.08] border border-white/10 hover:border-fiery-orange/30 text-white font-semibold text-sm transition-all`}
                     >
-                      Inquire for Details <ChevronRight className="w-4 h-4" />
+                      {t('services.inquire', 'Inquire for Details')} <ChevronRight className="w-4 h-4" />
                     </Link>
                   </div>
                 </motion.div>
@@ -257,7 +283,7 @@ export default function ServicesPage() {
 
                     <h3 className="text-base font-extrabold text-white mb-6 flex items-center gap-3">
                       <span className={`w-1.5 h-5 bg-gradient-to-b ${service.accent} rounded-full`} />
-                      Key Capabilities
+                      {t('services.capabilities', 'Key Capabilities')}
                     </h3>
                     <ul className="space-y-4">
                       {service.benefits.map((benefit) => (
@@ -282,12 +308,12 @@ export default function ServicesPage() {
         <section className="py-24 px-4 sm:px-6 bg-[#0A0A0E]/50">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
-              <p className="text-xs font-bold text-fiery-orange uppercase tracking-widest mb-4">Why Empire of Forex</p>
+              <p className="text-xs font-bold text-fiery-orange uppercase tracking-widest mb-4">{t('whyChooseUs.title', 'Why Empire of Forex')}</p>
               <h2 className="text-4xl sm:text-5xl text-white mb-4">
-                The Edge That Separates Us
+                {t('services.edgeTitle', 'The Edge That Separates Us')}
               </h2>
               <p className="text-base max-w-xl mx-auto">
-                We don't just deliver signals — we deliver a complete trading infrastructure.
+                {t('services.edgeDescription', "We don't just deliver signals — we deliver a complete trading infrastructure.")}
               </p>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -316,12 +342,12 @@ export default function ServicesPage() {
         <section className="py-24 px-4 sm:px-6">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
-              <p className="text-xs font-bold text-fiery-orange uppercase tracking-widest mb-4">Access Levels</p>
+              <p className="text-xs font-bold text-fiery-orange uppercase tracking-widest mb-4">{t('services.accessLevels', 'Access Levels')}</p>
               <h2 className="text-4xl sm:text-6xl  text-white mb-4">
-                Simple, Transparent Pricing
+                {t('services.pricingTitle', 'Simple, Transparent Pricing')}
               </h2>
               <p className="text-zinc-400 max-w-xl mx-auto">
-                Scalable solutions for every stage of your trading journey.
+                {t('services.pricingDescription', 'Scalable solutions for every stage of your trading journey.')}
               </p>
             </div>
 
@@ -349,7 +375,7 @@ export default function ServicesPage() {
                     <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20">
                       <div className="flex items-center gap-1.5 bg-gradient-to-r from-fiery-orange to-fiery-amber  px-4 py-1 rounded-full text-[10px] uppercase tracking-widest shadow-fiery">
                         <Star className="w-3 h-3 fill-black" />
-                        Most Popular
+                        {t('services.mostPopular', 'Most Popular')}
                       </div>
                     </div>
                   )}
@@ -413,18 +439,17 @@ export default function ServicesPage() {
               <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-fiery-orange/50 to-transparent" />
               <div className="relative z-10">
                 <h2 className="text-4xl sm:text-5xl text-white mb-4">
-                  Ready to Trade Like an Institution?
+                  {t('services.ctaTitle', 'Ready to Trade Like an Institution?')}
                 </h2>
                 <p className=" max-w-lg mx-auto mb-8  leading-relaxed">
-                  Start with a free account and unlock the tools that 12,000+ traders
-                  use to dominate the markets every day.
+                  {t('services.ctaDescription', 'Start with a free account and unlock the tools that 12,000+ traders use to dominate the markets every day.')}
                 </p>
                 <div className="flex flex-wrap justify-center gap-4">
                   <Link
                     href="/register"
                     className="inline-flex items-center gap-2 px-8 py-4 rounded-full border border-white/20 hover:border-fiery-orange/40 text-white font-semibold text-sm transition-all"
                   >
-                    Start Free Today <ArrowRight className="w-4 h-4" />
+                    {t('services.startFree', 'Start Free Today')} <ArrowRight className="w-4 h-4" />
                   </Link>
                   <Link
                     href="/about"

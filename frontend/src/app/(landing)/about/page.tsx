@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { getLocalizedPath, useLanguage } from '@/context/LanguageContext';
 
 /* ── Team Data ── */
 const TEAM = [
@@ -75,6 +76,19 @@ const VALUES = [
 ];
 
 export default function AboutPage() {
+  const { locale, t } = useLanguage();
+  const stats = STATS.map((stat, index) => ({ ...stat, label: t(`about.stats${index + 1}`, stat.label) }));
+  const values = VALUES.map((value, index) => ({
+    ...value,
+    title: t(`about.value${index + 1}Title`, value.title),
+    desc: t(`about.value${index + 1}Desc`, value.desc),
+  }));
+  const team = TEAM.map((member, index) => ({
+    ...member,
+    role: t(`about.team${index + 1}Role`, member.role),
+    bio: t(`about.team${index + 1}Bio`, member.bio),
+  }));
+
   return (
     <div className="w-full  min-h-screen bg-[#030305] text-white font-poppins overflow-x-hidden">
 
@@ -113,7 +127,7 @@ export default function AboutPage() {
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-fiery-orange/10 border border-fiery-orange/20 text-xs font-bold text-fiery-orange mb-8"
               >
                 <Star className="w-3.5 h-3.5 fill-fiery-orange" />
-                EST. 2020 · EMPIRE OF FOREX
+                {t('about.heroBadge', 'EST. 2020 · EMPIRE OF FOREX')}
               </motion.div>
 
               <motion.h1
@@ -122,9 +136,9 @@ export default function AboutPage() {
                 transition={{ duration: 0.7, delay: 0.1 }}
                 className="text-6xl sm:text-7xl lg:text-[5.5rem]  text-white leading-[1.05] tracking-tight mb-6"
               >
-                Built by Traders,{' '}
+                {t('about.heroTitle', 'Built by Traders,')}{' '}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] via-[#FF8C00] to-[#FFB800]">
-                  For Traders
+                  {t('about.heroTitleHighlight', 'For Traders')}
                 </span>
               </motion.h1>
 
@@ -134,8 +148,7 @@ export default function AboutPage() {
                 transition={{ duration: 0.7, delay: 0.2 }}
                 className="text-lg  leading-relaxed max-w-xl font-light mb-10"
               >
-                We've redefined the trading experience by bridging the gap between
-                institutional expertise and retail traders. Founded in 2020, powered by precision.
+                {t('about.heroDescription', "We've redefined the trading experience by bridging the gap between institutional expertise and retail traders. Founded in 2020, powered by precision.")}
               </motion.p>
 
               <motion.div
@@ -152,20 +165,20 @@ export default function AboutPage() {
                   Join the Empire
                 </Link>
                 <Link
-                  href="/trading-signals"
+                  href={getLocalizedPath('/trading-signals', locale)}
                   className="inline-flex items-center gap-3 px-8 py-4 rounded-full bg-white/[0.2] hover:bg-white/[0.08] border border-white/[0.07] hover:border-fiery-orange/30 text-white font-semibold text-sm transition-all"
                 >
                   <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-fiery-orange to-fiery-amber flex items-center justify-center shadow-fiery">
                     <Play size={10} className="fill-black translate-x-[1px]" />
                   </div>
-                  See Live Signals
+                  {t('about.seeSignals', 'See Live Signals')}
                 </Link>
               </motion.div>
             </div>
 
             {/* Floating stats */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-20">
-              {STATS.map((stat, i) => (
+              {stats.map((stat, i) => (
                 <motion.div
                   key={stat.label}
                   initial={{ opacity: 0, y: 20 }}
@@ -206,10 +219,10 @@ export default function AboutPage() {
                 <div className="absolute -bottom-6 -right-6 hidden md:block p-5 rounded-2xl  border border-white/[0.07] backdrop-blur-xl shadow-fiery">
                   <div className="flex items-center text-black gap-3 text- mb-2">
                     <TrendingUp className="w-5 h-5" />
-                    <span className="font-bold text-sm">Growth Trajectory</span>
+                    <span className="font-bold text-sm">{t('about.growthTrajectory', 'Growth Trajectory')}</span>
                   </div>
                   <p className="text-xs text-black italic max-w-[160px]">
-                    "Scaling wealth through data-driven precision since day one."
+                    {t('about.growthQuote', 'Scaling wealth through data-driven precision since day one.')}
                   </p>
                 </div>
                 {/* Ambient glow */}
@@ -225,21 +238,19 @@ export default function AboutPage() {
                 className="space-y-8"
               >
                 <div>
-                  <p className="text-xs font-bold text-fiery-orange uppercase tracking-widest mb-4">Our Legacy</p>
+                  <p className="text-xs font-bold text-fiery-orange uppercase tracking-widest mb-4">{t('about.legacyLabel', 'Our Legacy')}</p>
                   <h2 className="text-4xl sm:text-5xl text-white mb-6 leading-tight">
-                    Democratizing Professional Markets
+                    {t('about.legacyTitle', 'Democratizing Professional Markets')}
                   </h2>
                   <p className="text-lg leading-relaxed">
-                    Founded in 2020, Empire of Forex emerged from a vision to provide retail
-                    traders with the same technical arsenal used by institutional hedge funds.
-                    We believe every serious trader deserves professional-grade tools.
+                    {t('about.legacyDescription', 'Founded in 2020, Empire of Forex emerged from a vision to provide retail traders with the same technical arsenal used by institutional hedge funds. We believe every serious trader deserves professional-grade tools.')}
                   </p>
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-6">
                   {[
-                    { icon: Zap, title: 'Instant Execution', desc: 'Nano-second latency on all trade signal delivery systems.' },
-                    { icon: Globe, title: 'Global Access', desc: 'Available across 40+ countries and timezones, 24/7.' },
+                    { icon: Zap, title: t('about.instantExecution', 'Instant Execution'), desc: t('about.instantExecutionDesc', 'Nano-second latency on all trade signal delivery systems.') },
+                    { icon: Globe, title: t('about.globalAccess', 'Global Access'), desc: t('about.globalAccessDesc', 'Available across 40+ countries and timezones, 24/7.') },
                   ].map((item) => (
                     <div key={item.title} className="flex gap-4">
                       <div className="p-2.5 rounded-xl bg-fiery-orange/10 border border-fiery-orange/20 h-fit">
@@ -254,8 +265,7 @@ export default function AboutPage() {
                 </div>
 
                 <p className="text-zinc-400 italic border-l-2 border-fiery-orange pl-4">
-                  "What started as a small team of 3 traders has grown into a powerhouse
-                  managing over $250M in assets for 12,000+ active members."
+                  {t('about.storyQuote', 'What started as a small team of 3 traders has grown into a powerhouse managing over $250M in assets for 12,000+ active members.')}
                 </p>
               </motion.div>
             </div>
@@ -266,14 +276,14 @@ export default function AboutPage() {
         <section className="py-24 px-4 sm:px-6 bg-[#0A0A0E]/50">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
-              <p className="text-xs font-bold text-fiery-orange uppercase tracking-widest mb-4">What We Stand For</p>
-              <h2 className="text-4xl sm:text-5xl  text-white mb-4">Our Core Values</h2>
+              <p className="text-xs font-bold text-fiery-orange uppercase tracking-widest mb-4">{t('about.valuesLabel', 'What We Stand For')}</p>
+              <h2 className="text-4xl sm:text-5xl  text-white mb-4">{t('about.valuesTitle', 'Our Core Values')}</h2>
               <p className="text-zinc-300 max-w-xl mx-auto">
-                Everything we build is grounded in these four principles.
+                {t('about.valuesDescription', 'Everything we build is grounded in these four principles.')}
               </p>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {VALUES.map((v, i) => (
+              {values.map((v, i) => (
                 <motion.div
                   key={v.title}
                   initial={{ opacity: 0, y: 30 }}
@@ -299,15 +309,15 @@ export default function AboutPage() {
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
               <div>
-                <p className="text-xs font-bold text-fiery-orange uppercase tracking-widest mb-4">The Minds</p>
-                <h2 className="text-4xl sm:text-5xl text-white leading-tight">Guided by Experts</h2>
+                <p className="text-xs font-bold text-fiery-orange uppercase tracking-widest mb-4">{t('about.teamLabel', 'The Minds')}</p>
+                <h2 className="text-4xl sm:text-5xl text-white leading-tight">{t('about.teamTitle', 'Guided by Experts')}</h2>
               </div>
               <p className=" max-w-sm text-sm">
-                Our leadership brings decades of collective experience from top-tier financial institutions.
+                {t('about.teamDescription', 'Our leadership brings decades of collective experience from top-tier financial institutions.')}
               </p>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {TEAM.map((member, i) => (
+              {team.map((member, i) => (
                 <motion.div
                   key={member.name}
                   initial={{ opacity: 0, y: 40 }}
@@ -354,15 +364,13 @@ export default function AboutPage() {
                   <div className="p-3 rounded-2xl bg-fiery-orange/10 border border-fiery-orange/20 inline-flex mb-8">
                     <Target className="w-8 h-8 text-fiery-orange" />
                   </div>
-                  <h3 className="text-3xl mb-6">Our Mission</h3>
+                  <h3 className="text-3xl mb-6">{t('about.missionTitle', 'Our Mission')}</h3>
                   <p className="text-zinc-400 text-lg leading-relaxed mb-8">
-                    To empower retail traders with professional-grade tools, education, and signals,
-                    enabling them to build consistent wealth through forex trading. We're committed
-                    to transparency, fairness, and continuous innovation.
+                    {t('about.missionDescription', "To empower retail traders with professional-grade tools, education, and signals, enabling them to build consistent wealth through forex trading. We're committed to transparency, fairness, and continuous innovation.")}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 text-fiery-orange cursor-pointer group/link">
-                  Read our manifesto <ChevronRight className="w-5 h-5 group-hover/link:translate-x-1 transition-transform" />
+                  {t('about.missionLink', 'Read our manifesto')} <ChevronRight className="w-5 h-5 group-hover/link:translate-x-1 transition-transform" />
                 </div>
               </motion.div>
 
@@ -377,15 +385,13 @@ export default function AboutPage() {
                   <div className="p-3 rounded-2xl bg-fiery-amber/10 border border-fiery-amber/20 inline-flex mb-8">
                     <Award className="w-8 h-8 text-fiery-amber" />
                   </div>
-                  <h3 className="text-3xl mb-6">Our Vision</h3>
+                  <h3 className="text-3xl mb-6">{t('about.visionTitle', 'Our Vision')}</h3>
                   <p className="text-zinc-400 text-lg leading-relaxed mb-8">
-                    To become the world's most trusted forex trading platform, where every trader
-                    has access to institutional-quality research, signals, and risk management
-                    tools regardless of their capital size.
+                    {t('about.visionDescription', "To become the world's most trusted forex trading platform, where every trader has access to institutional-quality research, signals, and risk management tools regardless of their capital size.")}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 text-fiery-amber cursor-pointer group/link">
-                  Future roadmap <ChevronRight className="w-5 h-5 group-hover/link:translate-x-1 transition-transform" />
+                  {t('about.visionLink', 'Future roadmap')} <ChevronRight className="w-5 h-5 group-hover/link:translate-x-1 transition-transform" />
                 </div>
               </motion.div>
             </div>
@@ -396,10 +402,10 @@ export default function AboutPage() {
         <section className="py-24 px-4 sm:px-6">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
-              <p className="text-xs font-bold text-fiery-orange uppercase tracking-widest mb-4">Performance</p>
-              <h2 className="text-4xl sm:text-5xl text-white mb-4">Historical Excellence</h2>
+              <p className="text-xs font-bold text-fiery-orange uppercase tracking-widest mb-4">{t('about.performanceLabel', 'Performance')}</p>
+              <h2 className="text-4xl sm:text-5xl text-white mb-4">{t('about.performanceTitle', 'Historical Excellence')}</h2>
               <p className="text-zinc-400 max-w-xl mx-auto italic text-sm">
-                Independently audited results. Past performance is not indicative of future results.
+                {t('about.performanceDescription', 'Independently audited results. Past performance is not indicative of future results.')}
               </p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -415,10 +421,10 @@ export default function AboutPage() {
                   <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-fiery-orange to-fiery-amber transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500" />
                   <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">{record.year}</p>
                   <p className="text-lg font-black text-white mb-1">{record.aum}</p>
-                  <p className="text-[10px] text-zinc-600 uppercase font-bold mb-4">AUM</p>
+                  <p className="text-[10px] text-zinc-600 uppercase font-bold mb-4">{t('about.aum', 'AUM')}</p>
                   <div className="bg-emerald-500/10 border border-emerald-500/20 py-2 rounded-xl">
                     <p className="text-emerald-400 font-black text-xl">{record.returns}</p>
-                    <p className="text-emerald-600/70 text-[10px] uppercase font-bold">Net Return</p>
+                    <p className="text-emerald-600/70 text-[10px] uppercase font-bold">{t('about.netReturn', 'Net Return')}</p>
                   </div>
                 </motion.div>
               ))}
@@ -437,24 +443,23 @@ export default function AboutPage() {
 
               <div className="relative z-10">
                 <h2 className="text-5xl sm:text-6xl  text-white mb-6 leading-tight">
-                  BUILD YOUR EMPIRE TODAY
+                  {t('about.ctaTitle', 'BUILD YOUR EMPIRE TODAY')}
                 </h2>
                 <p className="text-zinc-400 text-lg max-w-2xl mx-auto mb-10 font-light leading-relaxed">
-                  Join 12,000+ traders already profiting from our institutional-grade signals
-                  and risk management software.
+                  {t('about.ctaDescription', 'Join 12,000+ traders already profiting from our institutional-grade signals and risk management software.')}
                 </p>
                 <div className="flex flex-wrap items-center justify-center gap-5">
                   <Link
                     href="/register"
                     className="inline-flex items-center gap-2 px-10 py-4 rounded-full bg-white hover:bg-zinc-100 text-black font-semibold text-sm shadow-[0_0_40px_rgba(255,255,255,0.15)] hover:scale-105 transition-all"
                   >
-                    Create Free Account <ArrowRight className="w-4 h-4" />
+                    {t('about.createAccount', 'Create Free Account')} <ArrowRight className="w-4 h-4" />
                   </Link>
                   <Link
                     href="/services"
                     className="inline-flex items-center gap-2 px-8 py-4 rounded-full border border-white/20 hover:border-fiery-orange/40 text-white font-semibold text-sm transition-all hover:bg-white/[0.04]"
                   >
-                    Explore Services
+                    {t('about.exploreServices', 'Explore Services')}
                   </Link>
                 </div>
               </div>

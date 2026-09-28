@@ -1,5 +1,6 @@
 
 import express, { Express, Request, Response, NextFunction } from 'express';
+import http from 'http';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import fs from 'fs';
@@ -20,6 +21,7 @@ import notificationsRoutes from './routes/notifications';
 import supportRoutes from './routes/support';
 import usersRoutes from './routes/users';
 import blogRoutes from './routes/blog';
+import { setupSupportWebSocket } from './websocket/supportHandler';
 
 dotenv.config();
 
@@ -122,7 +124,10 @@ const startServer = async () => {
       });
     });
 
-    app.listen(PORT, () => {
+    const server = http.createServer(app);
+    setupSupportWebSocket(server);
+
+    server.listen(PORT, () => {
       console.log(`✓ Server running on http://localhost:${PORT}\n`);
       console.log('Available endpoints:');
       console.log('\n   Auth:');

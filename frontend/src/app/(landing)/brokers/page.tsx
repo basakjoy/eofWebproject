@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { brokersApi } from '@/lib/brokersApi';
+import { useLanguage } from '@/context/LanguageContext';
 
 /* ── Stat counters ── */
 const LIVE_STATS = [
@@ -68,6 +69,7 @@ const COMPARISON_KEYS = [
 ];
 
 export default function BrokersPromotionalPage() {
+  const { t } = useLanguage();
   const [brokers, setBrokers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -194,8 +196,8 @@ export default function BrokersPromotionalPage() {
             {/* Section header + search */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-12">
               <div>
-                <p className="text-xs font-bold text-[#FF6B00] uppercase tracking-widest mb-2">Curated Picks</p>
-                <h2 className="text-3xl sm:text-4xl text-white">Featured Broker Partners</h2>
+                <p className="text-xs font-bold text-[#FF6B00] uppercase tracking-widest mb-2">{t('brokers.curated', 'Curated Picks')}</p>
+                <h2 className="text-3xl sm:text-4xl text-white">{t('brokers.featured', 'Featured Broker Partners')}</h2>
                 <p className="text-sm text-zinc-400 mt-1 max-w-md">
                   Every broker has passed our multi-tier regulatory, execution, and transparency audit.
                 </p>
@@ -205,7 +207,7 @@ export default function BrokersPromotionalPage() {
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
                 <input
                   type="text"
-                  placeholder="Search by name or country…"
+                  placeholder={t('brokers.searchPlaceholder', 'Search by name or country...')}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/[0.05] border border-white/10 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#FF6B00]/50 transition-colors"
@@ -216,16 +218,16 @@ export default function BrokersPromotionalPage() {
             {loading ? (
               <div className="flex flex-col items-center justify-center py-24">
                 <Loader2 className="w-10 h-10 text-[#FF6B00] animate-spin mb-4" />
-                <p className="text-zinc-400 text-sm animate-pulse font-medium">Loading top brokers…</p>
+                <p className="text-zinc-400 text-sm animate-pulse font-medium">{t('common.loading', 'Loading...')}</p>
               </div>
             ) : filtered.length === 0 ? (
               <div className="py-24 text-center rounded-3xl border border-white/10 bg-[#0C0C10]/40 backdrop-blur-2xl">
                 <ShieldCheck className="w-12 h-12 text-zinc-600 mx-auto mb-4" />
                 <h3 className="text-xl font-bold text-white mb-2">
-                  {search ? 'No brokers matched your search' : 'No Brokers Available'}
+                  {search ? t('brokers.noMatch', 'No brokers matched your search') : t('brokers.none', 'No Brokers Available')}
                 </h3>
                 <p className="text-xs text-zinc-400">
-                  {search ? 'Try a different name or country.' : 'We are currently updating our list of recommended brokers.'}
+                  {search ? t('brokers.tryAgain', 'Try a different name or country.') : t('brokers.updating', 'We are currently updating our list of recommended brokers.')}
                 </p>
               </div>
             ) : (
@@ -395,8 +397,8 @@ export default function BrokersPromotionalPage() {
           <section className="py-16 px-4 sm:px-6 bg-[#0A0A0E]/60">
             <div className="max-w-7xl mx-auto">
               <div className="text-center mb-10">
-                <p className="text-xs font-bold text-[#FF6B00] uppercase tracking-widest mb-2">Side by Side</p>
-                <h2 className="text-3xl sm:text-4xl text-white">Quick Comparison</h2>
+                <p className="text-xs font-bold text-[#FF6B00] uppercase tracking-widest mb-2">{t('brokers.comparisonLabel', 'Side by Side')}</p>
+                <h2 className="text-3xl sm:text-4xl text-white">{t('brokers.comparisonTitle', 'Quick Comparison')}</h2>
                 <p className="text-sm text-zinc-400 mt-1">Compare key metrics across all our featured brokers at a glance.</p>
               </div>
 
@@ -476,8 +478,8 @@ export default function BrokersPromotionalPage() {
         <section id="why-trust" className="py-20 px-4 sm:px-6">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-14">
-              <p className="text-xs font-bold text-[#FF6B00] uppercase tracking-widest mb-3">Our Standards</p>
-              <h2 className="text-4xl sm:text-5xl text-white mb-4">Why Trust Our Recommendations?</h2>
+              <p className="text-xs font-bold text-[#FF6B00] uppercase tracking-widest mb-3">{t('brokers.standards', 'Our Standards')}</p>
+              <h2 className="text-4xl sm:text-5xl text-white mb-4">{t('brokers.trustTitle', 'Why Trust Our Recommendations?')}</h2>
               <p className="text-zinc-400 max-w-xl mx-auto text-sm">
                 Our rigorous multi-tier selection process ensures you only trade with the very best.
               </p>

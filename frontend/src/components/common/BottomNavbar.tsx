@@ -16,11 +16,13 @@ import {
   DiamondIcon
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
+import { getLocalizedPath, useLanguage } from '@/context/LanguageContext';
 
 export default function BottomNavbar() {
   const [isVisible, setIsVisible] = useState(false);
   const pathname = usePathname();
   const { isAuthenticated, user } = useAuthStore();
+  const { locale, t } = useLanguage();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -51,12 +53,12 @@ export default function BottomNavbar() {
   };
 
   const navItems = [
-    { name: 'Home', href: '/home', icon: Home },
-    { name: 'Signals', href: '/trading-signals', icon: Zap, highlight: true },
-    { name: 'Services', href: '/services', icon: Layers },
-    { name: 'Plans', href: '/investment-plans', icon: ShieldCheck },
-    { name: 'Blog', href: '/blog', icon: BookOpen },
-    { name: 'Brokers', href: '/brokers', icon: DiamondIcon },
+    { name: t('bottomNav.home', 'Home'), href: getLocalizedPath('/home', locale), icon: Home },
+    { name: t('bottomNav.signals', 'Signals'), href: getLocalizedPath('/trading-signals', locale), icon: Zap, highlight: true },
+    { name: t('bottomNav.services', 'Services'), href: getLocalizedPath('/services', locale), icon: Layers },
+    { name: t('bottomNav.plans', 'Plans'), href: getLocalizedPath('/investment-plans', locale), icon: ShieldCheck },
+    { name: t('bottomNav.blog', 'Blog'), href: getLocalizedPath('/blog', locale), icon: BookOpen },
+    { name: t('bottomNav.brokers', 'Brokers'), href: getLocalizedPath('/brokers', locale), icon: DiamondIcon },
   ];
 
   return (

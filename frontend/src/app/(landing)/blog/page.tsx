@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import blogApi, { BlogArticle } from '@/lib/blogApi';
+import { useLanguage } from '@/context/LanguageContext';
 
 /* ─── Helpers ──────────────────────────────────────────────── */
 
@@ -204,6 +205,7 @@ function CardSkeleton() {
 /* ─── Main Page Component ─────────────────────────────────── */
 
 export default function BlogPage() {
+  const { t } = useLanguage();
   const [articles, setArticles] = useState<BlogArticle[]>([]);
   const [categories, setCategories] = useState<string[]>(['All']);
   const [activeCategory, setActiveCategory] = useState('All');
@@ -296,7 +298,7 @@ export default function BlogPage() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-fiery-orange/10 border border-fiery-orange/20 text-xs font-bold text-fiery-orange mb-8 backdrop-blur-md"
             >
               <Sparkles className="w-3.5 h-3.5 fill-fiery-orange" />
-              INSTITUTIONAL INSIGHTS · RESEARCH & ANALYSIS
+              {t('Blog.title', 'Market Insights')} · {t('Blog.published', 'Research & Analysis')}
             </motion.div>
 
             <motion.h1
@@ -305,9 +307,9 @@ export default function BlogPage() {
               transition={{ duration: 0.7, delay: 0.1 }}
               className="text-5xl sm:text-7xl lg:text-[5.5rem] text-white leading-[1.05] tracking-tight mb-6"
             >
-              Market{' '}
+              {t('Blog.title', 'Market')}{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] via-[#FF8C00] to-[#FFB800]">
-                Insights
+                {t('Blog.title', 'Insights')}
               </span>
             </motion.h1>
 
@@ -317,8 +319,7 @@ export default function BlogPage() {
               transition={{ duration: 0.7, delay: 0.2 }}
               className="text-lg leading-relaxed max-w-2xl mx-auto font-light text-zinc-400 mb-10"
             >
-              Stay ahead with real-time institutional breakdowns, technical research, and strategies
-              curated by our trading desk.
+              {t('blog.description', 'Stay ahead with real-time institutional breakdowns, technical research, and strategies curated by our trading desk.')}
             </motion.p>
 
             {/* Glass Search Bar */}
@@ -335,7 +336,7 @@ export default function BlogPage() {
                   type="text"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder="Search market reports, strategies, or topics..."
+                  placeholder={t('blog.searchPlaceholder', 'Search market reports, strategies, or topics...')}
                   className="w-full bg-[#0C0C10]/60 border border-white/10 rounded-full pl-11 pr-10 py-3.5 text-sm text-white placeholder-zinc-500 backdrop-blur-xl focus:outline-none focus:border-fiery-orange/50 transition-all shadow-xl"
                 />
                 {searchInput && (
@@ -352,7 +353,7 @@ export default function BlogPage() {
                 type="submit"
                 className="px-8 py-3.5 rounded-full bg-gradient-to-r from-fiery-orange to-fiery-amber text-white font-extrabold text-sm shadow-fiery hover:scale-105 transition-all shrink-0"
               >
-                Search
+                {t('blog.search', 'Search')}
               </button>
             </motion.form>
 
@@ -449,8 +450,8 @@ export default function BlogPage() {
               ) : (
                 <div className="py-20 text-center rounded-3xl border border-white/10 bg-[#0C0C10]/40 backdrop-blur-2xl">
                   <Newspaper className="w-12 h-12 text-zinc-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-bold text-white mb-1">No articles found</h3>
-                  <p className="text-xs text-zinc-400">Try adjusting your search criteria or category filter.</p>
+                  <h3 className="text-lg font-bold text-white mb-1">{t('Blog.noArticles', 'No articles found')}</h3>
+                  <p className="text-xs text-zinc-400">{t('blog.noArticlesHint', 'Try adjusting your search criteria or category filter.')}</p>
                 </div>
               )}
             </div>
@@ -501,15 +502,15 @@ export default function BlogPage() {
               <div className="relative p-8 rounded-3xl border border-fiery-orange/30 bg-gradient-to-br from-[#0C0C10]/90 via-[#0C0C10]/60 to-[#111116]/90 backdrop-blur-2xl shadow-2xl overflow-hidden">
                 <div className="absolute top-0 right-0 w-36 h-36 bg-fiery-orange/10 blur-[50px] rounded-full pointer-events-none" />
                 <h3 className="text-xl font-bold text-white mb-2 leading-snug">
-                  Get Daily Market Signals & Research
+                  {t('blog.newsletterTitle', 'Get Daily Market Signals & Research')}
                 </h3>
                 <p className="text-xs text-zinc-400 mb-6 font-light leading-relaxed">
-                  Subscribe to our research newsletter for key market breakdowns delivered directly to your inbox.
+                  {t('blog.newsletterDescription', 'Subscribe to our research newsletter for key market breakdowns delivered directly to your inbox.')}
                 </p>
                 <form onSubmit={(e) => e.preventDefault()} className="space-y-3">
                   <input
                     type="email"
-                    placeholder="Enter your email address"
+                    placeholder={t('Auth.email', 'Enter your email address')}
                     className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-4 py-3 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-fiery-orange/50 transition-all"
                   />
                   <button

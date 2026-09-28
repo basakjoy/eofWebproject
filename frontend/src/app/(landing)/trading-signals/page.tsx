@@ -26,6 +26,7 @@ import {
   LineChart,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useLanguage } from '@/context/LanguageContext';
 import { motion } from 'framer-motion';
 import { signalsApi, SignalRecord } from '@/lib/signalsApi';
 import SignalDetailModal from '@/components/signals/SignalDetailModal';
@@ -258,6 +259,7 @@ const FEATURES = [
 
 /* ── MAIN PAGE ── */
 export default function TradingSignalsPage() {
+  const { t } = useLanguage();
   const [signals, setSignals] = useState<SignalRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -365,7 +367,7 @@ export default function TradingSignalsPage() {
                 transition={{ duration: 0.5 }}
                 className="text-sm font-bold text-fiery-orange uppercase tracking-[0.2em] mb-5 font-mono"
               >
-                Institutional-Grade Signal Desk
+                {t('liveSignals.title', 'Institutional-Grade Signal Desk')}
               </motion.p>
 
               <motion.h1
@@ -374,9 +376,9 @@ export default function TradingSignalsPage() {
                 transition={{ duration: 0.7, delay: 0.1 }}
                 className="text-5xl sm:text-6xl lg:text-10xl text-white leading-[1.05] tracking-tight [text-shadow:0_2px_24px_rgba(0,0,0,0.35)]"
               >
-                Institutional{' '}
+                {t('nav.signals', 'Institutional')}{' '}
                 <span className="text-fiery-orange pb-2 inline-block">
-                  Trading Signals
+                  {t('nav.signals', 'Trading Signals')}
                 </span>
               </motion.h1>
 
@@ -437,8 +439,8 @@ export default function TradingSignalsPage() {
         <section className="py-10 px-4 sm:px-8 lg:px-14">
           <div className="max-w-[1600px] mx-auto">
             <div className="text-center mb-14">
-                <p className="text-xs font-bold text-fiery-orange uppercase tracking-[0.2em] mb-3 font-mono">Try our Forex Trading Signals</p>
-                <h2 className="text-4xl sm:text-5xl text-white text-center tracking-tight">Signal Analytics</h2>
+                <p className="text-xs font-bold text-fiery-orange uppercase tracking-[0.2em] mb-3 font-mono">{t('liveSignals.description', 'Try our Forex Trading Signals')}</p>
+                <h2 className="text-4xl sm:text-5xl text-white text-center tracking-tight">{t('tradingSignals.analytics', 'Signal Analytics')}</h2>
             </div>
             <SignalAnalyticsOverview />
           </div>
@@ -451,7 +453,7 @@ export default function TradingSignalsPage() {
             {/* Section Header + Controls */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
               <div>
-                <h2 className="text-4xl sm:text-4xl text-white tracking-tight">Live Signals Feed</h2>
+                <h2 className="text-4xl sm:text-4xl text-white tracking-tight">{t('liveSignals.title', 'Live Signals Feed')}</h2>
                 <p className="text-sm text-zinc-400 mt-0.5">
                   {filtered.length} active setups · refreshed continuously
                 </p>
@@ -475,7 +477,7 @@ export default function TradingSignalsPage() {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
                 <input
                   type="text"
-                  placeholder="Search pair (EUR/USD, BTC...)"
+                  placeholder={t('tradingSignals.searchPlaceholder', 'Search pair (EUR/USD, BTC...)')}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full pl-11 pr-4 py-3 bg-[#0a0a0a] border border-white/10 rounded-sm text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-fiery-orange/60 transition-colors"
@@ -506,7 +508,7 @@ export default function TradingSignalsPage() {
             {isLoading ? (
               <div className="py-24 text-center">
                 <Loader2 className="w-10 h-10 text-fiery-orange animate-spin mx-auto mb-3" />
-                <p className="text-sm text-zinc-500">Loading live market setups...</p>
+                <p className="text-sm text-zinc-500">{t('common.loading', 'Loading...')}</p>
               </div>
             ) : filtered.length === 0 ? (
               <div className="py-24 text-center rounded-lg border border-white/5 liquid-panel">
@@ -532,7 +534,7 @@ export default function TradingSignalsPage() {
         <section className="py-20 px-4 sm:px-8 lg:px-14">
           <div className="max-w-[1600px] mx-auto">
             <div className="text-center mb-14">
-              <p className="text-xs font-bold text-fiery-orange uppercase tracking-[0.2em] mb-3 font-mono">How It Works</p>
+              <p className="text-xs font-bold text-fiery-orange uppercase tracking-[0.2em] mb-3 font-mono">{t('tradingSignals.howItWorks', 'How It Works')}</p>
               <h2 className="text-3xl sm:text-5xl  text-white mb-4 tracking-tight">
                 Every Signal, Perfectly Structured
               </h2>

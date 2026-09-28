@@ -4,6 +4,7 @@ import { ArrowUpRight, Play, ArrowRight, Activity } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import Candlestick3DUptrend from './Candlestick3DUptrend';
+import { getLocalizedPath, useLanguage } from '@/context/LanguageContext';
 
 const ASSETS = [
   {
@@ -97,6 +98,8 @@ const COLOR_MAP = {
 };
 
 export default function IntroSection() {
+  const { locale, t } = useLanguage();
+
   return (
     <section className="relative min-h-[720px] lg:min-h-screen flex items-center pt-28 sm:pt-32 pb-20 sm:pb-24 overflow-hidden bg-[#030305]">
 
@@ -141,20 +144,25 @@ export default function IntroSection() {
                 className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] backdrop-blur-md shadow-[0_0_15px_rgba(255,107,0,0.15)]"
               >
                 <Activity className="w-4 h-4 text-[#FF6B00] animate-pulse" />
-                <span className="text-xs font-semibold text-zinc-300">Institutional Trading Signals &amp; Market Intelligence</span>
+                <span className="text-xs font-semibold text-zinc-300">
+                  {t('hero.badge', 'Institutional Trading Signals & Market Intelligence')}
+                </span>
               </motion.div>
 
               {/* Main Headline */}
               <h1 className="text-4xl xs:text-5xl sm:text-7xl lg:text-[5.5rem] font-bold text-white leading-[1.05] tracking-tight">
-                Conquering Your <br />
+                {t('hero.title', 'Conquering Your')} <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] via-[#FF8C00] to-[#FFb800] pb-2 inline-block">
-                  Trading Goals
+                  {t('hero.titleHighlight', 'Trading Goals')}
                 </span>
               </h1>
             </div>
 
-            <p className="text-base sm:text-lg max-w-lg leading-relaxed font-light">
-              Customize your business journey effortlessly with Empire of Forex&apos;s dashboard, backed by a suite of powerful analytical tools at your fingertips.
+            <p className="text-base sm:text-lg max-w-lg leading-relaxed font-light text-zinc-300">
+              {t(
+                'hero.description',
+                "Customize your business journey effortlessly with Empire of Forex's dashboard, backed by a suite of powerful analytical tools at your fingertips."
+              )}
             </p>
 
             <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-3 sm:gap-5 pt-2 sm:pt-4">
@@ -162,18 +170,18 @@ export default function IntroSection() {
                 href="/register"
                 className="group relative inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 bg-white hover:bg-zinc-100 text-black font-semibold text-sm rounded-full transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_20px_rgba(255,255,255,0.15)] overflow-hidden"
               >
-                <span className="relative z-10">Get Started</span>
+                <span className="relative z-10">{t('hero.getStarted', 'Get Started Free')}</span>
                 <ArrowUpRight size={16} className="relative z-10 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               </Link>
               
               <Link
-                href="/about"
+                href={getLocalizedPath('/trading-signals', locale)}
                 className="group inline-flex items-center justify-center gap-3 px-6 sm:px-8 py-3.5 sm:py-4 bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.05] hover:border-[#FF6B00]/30 text-white font-medium text-sm rounded-full transition-all duration-300 backdrop-blur-sm"
               >
                 <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-[#FF6B00] to-[#FFb800] flex items-center justify-center shadow-[0_0_10px_rgba(255,107,0,0.4)]">
                   <Play size={10} className="fill-white translate-x-[1px]" />
                 </div>
-                <span>How it works</span>
+                <span>{t('hero.exploreSignals', 'Explore Signals')}</span>
               </Link>
             </div>
           </motion.div>

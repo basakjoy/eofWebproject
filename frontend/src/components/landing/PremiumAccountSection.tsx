@@ -2,13 +2,32 @@
 
 import { Crown, Zap, Shield, UserCheck, BarChart, Gem } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function PremiumAccountSection() {
+  const { t } = useLanguage();
+
   const benefits = [
-    { icon: Shield, title: 'Priority Access', desc: 'Concierge-level support 24/7.' },
-    { icon: BarChart, title: 'Zero Spreads', desc: 'Trade with institutional liquidity.' },
-    { icon: UserCheck, title: 'VIP Manager', desc: 'Personal guide for your portfolio.' },
-    { icon: Gem, title: 'Exclusive Alpha', desc: 'Access to private signal channels.' },
+    {
+      icon: Shield,
+      title: t('premiumAccount.benefit1Title', 'Priority Access'),
+      desc: t('premiumAccount.benefit1Desc', 'Concierge-level support 24/7.')
+    },
+    {
+      icon: BarChart,
+      title: t('premiumAccount.benefit2Title', 'Zero Spreads'),
+      desc: t('premiumAccount.benefit2Desc', 'Trade with institutional liquidity.')
+    },
+    {
+      icon: UserCheck,
+      title: t('premiumAccount.benefit3Title', 'VIP Manager'),
+      desc: t('premiumAccount.benefit3Desc', 'Personal guide for your portfolio.')
+    },
+    {
+      icon: Gem,
+      title: t('premiumAccount.benefit4Title', 'Exclusive Alpha'),
+      desc: t('premiumAccount.benefit4Desc', 'Access to private signal channels.')
+    },
   ];
 
   // Real photo avatars for the "Elite Ecosystem" member cluster
@@ -52,12 +71,16 @@ export default function PremiumAccountSection() {
 
                    <div className="relative z-10">
                      <Gem className="text-[#FF8C00] mb-6" size={48} />
-                     <h3 className="text-4xl font-semibold text-white uppercase tracking-tighter">Gold<br />Membership</h3>
+                     <h3 className="text-4xl font-semibold text-white uppercase tracking-tighter">
+                       {t('premiumAccount.badge', 'Gold Membership')}
+                     </h3>
                    </div>
 
                    <div className="relative z-10 space-y-4">
                       <div className="h-0.5 w-12 bg-gradient-to-r from-[#FF6B00] to-[#FFb800]" />
-                      <p className="text-[#FF8C00]/70 uppercase tracking-[0.4em]">Elite Ecosystem</p>
+                      <p className="text-[#FF8C00]/70 uppercase tracking-[0.4em] text-xs">
+                        {t('premiumAccount.eliteEcosystem', 'Elite Ecosystem')}
+                      </p>
                       <div className="flex items-center gap-3">
                         <div className="flex -space-x-3">
                            {eliteMemberAvatars.map((src, i) => (
@@ -76,7 +99,9 @@ export default function PremiumAccountSection() {
                              </motion.div>
                            ))}
                         </div>
-                        <span className="text-[10px] font-bold text-zinc-500 tracking-wide">+2,400 members</span>
+                        <span className="text-[10px] font-bold text-zinc-500 tracking-wide">
+                          {t('premiumAccount.membersCount', '+2,400 members')}
+                        </span>
                       </div>
                    </div>
                  </div>
@@ -85,9 +110,9 @@ export default function PremiumAccountSection() {
                  <motion.div 
                    animate={{ y: [0, -10, 0] }}
                    transition={{ duration: 3, repeat: Infinity }}
-                   className="absolute -top-6 -right-6 px-6 py-3 rounded-2xl bg-gradient-to-r from-[#FF6B00] to-[#FFb800] text-black  uppercase text-[20px] tracking-widest shadow-[0_0_20px_rgba(255,107,0,0.4)]"
+                   className="absolute -top-6 -right-6 px-6 py-3 rounded-2xl bg-gradient-to-r from-[#FF6B00] to-[#FFb800] text-black font-extrabold uppercase text-xs tracking-widest shadow-[0_0_20px_rgba(255,107,0,0.4)]"
                  >
-                   Limited Slots
+                   {t('premiumAccount.limitedSlots', 'Limited Slots')}
                  </motion.div>
                </motion.div>
             </div>
@@ -101,13 +126,17 @@ export default function PremiumAccountSection() {
             className="space-y-10 order-1 lg:order-2 text-center lg:text-left"
           >
             <div>
-              <span className="text-xs font-black text-[#FF8C00] uppercase tracking-[0.4em] block mb-4">Elite Tier</span>
-              <h2 className="text-4xl md:text-5xl lg:text-6xl  text-white leading-tight uppercase tracking-tighter">
-                Sovereign <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] via-[#FF8C00] to-[#FFb800]">Financial Edge.</span>
+              <span className="text-xs font-black text-[#FF8C00] uppercase tracking-[0.4em] block mb-4">
+                {t('premiumAccount.tierBadge', 'Elite Tier')}
+              </span>
+              <h2 className="text-4xl md:text-5xl lg:text-6xl text-white leading-tight uppercase tracking-tighter">
+                {t('premiumAccount.title', 'Sovereign')} <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] via-[#FF8C00] to-[#FFb800]">
+                  {t('premiumAccount.titleHighlight', 'Financial Edge.')}
+                </span>
               </h2>
               <p className="text-lg text-zinc-400 mt-6 max-w-lg mx-auto lg:mx-0 ">
-                Unlock the ultimate trading environment with personalized infrastructure, zero latency, and dedicated institutional insights.
+                {t('premiumAccount.description', 'Unlock the ultimate trading environment with personalized infrastructure, zero latency, and dedicated institutional insights.')}
               </p>
             </div>
 
@@ -118,7 +147,7 @@ export default function PremiumAccountSection() {
                   <div key={i} className="space-y-2">
                     <div className="flex items-center gap-2 justify-center lg:justify-start text-[#FF8C00]">
                        <Icon size={18} />
-                       <h4 className="text-sm text-semibold uppercase tracking-widest text-white">{b.title}</h4>
+                       <h4 className="text-sm font-semibold uppercase tracking-widest text-white">{b.title}</h4>
                     </div>
                     <p className="text-xs text-zinc-300">{b.desc}</p>
                   </div>
@@ -127,8 +156,8 @@ export default function PremiumAccountSection() {
             </div>
 
             <div className="pt-6">
-               <button className="group relative px-6 sm:px-10 py-4 sm:py-6 bg-white text-black  uppercase tracking-widest text-[10px] sm:text-sm rounded-full transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.15)] overflow-hidden">
-                 <span className="relative z-10">Application for Tier 1 Access</span>
+               <button className="group relative px-6 sm:px-10 py-4 sm:py-6 bg-white text-black font-extrabold uppercase tracking-widest text-[10px] sm:text-sm rounded-full transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.15)] overflow-hidden">
+                 <span className="relative z-10">{t('premiumAccount.applyCta', 'Application for Tier 1 Access')}</span>
                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                </button>
             </div>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
@@ -37,10 +37,12 @@ import Link from 'next/link';
 import { signalsApi, SignalRecord } from '@/lib/signalsApi';
 import SignalDetailModal from '@/components/signals/SignalDetailModal';
 import RiskCalculatorModal from '@/components/signals/RiskCalculatorModal';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function HomePage() {
   const { isAuthenticated, user } = useAuthStore();
   const router = useRouter();
+  const { t } = useLanguage();
 
   // States for live signals previews in authenticated view
   const [liveSignals, setLiveSignals] = useState<SignalRecord[]>([]);
@@ -90,15 +92,15 @@ export default function HomePage() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
-                Active Session Connected
+                {t('hero.activeSession', 'Active Session Connected')}
               </div>
               <h1 className="text-4xl sm:text-5xl font-black text-white tracking-tight">
-                Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-fiery-orange to-fiery-amber">{user.name}</span>
+                {t('hero.welcomeBack', 'Welcome back')}, <span className="text-transparent bg-clip-text bg-gradient-to-r from-fiery-orange to-fiery-amber">{user.name}</span>
               </h1>
               <p className="text-sm text-zinc-400 font-light mt-1">
                 {user.role === 'admin' 
-                  ? 'Administrator control panel & market alerts deployment center.'
-                  : 'Access real-time institutional opportunities & track your growth strategy.'}
+                  ? t('hero.adminCenter', 'Administrator control panel & market alerts deployment center.')
+                  : t('hero.traderCenter', 'Institutional signals desk, portfolio telemetry & automated risk metrics.')}
               </p>
             </div>
 
@@ -111,7 +113,7 @@ export default function HomePage() {
                 className="px-4 py-2.5 rounded-xl bg-panel-dark hover:bg-white/5 border border-white/10 text-xs font-bold text-white flex items-center gap-2 transition-all hover:scale-105"
               >
                 <Calculator className="w-4 h-4 text-fiery-orange" />
-                Calculator
+                {t('liveSignals.riskCalc', 'Calculator')}
               </button>
 
               <Link 
@@ -119,7 +121,7 @@ export default function HomePage() {
                 className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-fiery-orange to-fiery-amber text-black font-extrabold text-xs flex items-center gap-2 shadow-fiery hover:scale-105 transition-transform"
               >
                 <Zap className="w-4 h-4 fill-black" />
-                Live Signals
+                {t('dashboard.liveSignals', 'Live Signals')}
               </Link>
             </div>
           </div>
@@ -130,9 +132,9 @@ export default function HomePage() {
               <div>
                 <h2 className="text-lg font-extrabold text-white flex items-center gap-2">
                   <Activity className="w-5 h-5 text-fiery-orange" />
-                  Live Market Alert Feed
+                  {t('dashboard.liveSignals', 'Live Market Alert Feed')}
                 </h2>
-                <p className="text-xs text-zinc-500">Recent high-probability trading configurations</p>
+                <p className="text-xs text-zinc-500">{t('liveSignals.description', 'Recent high-probability trading configurations')}</p>
               </div>
               <Link href="/signals" className="text-xs font-bold text-fiery-amber hover:underline flex items-center gap-1">
                 Explore Terminal <ArrowRight className="w-3.5 h-3.5" />
@@ -143,12 +145,12 @@ export default function HomePage() {
               {isLoadingSignals ? (
                 <div className="col-span-3 py-12 text-center bg-card-dark/40 border border-white/5 rounded-3xl">
                   <Loader2 className="w-8 h-8 text-fiery-orange animate-spin mx-auto mb-2" />
-                  <span className="text-xs text-zinc-400">Loading live setups...</span>
+                  <span className="text-xs text-zinc-400">{t('common.loading', 'Loading...')}</span>
                 </div>
               ) : liveSignals.length === 0 ? (
                 <div className="col-span-3 py-12 text-center bg-card-dark/40 border border-white/5 rounded-3xl space-y-2">
                   <Zap className="w-8 h-8 text-zinc-500 mx-auto" />
-                  <p className="text-xs text-zinc-400">No active signals found in the database right now.</p>
+                  <p className="text-xs text-zinc-400">{t('liveSignals.noSignals', 'No active signals found in the database right now.')}</p>
                 </div>
               ) : (
                 liveSignals.map((signal) => {
@@ -182,11 +184,11 @@ export default function HomePage() {
 
                       <div className="grid grid-cols-2 gap-2 mb-3">
                         <div className="bg-panel-dark/60 p-2.5 rounded-xl border border-white/5">
-                          <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block">Entry</span>
+                          <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block">{t('liveSignals.entry', 'Entry')}</span>
                           <span className="text-xs font-mono font-bold text-white">{signal.entryPrice}</span>
                         </div>
                         <div className="bg-emerald-500/5 p-2.5 rounded-xl border border-emerald-500/10">
-                          <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider block">Target TP1</span>
+                          <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider block">{t('liveSignals.takeProfit', 'Target TP1')}</span>
                           <span className="text-xs font-mono font-bold text-emerald-400">{signal.takeProfit1 || signal.takeProfit}</span>
                         </div>
                       </div>
@@ -194,10 +196,10 @@ export default function HomePage() {
                       <div className="flex items-center justify-between text-[11px] text-zinc-400 pt-2 border-t border-white/5">
                         <span className="flex items-center gap-1 font-medium">
                           <Target className="w-3.5 h-3.5 text-fiery-orange" />
-                          Acc: {signal.accuracy || 88}%
+                          {t('liveSignals.accuracy', 'Acc')}: {signal.accuracy || 88}%
                         </span>
                         <span className="text-fiery-orange font-bold flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
-                          Setup <Eye className="w-3.5 h-3.5" />
+                          {t('liveSignals.setupDetails', 'Setup')} <Eye className="w-3.5 h-3.5" />
                         </span>
                       </div>
                     </div>
@@ -223,12 +225,12 @@ export default function HomePage() {
                 <ArrowRight className="w-5 h-5 text-zinc-400 group-hover:text-fiery-orange transition-colors" />
               </div>
               <h3 className="text-xl font-bold text-white mb-2">
-                {user.role === 'admin' ? 'Admin Dashboard' : 'Trading Dashboard'}
+                {user.role === 'admin' ? t('dashboard.adminDashboard', 'Admin Dashboard') : t('dashboard.tradingDashboard', 'Trading Dashboard')}
               </h3>
               <p className="text-sm text-zinc-400 font-light leading-relaxed">
                 {user.role === 'admin' 
-                  ? 'Manage institutional signals, active subscribers, and review analytics.'
-                  : 'Track your capital growth, review active positions, and portfolio status.'}
+                  ? t('dashboard.adminDesc', 'Manage institutional signals, active subscribers, and review analytics.')
+                  : t('dashboard.traderDesc', 'Track your capital growth, review active positions, and portfolio status.')}
               </p>
             </Link>
 
@@ -244,9 +246,9 @@ export default function HomePage() {
                 </div>
                 <ArrowRight className="w-5 h-5 text-zinc-400 group-hover:text-fiery-orange transition-colors" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Account Profile</h3>
+              <h3 className="text-xl font-bold text-white mb-2">{t('dashboard.accountProfile', 'Account Profile')}</h3>
               <p className="text-sm text-zinc-400 font-light leading-relaxed">
-                Review your current package membership tiers, credentials, and custom profile configurations.
+                {t('dashboard.accountProfileDesc', 'Review your current package membership tiers, credentials, and custom profile configurations.')}
               </p>
             </Link>
 
@@ -262,9 +264,9 @@ export default function HomePage() {
                 </div>
                 <ArrowRight className="w-5 h-5 text-zinc-400 group-hover:text-fiery-orange transition-colors" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">System Settings</h3>
+              <h3 className="text-xl font-bold text-white mb-2">{t('settings.title', 'System Settings')}</h3>
               <p className="text-sm text-zinc-400 font-light leading-relaxed">
-                Configure your API key integrations, notification triggers, and custom risk profiles.
+                {t('dashboard.settingsDesc', 'Configure your API key integrations, notification triggers, and custom risk profiles.')}
               </p>
             </Link>
           </div>
@@ -276,7 +278,7 @@ export default function HomePage() {
               <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
               <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-fiery-orange" />
-                Security & Identity
+                {t('settings.interfaceLanguage', 'Security & Identity')}
               </h3>
               <div className="space-y-4">
                 <div>
@@ -302,14 +304,14 @@ export default function HomePage() {
               <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
               <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-1.5">
                 <BarChart3 className="w-4 h-4 text-fiery-amber" />
-                Quick Navigation Links
+                {t('dashboard.quickNav', 'Quick Navigation Links')}
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {[
-                  { label: 'Trade Room', href: '/signals' },
-                  { label: 'Investment Plans', href: '/investment-plans' },
-                  { label: 'Market Analysis', href: '/market-analysis' },
-                  { label: 'Account Settings', href: '/settings' }
+                  { label: t('dashboard.tradeRoom', 'Trade Room'), href: '/signals' },
+                  { label: t('dashboard.investmentPlans', 'Investment Plans'), href: '/investment-plans' },
+                  { label: t('dashboard.marketAnalysis', 'Market Analysis'), href: '/market-analysis' },
+                  { label: t('dashboard.accountSettings', 'Account Settings'), href: '/settings' }
                 ].map((link, idx) => (
                   <Link 
                     key={idx}
@@ -361,3 +363,4 @@ export default function HomePage() {
     </div>
   );
 }
+

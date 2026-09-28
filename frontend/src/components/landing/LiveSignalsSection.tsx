@@ -3,9 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, Clock, Lock, ArrowRight, Zap, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { signalsApi, SignalRecord }  from '@/lib/signalsApi';
+import { signalsApi, SignalRecord } from '@/lib/signalsApi';
+import { getLocalizedPath, useLanguage } from '@/context/LanguageContext';
 
 export default function LiveSignalsSection() {
+  const { locale, t } = useLanguage();
   const [signals, setSignals] = useState<SignalRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -25,9 +27,18 @@ export default function LiveSignalsSection() {
   }, []);
 
   const features = [
-    { title: 'AI-Powered Analysis', desc: 'Neural networks scanning 50+ pairs 24/7' },
-    { title: 'Institutional Flow', desc: 'Track where the big banks are moving' },
-    { title: 'Verified Accuracy', desc: '84.2% historical win rate across all pairs' },
+    {
+      title: t('liveSignals.aiAnalysis', 'AI-Powered Analysis'),
+      desc: t('liveSignals.aiAnalysisDesc', 'Neural networks scanning 50+ pairs 24/7'),
+    },
+    {
+      title: t('liveSignals.institutionalFlow', 'Institutional Flow'),
+      desc: t('liveSignals.institutionalFlowDesc', 'Track where the big banks are moving'),
+    },
+    {
+      title: t('liveSignals.verifiedAccuracy', 'Verified Accuracy'),
+      desc: t('liveSignals.verifiedAccuracyDesc', '84.2% historical win rate across all pairs'),
+    },
   ];
 
   // Real photo avatars for the "Live Feed" header cluster
@@ -101,24 +112,24 @@ export default function LiveSignalsSection() {
           >
             <div className="inline-flex items-center gap-2 mb-6 justify-center lg:justify-start">
               <div className="w-2 h-2 rounded-full bg-[#FF6B00] animate-pulse" />
-              <span className="text-xl  text-[#FF8C00] uppercase tracking-widest">Global Intelligence Live</span>
+              <span className="text-xl text-[#FF8C00] uppercase tracking-widest">{t('liveSignals.title', 'Live Signals Desk')}</span>
             </div>
             
-            <h2 className="text-5xl sm:text-6xl font-semibold tracking-tight  text-white leading-tight mb-6 sm:mb-8">
-              Real-Time Signals <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] via-[#FF8C00] to-[#FFb800]">for Modern Traders.</span>
+            <h2 className="text-5xl sm:text-6xl font-semibold tracking-tight text-white leading-tight mb-6 sm:mb-8">
+              {t('liveSignals.title', 'Real-Time Signals')} <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] via-[#FF8C00] to-[#FFb800]">{t('liveSignals.subtitle', 'for Modern Traders.')}</span>
             </h2>
             
             <p className="text-base sm:text-lg text-zinc-300 leading-relaxed max-w-xl mb-8 sm:mb-12 mx-auto lg:mx-0 ">
-              Our advanced proprietary algorithms analyze over 50 currency pairs concurrently to identify high-probability trading opportunities.
+              {t('liveSignals.description', 'Our advanced proprietary algorithms analyze over 50 currency pairs concurrently to identify high-probability trading opportunities.')}
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6 mb-8 sm:mb-12">
               {features.map((feature, i) => (
                 <div key={i} className="space-y-2 text-center sm:text-left">
                   <div className="flex items-center gap-2 justify-center sm:justify-start">
-                    <Zap className="w-4 h-4 text-base" />
-                    <h4 className="text-sm  text-white uppercase tracking-wider">{feature.title}</h4>
+                    <Zap className="w-4 h-4 text-base text-[#FF6B00]" />
+                    <h4 className="text-sm text-white uppercase tracking-wider">{feature.title}</h4>
                   </div>
                   <p className="text-xs text-zinc-300">{feature.desc}</p>
                 </div>
@@ -126,10 +137,10 @@ export default function LiveSignalsSection() {
             </div>
 
             <Link 
-              href="/trading-signals"
+              href={getLocalizedPath('/trading-signals', locale)}
               className="group relative inline-flex items-center gap-2 px-8 py-4 bg-white hover:bg-zinc-100 text-black font-semibold text-sm rounded-full transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_20px_rgba(255,255,255,0.15)]"
             >
-              View All Live Signals
+              {t('liveSignals.viewAll', 'View All Live Signals')}
               <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </Link>
           </motion.div>
@@ -152,8 +163,12 @@ export default function LiveSignalsSection() {
               {/* Card Header */}
               <div className="relative z-10 p-6 sm:p-8 border-b border-white/[0.05] bg-white/[0.03] backdrop-blur-xl flex flex-col sm:flex-row justify-between items-center gap-4">
                  <div className="text-center sm:text-left">
-                   <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] block mb-1">Live Feed</span>
-                   <h3 className="text-lg sm:text-xl font-bold text-white">Active Market Signals</h3>
+                   <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] block mb-1">
+                     {t('liveSignals.liveFeed', 'Live Feed')}
+                   </span>
+                   <h3 className="text-lg sm:text-xl font-bold text-white">
+                     {t('liveSignals.feedTitle', 'Active Market Signals')}
+                   </h3>
                  </div>
                  <div className="flex -space-x-2">
                    {avatarUrls.map((src, i) => (
@@ -173,7 +188,7 @@ export default function LiveSignalsSection() {
                   </div>
                 ) : signals.length === 0 ? (
                   <div className="text-center py-10 text-zinc-500 text-sm font-medium">
-                    No active signals right now.
+                    {t('liveSignals.noSignals', 'No active signals right now.')}
                   </div>
                 ) : signals.map((signal) => {
                   const date = new Date(signal.createdAt || Date.now());
@@ -212,15 +227,21 @@ export default function LiveSignalsSection() {
 
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                       <div className="bg-[#030305] p-2 sm:p-3 rounded-xl border border-white/[0.05]">
-                         <span className="text-[8px] font-black text-zinc-500 uppercase block mb-1">Entry</span>
+                         <span className="text-[8px] font-black text-zinc-500 uppercase block mb-1">
+                           {t('liveSignals.entry', 'Entry')}
+                         </span>
                          <span className="text-xs sm:text-sm font-bold text-white">{signal.entryPrice}</span>
                       </div>
                       <div className="bg-[#030305] p-2 sm:p-3 rounded-xl border border-white/[0.05]">
-                         <span className="text-[8px] font-black text-zinc-500 uppercase block mb-1">TP</span>
+                         <span className="text-[8px] font-black text-zinc-500 uppercase block mb-1">
+                           {t('liveSignals.takeProfit', 'TP')}
+                         </span>
                          <span className="text-xs sm:text-sm font-bold text-emerald-400">{signal.takeProfit || signal.takeProfit1}</span>
                       </div>
                       <div className="bg-[#030305] p-2 sm:p-3 rounded-xl border border-white/[0.05] col-span-2 sm:col-span-1">
-                         <span className="text-[8px] font-black text-zinc-500 uppercase block mb-1">Confidence</span>
+                         <span className="text-[8px] font-black text-zinc-500 uppercase block mb-1">
+                           {t('liveSignals.confidence', 'Confidence')}
+                         </span>
                          <span className="text-xs sm:text-sm font-bold text-[#FF8C00]">{signal.accuracy?.toString().includes('%') ? signal.accuracy : `${(parseFloat(String(signal.accuracy ?? '85')) * (signal.accuracy?.toString().includes('.') ? 100 : 1)).toFixed(0)}%`}</span>
                       </div>
                     </div>

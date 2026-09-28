@@ -255,7 +255,7 @@ export default function SignalsPage() {
             <button
               onClick={() => setViewMode('grid')}
               className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                viewMode === 'grid' ? 'bg-fiery-orange text-black shadow-md' : 'text-zinc-400 hover:text-white'
+                viewMode === 'grid' ? 'bg-fiery-orange shadow-md' : 'text-zinc-400 hover:text-white'
               }`}
             >
               <Grid className="w-3.5 h-3.5" /> Cards
@@ -263,7 +263,7 @@ export default function SignalsPage() {
             <button
               onClick={() => setViewMode('table')}
               className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                viewMode === 'table' ? 'bg-fiery-orange text-black shadow-md' : 'text-zinc-400 hover:text-white'
+                viewMode === 'table' ? 'bg-fiery-orange shadow-md' : 'text-zinc-400 hover:text-white'
               }`}
             >
               <List className="w-3.5 h-3.5" /> Terminal
@@ -287,7 +287,7 @@ export default function SignalsPage() {
               onClick={() => setActiveFilter(tab)}
               className={`px-3 py-1.5 rounded-xl text-xs font-extrabold capitalize transition-all ${
                 activeFilter === tab
-                  ? 'bg-fiery-orange text-black shadow-sm'
+                  ? 'bg-fiery-orange  shadow-sm'
                   : 'bg-transparent text-zinc-400 hover:text-white hover:bg-white/5'
               }`}
             >

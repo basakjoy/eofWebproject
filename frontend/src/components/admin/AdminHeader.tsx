@@ -6,16 +6,16 @@ import { Search, Bell, User as UserIcon, Menu, Home, ChevronDown, Check, LogOut,
 import { useAuthStore } from "@/store/authStore";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-
+import LanguageSwitcher from "@/components/common/LanguageSwitcher";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface AdminHeaderProps {
   onMenuClick?: () => void;
 }
 
-
-
 export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
   const { user, logout } = useAuthStore();
+  const { t } = useLanguage();
 
   const [currencyOpen, setCurrencyOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -36,15 +36,16 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
         <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-slate-400">
           <Link href="/admin?tab=overview" className="flex items-center gap-1 hover:text-white transition-colors">
             <Home size={14} className="text-primary" />
-            <span>Home</span>
+            <span>{t('nav.home', 'Home')}</span>
           </Link>
           <span className="text-slate-600">/</span>
-          <span className="text-slate-200">Dashboard</span>
+          <span className="text-slate-200">{t('nav.dashboard', 'Dashboard')}</span>
         </div>
       </div>
 
       {/* Right Section: Currency Selector, Notifications, User Profile */}
       <div className="flex items-center gap-4 sm:gap-6">
+        <LanguageSwitcher />
         
         {/* Currency Type Selector */}
        

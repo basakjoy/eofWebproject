@@ -125,6 +125,21 @@ model Transaction {
   @@map("transactions")
 }
 
+model Translation {
+  id         String   @id @default(cuid())
+  entityType String
+  entityId   String
+  locale     String
+  field      String
+  value      String   @db.Text
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([entityType, entityId, locale, field])
+  @@index([entityType, entityId, locale])
+  @@map("translations")
+}
+
 model Signal {
   id          String   @id @default(cuid())
   pair        String

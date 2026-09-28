@@ -150,6 +150,16 @@ interface DashboardStats {
   withdrawals?: { pending: number; pendingAmount: number };
   support?: { openTickets: number };
   blog?: { total: number; published: number };
+  activity?: {
+    deposits?: { pending: number; pendingAmount: number; rows: Array<{ period: string; count: number; amount: number }> };
+    withdrawals?: { rows: Array<{ period: string; count: number; amount: number }> };
+    registeredUsers?: Array<{ period: string; count: number }>;
+    firstDeposits?: Array<{ period: string; count: number; amount: number }>;
+    bonuses?: Array<{ period: string; count: number; amount: number }>;
+    winLoss?: Array<{ period: string; count: number; amount: number }>;
+    turnover?: Array<{ period: string; count: number; amount: number }>;
+    grossMargin?: Array<{ period: string; count: number; margin: string }>;
+  };
 }
 
 const mockArticles: Article[] = [
@@ -647,10 +657,10 @@ export default function AdminDashboard() {
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-black text-slate-400 uppercase">Pending:</span>
                     <span className="text-[10px] font-bold bg-cyan-600/10 text-cyan-400 border border-cyan-500/20 px-2 py-0.5 rounded-md">
-                      USD 0.00
+                      USD {(dashboardStats?.activity?.deposits?.pendingAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </span>
                     <span className="text-[10px] font-bold bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded-md">
-                      0
+                      {dashboardStats?.activity?.deposits?.pending || 0}
                     </span>
                   </div>
                   <ChevronDown className={cn("w-4 h-4 text-slate-500 transition-transform duration-200", openPanels.deposit && "transform rotate-180")} />
@@ -682,14 +692,7 @@ export default function AdminDashboard() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/[0.02] text-xs sm:text-sm">
-                          {[
-                            { period: "Today", count: 0, amount: "0.00" },
-                            { period: "Yesterday", count: 0, amount: "0.00" },
-                            { period: "This Week", count: 0, amount: "0.00" },
-                            { period: "Last Week", count: 0, amount: "0.00" },
-                            { period: "This Month", count: 0, amount: "0.00" },
-                            { period: "Last Month", count: 0, amount: "0.00" },
-                          ].map((row, i) => (
+                          {(dashboardStats?.activity?.deposits?.rows || []).map((row, i) => (
                             <tr key={i} className="hover:bg-white/[0.01] transition-colors">
                               <td className="py-3.5 font-bold text-slate-300 pl-12">{row.period}</td>
                               <td className="py-3.5 text-center text-slate-400 font-semibold">{row.count}</td>
@@ -721,10 +724,10 @@ export default function AdminDashboard() {
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-black text-slate-400 uppercase">Pending:</span>
                     <span className="text-[10px] font-bold bg-rose-600/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded-md">
-                      USD 0.00
+                      USD {(dashboardStats?.withdrawals?.pendingAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </span>
                     <span className="text-[10px] font-bold bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded-md">
-                      0
+                      {dashboardStats?.withdrawals?.pending || 0}
                     </span>
                   </div>
                   <ChevronDown className={cn("w-4 h-4 text-slate-500 transition-transform duration-200", openPanels.withdrawal && "transform rotate-180")} />
@@ -755,14 +758,7 @@ export default function AdminDashboard() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/[0.02] text-xs sm:text-sm">
-                          {[
-                            { period: "Today", count: 0, amount: "0.00" },
-                            { period: "Yesterday", count: 0, amount: "0.00" },
-                            { period: "This Week", count: 0, amount: "0.00" },
-                            { period: "Last Week", count: 0, amount: "0.00" },
-                            { period: "This Month", count: 0, amount: "0.00" },
-                            { period: "Last Month", count: 0, amount: "0.00" },
-                          ].map((row, i) => (
+                          {(dashboardStats?.activity?.withdrawals?.rows || []).map((row, i) => (
                             <tr key={i} className="hover:bg-white/[0.01] transition-colors">
                               <td className="py-3.5 font-bold text-slate-300 pl-12">{row.period}</td>
                               <td className="py-3.5 text-center text-slate-400 font-semibold">{row.count}</td>
@@ -809,14 +805,7 @@ export default function AdminDashboard() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/[0.02] text-xs sm:text-sm">
-                          {[
-                            { period: "Today", count: 3 },
-                            { period: "Yesterday", count: 0 },
-                            { period: "This Week", count: 5 },
-                            { period: "Last Week", count: 12 },
-                            { period: "This Month", count: 3 },
-                            { period: "Last Month", count: 61 },
-                          ].map((row, i) => (
+                          {(dashboardStats?.activity?.registeredUsers || []).map((row, i) => (
                             <tr key={i} className="hover:bg-white/[0.01] transition-colors">
                               <td className="py-3.5 font-bold text-slate-300">{row.period}</td>
                               <td className="py-3.5 text-right font-display font-semibold text-slate-200 pr-6">{row.count}</td>
@@ -863,14 +852,7 @@ export default function AdminDashboard() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/[0.02] text-xs sm:text-sm">
-                          {[
-                            { period: "Today", count: 0, amount: "0.00" },
-                            { period: "Yesterday", count: 0, amount: "0.00" },
-                            { period: "This Week", count: 0, amount: "0.00" },
-                            { period: "Last Week", count: 0, amount: "0.00" },
-                            { period: "This Month", count: 3, amount: "3.00" },
-                            { period: "Last Month", count: 61, amount: "61.00" },
-                          ].map((row, i) => (
+                          {(dashboardStats?.activity?.firstDeposits || []).map((row, i) => (
                             <tr key={i} className="hover:bg-white/[0.01] transition-colors">
                               <td className="py-3.5 font-bold text-slate-300">{row.period}</td>
                               <td className="py-3.5 text-center text-slate-400 font-semibold">{row.count}</td>
@@ -918,14 +900,7 @@ export default function AdminDashboard() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/[0.02] text-xs sm:text-sm">
-                          {[
-                            { period: "Today", count: 0, amount: "0.00" },
-                            { period: "Yesterday", count: 0, amount: "0.00" },
-                            { period: "This Week", count: 1, amount: "2,000.00" },
-                            { period: "Last Week", count: 0, amount: "0.00" },
-                            { period: "This Month", count: 0, amount: "0.00" },
-                            { period: "Last Month", count: 9, amount: "12,600.00" },
-                          ].map((row, i) => (
+                          {(dashboardStats?.activity?.bonuses || []).map((row, i) => (
                             <tr key={i} className="hover:bg-white/[0.01] transition-colors">
                               <td className="py-3.5 font-bold text-slate-300">{row.period}</td>
                               <td className="py-3.5 text-center text-slate-400 font-semibold">{row.count}</td>
@@ -975,14 +950,7 @@ export default function AdminDashboard() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/[0.02] text-xs sm:text-sm">
-                          {[
-                            { period: "Today", count: 0, amount: "0.00" },
-                            { period: "Yesterday", count: 0, amount: "0.00" },
-                            { period: "This Week", count: 0, amount: "0.00" },
-                            { period: "Last Week", count: 0, amount: "0.00" },
-                            { period: "This Month", count: 0, amount: "0.00" },
-                            { period: "Last Month", count: 1, amount: "50.00" },
-                          ].map((row, i) => (
+                          {(dashboardStats?.activity?.winLoss || []).map((row, i) => (
                             <tr key={i} className="hover:bg-white/[0.01] transition-colors">
                               <td className="py-3.5 font-bold text-slate-300">{row.period}</td>
                               <td className="py-3.5 text-center text-slate-400 font-semibold">{row.count}</td>
@@ -1030,14 +998,7 @@ export default function AdminDashboard() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/[0.02] text-xs sm:text-sm">
-                          {[
-                            { period: "Today", count: 0, amount: "0.00" },
-                            { period: "Yesterday", count: 0, amount: "0.00" },
-                            { period: "This Week", count: 0, amount: "0.00" },
-                            { period: "Last Week", count: 0, amount: "0.00" },
-                            { period: "This Month", count: 0, amount: "0.00" },
-                            { period: "Last Month", count: 1, amount: "50.00" },
-                          ].map((row, i) => (
+                          {(dashboardStats?.activity?.turnover || []).map((row, i) => (
                             <tr key={i} className="hover:bg-white/[0.01] transition-colors">
                               <td className="py-3.5 font-bold text-slate-300">{row.period}</td>
                               <td className="py-3.5 text-center text-slate-400 font-semibold">{row.count}</td>
@@ -1085,14 +1046,7 @@ export default function AdminDashboard() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/[0.02] text-xs sm:text-sm">
-                          {[
-                            { period: "Today", count: 0, margin: "0%" },
-                            { period: "Yesterday", count: 0, margin: "0%" },
-                            { period: "This Week", count: 0, margin: "0%" },
-                            { period: "Last Week", count: 0, margin: "0%" },
-                            { period: "This Month", count: 0, margin: "0%" },
-                            { period: "Last Month", count: 1, margin: "100%" },
-                          ].map((row, i) => (
+                          {(dashboardStats?.activity?.grossMargin || []).map((row, i) => (
                             <tr key={i} className="hover:bg-white/[0.01] transition-colors">
                               <td className="py-3.5 font-bold text-slate-300">{row.period}</td>
                               <td className="py-3.5 text-center text-slate-400 font-semibold">{row.count}</td>

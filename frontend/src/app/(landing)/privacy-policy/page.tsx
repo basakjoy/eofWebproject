@@ -216,7 +216,7 @@ export default function PrivacyPolicy() {
           </p>
           <div className="bg-slate-800 border border-slate-700 rounded p-6 text-slate-300">
             <p><strong>Empire of Forex</strong></p>
-            <p>Email: privacy@empireofforex.com</p>
+            <p>Email: support@empireofforex.com</p>
             <p>Support: support@empireofforex.com</p>
             <p>Address: [Your Company Address]</p>
             <p>Phone: [Your Company Phone]</p>

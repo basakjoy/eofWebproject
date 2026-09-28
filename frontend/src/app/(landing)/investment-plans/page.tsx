@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { useLanguage } from '@/context/LanguageContext';
 
 /* ── Plans Data ── */
 const PLANS = [
@@ -117,6 +118,38 @@ const FAQS = [
 
 export default function InvestmentPlansPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const { t } = useLanguage();
+
+  const plans = [
+    {
+      ...PLANS[0],
+      name: t('investmentPlans.plan1Name', PLANS[0].name),
+      price: t('investmentPlans.plan1Price', PLANS[0].price),
+      minInvestment: t('investmentPlans.plan1Deposit', PLANS[0].minInvestment),
+      expectedROI: t('investmentPlans.plan1Roi', PLANS[0].expectedROI),
+      desc: t('investmentPlans.plan1Desc', PLANS[0].desc),
+      cta: t('investmentPlans.ctaButton1', PLANS[0].cta),
+    },
+    {
+      ...PLANS[1],
+      name: t('investmentPlans.plan2Name', PLANS[1].name),
+      price: t('investmentPlans.plan2Price', PLANS[1].price),
+      period: t('investmentPlans.plan2Period', PLANS[1].period),
+      minInvestment: t('investmentPlans.plan2Deposit', PLANS[1].minInvestment),
+      expectedROI: t('investmentPlans.plan2Roi', PLANS[1].expectedROI),
+      desc: t('investmentPlans.plan2Desc', PLANS[1].desc),
+      cta: t('nav.register', PLANS[1].cta),
+    },
+    {
+      ...PLANS[2],
+      name: t('investmentPlans.plan3Name', PLANS[2].name),
+      price: t('investmentPlans.plan3Price', PLANS[2].price),
+      minInvestment: t('investmentPlans.plan3Deposit', PLANS[2].minInvestment),
+      expectedROI: t('investmentPlans.plan3Roi', PLANS[2].expectedROI),
+      desc: t('investmentPlans.plan3Desc', PLANS[2].desc),
+      cta: t('investmentPlans.ctaButton2', PLANS[2].cta),
+    },
+  ];
 
   return (
     <div className="w-full min-h-screen bg-[#030305] text-white font-poppins overflow-x-hidden">
@@ -146,7 +179,7 @@ export default function InvestmentPlansPage() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-fiery-orange/10 border border-fiery-orange/20 text-xs font-bold text-fiery-orange mb-8 backdrop-blur-md"
             >
               <Star className="w-3.5 h-3.5 fill-fiery-orange" />
-              CAPITAL ALLOCATION · EMPIRE OF FOREX
+              {t('investmentPlans.heroBadge', 'Investment Plans')} · EMPIRE OF FOREX
             </motion.div>
 
             <motion.h1
@@ -155,10 +188,7 @@ export default function InvestmentPlansPage() {
               transition={{ duration: 0.7, delay: 0.1 }}
               className="text-5xl sm:text-7xl lg:text-[5.5rem] text-white leading-[1.05] tracking-tight mb-6"
             >
-              Investment{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] via-[#FF8C00] to-[#FFB800]">
-                Plans
-              </span>
+              {t('investmentPlans.heroTitle', 'Investment Plans')}
             </motion.h1>
 
             <motion.p
@@ -167,8 +197,7 @@ export default function InvestmentPlansPage() {
               transition={{ duration: 0.7, delay: 0.2 }}
               className="text-lg leading-relaxed max-w-2xl mx-auto font-light "
             >
-              Choose the perfect capital deployment strategy tailored for your financial goals,
-              drawdown protection, and institutional execution.
+              {t('investmentPlans.description', 'Choose the perfect capital deployment strategy tailored for your financial goals, drawdown protection, and institutional execution.')}
             </motion.p>
           </div>
         </section>
@@ -177,7 +206,7 @@ export default function InvestmentPlansPage() {
         <section className="py-12 px-4 sm:px-6">
           <div className="max-w-7xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
-              {PLANS.map((plan, i) => (
+              {plans.map((plan, i) => (
                 <motion.div
                   key={plan.name}
                   initial={{ opacity: 0, y: 30 }}
@@ -269,8 +298,8 @@ export default function InvestmentPlansPage() {
         <section className="py-20 px-4 sm:px-6">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-12">
-              <p className="text-xs font-bold text-fiery-orange uppercase tracking-widest mb-3">Side-By-Side</p>
-              <h2 className="text-4xl sm:text-5xl text-white mb-4">Detailed Plan Comparison</h2>
+              <p className="text-xs font-bold text-fiery-orange uppercase tracking-widest mb-3">{t('investmentPlans.comparisonLabel', 'Side-By-Side')}</p>
+              <h2 className="text-4xl sm:text-5xl text-white mb-4">{t('investmentPlans.comparisonTitle', 'Detailed Plan Comparison')}</h2>
               <p className="text-zinc-400 text-sm max-w-xl mx-auto">
                 Compare institutional features across all tier levels.
               </p>
@@ -334,8 +363,8 @@ export default function InvestmentPlansPage() {
         <section className="py-20 px-4 sm:px-6 bg-[#0A0A0E]/50">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-14">
-              <p className="text-xs font-bold text-fiery-orange uppercase tracking-widest mb-3">Institutional Standards</p>
-              <h2 className="text-4xl sm:text-5xl text-white mb-4">Why Invest With Us</h2>
+              <p className="text-xs font-bold text-fiery-orange uppercase tracking-widest mb-3">{t('investmentPlans.advantagesLabel', 'Institutional Standards')}</p>
+              <h2 className="text-4xl sm:text-5xl text-white mb-4">{t('investmentPlans.advantagesTitle', 'Why Invest With Us')}</h2>
               <p className="text-zinc-400 max-w-xl mx-auto text-sm">
                 Built on institutional safety, transparency, and high probability execution.
               </p>
@@ -366,8 +395,8 @@ export default function InvestmentPlansPage() {
         <section className="py-24 px-4 sm:px-6">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-14">
-              <p className="text-xs font-bold text-fiery-orange uppercase tracking-widest mb-3">Got Questions?</p>
-              <h2 className="text-4xl sm:text-5xl text-white mb-4">Frequently Asked Questions</h2>
+              <p className="text-xs font-bold text-fiery-orange uppercase tracking-widest mb-3">{t('investmentPlans.faqLabel', 'Got Questions?')}</p>
+              <h2 className="text-4xl sm:text-5xl text-white mb-4">{t('investmentPlans.faqTitle', 'Frequently Asked Questions')}</h2>
               <p className="text-zinc-400 text-sm max-w-lg mx-auto">
                 Everything you need to know about our managed plans and subscription model.
               </p>

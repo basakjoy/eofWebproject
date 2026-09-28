@@ -63,7 +63,7 @@ router.get('/user/:userId', async (req: AuthRequest, res: Response) => {
 });
 
 // ─── Get all transactions — admin only ─────────────────────────────────
-router.get('/', requireRole(['SUPER_ADMIN', 'SIGNAL_ADMIN']), async (req: AuthRequest, res: Response) => {
+router.get('/', requireRole(['admin', 'superadmin', 'SUPER_ADMIN', 'SIGNAL_ADMIN']), async (req: AuthRequest, res: Response) => {
   try {
     const { userId, type, status } = req.query;
     const limit = Math.min(parseInt(String(req.query.limit)) || 50, 100);
@@ -74,15 +74,18 @@ router.get('/', requireRole(['SUPER_ADMIN', 'SIGNAL_ADMIN']), async (req: AuthRe
     if (type) where.type = String(type);
     if (status) where.status = String(status);
 
-    const transactions = await prisma.transaction.findMany({
-      where,
-      take: limit,
-      skip: offset,
-      orderBy: { createdAt: 'desc' },
-      include: { user: { select: { name: true, email: true } } },
-    });
+    const [transactions, total] = await Promise.all([
+      prisma.transaction.findMany({
+        where,
+        take: limit,
+        skip: offset,
+        orderBy: { createdAt: 'desc' },
+        include: { user: { select: { name: true, email: true } } },
+      }),
+      prisma.transaction.count({ where }),
+    ]);
 
-    res.json({ success: true, data: transactions, limit, offset });
+    res.json({ success: true, data: transactions, total, limit, offset });
   } catch (error: any) {
     handleError(res, error, 'Failed to fetch transactions');
   }
@@ -158,7 +161,7 @@ const updateTransactionSchema = z.object({
   notes: z.string().max(1000).optional(),
 }).strict();
 
-router.put('/:id', requireRole(['SUPER_ADMIN', 'SIGNAL_ADMIN']), async (req: AuthRequest, res: Response) => {
+router.put('/:id', requireRole(['admin', 'superadmin', 'SUPER_ADMIN', 'SIGNAL_ADMIN']), async (req: AuthRequest, res: Response) => {
   try {
     const parsed = updateTransactionSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -179,6 +182,23 @@ router.put('/:id', requireRole(['SUPER_ADMIN', 'SIGNAL_ADMIN']), async (req: Aut
     if (notes) data.metadata = JSON.stringify({ notes });
 
     await prisma.transaction.update({ where: { id: req.params.id }, data });
+
+    const adminUser = await prisma.adminUser.findUnique({ where: { userId: req.user.userId } });
+    if (adminUser) {
+      await prisma.adminAction.create({
+        data: {
+          id: uuidv4(),
+          adminId: adminUser.id,
+          action: `deposit_${status}`,
+          targetId: transaction.id,
+          targetType: 'transaction',
+          changes: JSON.stringify({ from: transaction.status, to: status, amount: Number(transaction.amount) }),
+          reason: notes || null,
+          ipAddress: req.ip,
+          status: 'success',
+        },
+      });
+    }
 
     // Audit log for financial state changes
     console.log(`[AUDIT] Transaction ${req.params.id} updated by admin ${req.user.userId}: status -> ${status}`);

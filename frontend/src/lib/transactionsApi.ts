@@ -57,13 +57,26 @@ export const transactionsApi = {
     amount: number;
     description?: string;
     status?: 'pending' | 'completed' | 'failed' | 'cancelled';
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
   }) => {
     try {
       const response = await apiClient.post('/transactions', data);
       return response.data;
     } catch (error) {
       console.error('Error creating transaction:', error);
+      throw error;
+    }
+  },
+
+  updateTransaction: async (
+    transactionId: string,
+    data: { status: 'pending' | 'completed' | 'failed' | 'cancelled'; notes?: string }
+  ) => {
+    try {
+      const response = await apiClient.put(`/transactions/${transactionId}`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating transaction:', error);
       throw error;
     }
   },

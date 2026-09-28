@@ -1,8 +1,11 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function PaymentMethodsSection() {
+  const { t } = useLanguage();
+
   const languages = [
     { country: 'Sweden', code: 'se' },
     { country: 'United Kingdom', code: 'gb' },
@@ -24,12 +27,12 @@ export default function PaymentMethodsSection() {
         {/* Top Header */}
         <div className="space-y-4 max-w-xl mx-auto">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">
-            <span>Languages</span>
+            <span>{t('paymentMethods.badge', 'Languages')}</span>
             <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B00]" />
           </div>
 
           <h2 className="text-4xl sm:text-5xl font-semibold text-white tracking-tight leading-tight">
-            Customer Support in 18 Languages
+            {t('paymentMethods.title', 'Customer Support in 18 Languages')}
           </h2>
         </div>
 

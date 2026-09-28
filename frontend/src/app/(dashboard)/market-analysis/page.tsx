@@ -4,9 +4,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { analysisApi } from '@/lib/analysisApi';
 import {
   TrendingUp, TrendingDown, Minus, LineChart, RefreshCw,
-  Clock, Filter, ChevronDown, ChevronUp,
-  Activity, BarChart2, AlertCircle, BookOpen, Zap,
-  Target, Eye, Tag
+  Clock, ChevronDown, ChevronUp, Activity, BarChart2,
+  AlertCircle, BookOpen, Zap,
 } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -69,41 +68,26 @@ const STATIC_ANALYSES: Analysis[] = [
 
 const SENTIMENT_CONFIG = {
   bullish: {
-    label: 'Bullish',
-    color: 'text-emerald-400',
-    bg: 'bg-emerald-500/10 border-emerald-500/25',
-    barColor: 'bg-emerald-500',
-    shadowHover: 'hover:shadow-emerald-500/10',
-    topBar: 'bg-emerald-400',
-    icon: TrendingUp,
+    label: 'Bullish', color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/25',
+    barColor: 'bg-emerald-500', topBar: 'bg-emerald-400', icon: TrendingUp,
   },
   bearish: {
-    label: 'Bearish',
-    color: 'text-rose-400',
-    bg: 'bg-rose-500/10 border-rose-500/25',
-    barColor: 'bg-rose-500',
-    shadowHover: 'hover:shadow-rose-500/10',
-    topBar: 'bg-rose-400',
-    icon: TrendingDown,
+    label: 'Bearish', color: 'text-rose-400', bg: 'bg-rose-500/10 border-rose-500/25',
+    barColor: 'bg-rose-500', topBar: 'bg-rose-400', icon: TrendingDown,
   },
   neutral: {
-    label: 'Neutral',
-    color: 'text-fiery-amber',
-    bg: 'bg-fiery-amber/10 border-fiery-amber/25',
-    barColor: 'bg-fiery-amber',
-    shadowHover: 'hover:shadow-fiery-amber/10',
-    topBar: 'bg-fiery-amber',
-    icon: Minus,
+    label: 'Neutral', color: 'text-fiery-amber', bg: 'bg-fiery-amber/10 border-fiery-amber/25',
+    barColor: 'bg-fiery-amber', topBar: 'bg-fiery-amber', icon: Minus,
   },
 };
 
-const PAIR_STYLES: Record<string, { pill: string }> = {
-  EURUSD:  { pill: 'bg-blue-500/15 text-blue-300 border-blue-500/30' },
-  GBPUSD:  { pill: 'bg-violet-500/15 text-violet-300 border-violet-500/30' },
-  USDJPY:  { pill: 'bg-orange-500/15 text-orange-300 border-orange-500/30' },
-  AUDUSD:  { pill: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' },
-  XAUUSD:  { pill: 'bg-yellow-500/15 text-yellow-300 border-yellow-500/30' },
-  DEFAULT: { pill: 'bg-white/10 text-zinc-300 border-white/20' },
+const PAIR_STYLES: Record<string, string> = {
+  EURUSD: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
+  GBPUSD: 'bg-violet-500/15 text-violet-300 border-violet-500/30',
+  USDJPY: 'bg-orange-500/15 text-orange-300 border-orange-500/30',
+  AUDUSD: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+  XAUUSD: 'bg-yellow-500/15 text-yellow-300 border-yellow-500/30',
+  DEFAULT: 'bg-white/10 text-zinc-300 border-white/20',
 };
 
 function timeAgo(iso: string): string {
@@ -123,54 +107,46 @@ function AnalysisCard({ analysis }: { analysis: Analysis }) {
   const pairStyle = PAIR_STYLES[analysis.pair ?? 'DEFAULT'] ?? PAIR_STYLES.DEFAULT;
 
   return (
-    <div className={`group relative bg-card-dark/70 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl ${s.shadowHover}`}>
-      {/* Sentiment accent top bar */}
-      <div className={`absolute top-0 left-8 right-8 h-[2px] rounded-b-full opacity-80 ${s.topBar}`} />
+    <div className="group relative bg-card-dark/70 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:border-white/20">
+      <div className={`absolute top-0 left-0 right-0 h-[2px] ${s.topBar}`} />
 
-      <div className="p-5 pt-6">
-        {/* Header: Pair + Timeframe + Sentiment */}
-        <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-          <div className="flex items-center gap-2">
+      <div className="p-5">
+        {/* Header: Pair · Timeframe on the left, Sentiment on the right */}
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div className="flex items-baseline gap-2">
             {analysis.pair && (
-              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-black border ${pairStyle.pill}`}>
-                <Activity className="w-3 h-3" />
+              <span className={`px-2 py-0.5 rounded-lg text-xs font-black border ${pairStyle}`}>
                 {analysis.pair}
               </span>
             )}
             {analysis.timeframe && (
-              <span className="text-[10px] font-bold text-zinc-400 bg-panel-dark border border-white/10 px-2.5 py-1 rounded-xl">
-                {analysis.timeframe}
-              </span>
+              <span className="text-xs text-zinc-500 font-medium">{analysis.timeframe}</span>
             )}
           </div>
-          <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl border ${s.bg} ${s.color}`}>
+          <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg border shrink-0 ${s.bg} ${s.color}`}>
             <SentIcon className="w-3.5 h-3.5" />
             {s.label}
           </span>
         </div>
 
-        {/* Title */}
-        <h3 className="font-extrabold text-white text-base leading-snug mb-2 group-hover:text-fiery-amber transition-colors duration-200">
+        {/* Title + description */}
+        <h3 className="font-bold text-white text-base leading-snug mb-1.5">
           {analysis.title}
         </h3>
-
-        {/* Description */}
         {analysis.description && (
           <p className="text-sm text-zinc-400 leading-relaxed mb-4">{analysis.description}</p>
         )}
 
-        {/* Technical Strength Meter */}
+        {/* Technical strength */}
         {analysis.technicalLevel != null && (
           <div className="mb-4">
-            <div className="flex items-center justify-between text-xs mb-2">
-              <span className="text-zinc-500 font-semibold flex items-center gap-1">
-                <Target className="w-3 h-3" /> Technical Strength
-              </span>
-              <span className={`font-black ${s.color}`}>{analysis.technicalLevel}%</span>
+            <div className="flex items-center justify-between text-xs mb-1.5">
+              <span className="text-zinc-500 font-medium">Technical strength</span>
+              <span className={`font-bold ${s.color}`}>{analysis.technicalLevel}%</span>
             </div>
-            <div className="h-1.5 w-full bg-panel-dark rounded-full overflow-hidden">
+            <div className="h-1 w-full bg-panel-dark rounded-full overflow-hidden">
               <div
-                className={`h-full rounded-full transition-all duration-700 ${s.barColor}`}
+                className={`h-full rounded-full ${s.barColor}`}
                 style={{ width: `${analysis.technicalLevel}%` }}
               />
             </div>
@@ -179,23 +155,22 @@ function AnalysisCard({ analysis }: { analysis: Analysis }) {
 
         {/* Tags */}
         {analysis.tags && analysis.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-4 items-center">
-            <Tag className="w-3 h-3 text-zinc-500" />
+          <div className="flex flex-wrap gap-1.5 mb-4">
             {analysis.tags.map(tag => (
-              <span key={tag} className="text-[10px] font-bold text-zinc-400 bg-panel-dark border border-white/10 px-2 py-0.5 rounded-lg">
+              <span key={tag} className="text-[10px] font-medium text-zinc-400 bg-white/5 px-2 py-0.5 rounded-md">
                 {tag}
               </span>
             ))}
           </div>
         )}
 
-        {/* Expandable Full Content */}
+        {/* Expandable full content */}
         {analysis.content && (
-          <>
+          <div className="border-t border-white/5 pt-3">
             {expanded && (
-              <div className="mb-4 p-4 rounded-2xl bg-panel-dark border border-white/10">
-                <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-line">{analysis.content}</p>
-              </div>
+              <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-line mb-3">
+                {analysis.content}
+              </p>
             )}
             <button
               onClick={() => setExpanded(!expanded)}
@@ -205,20 +180,14 @@ function AnalysisCard({ analysis }: { analysis: Analysis }) {
               {expanded ? 'Show less' : 'Read full analysis'}
               {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
             </button>
-          </>
+          </div>
         )}
+      </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/5">
-          <div className="flex items-center gap-1.5 text-zinc-500">
-            <Clock className="w-3.5 h-3.5" />
-            <span className="text-xs">{timeAgo(analysis.createdAt)}</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-zinc-600 hover:text-fiery-orange transition-colors cursor-pointer">
-            <Eye className="w-3.5 h-3.5" />
-            <span className="text-xs font-semibold">View Details</span>
-          </div>
-        </div>
+      {/* Footer */}
+      <div className="flex items-center gap-1.5 text-zinc-500 px-5 pb-4">
+        <Clock className="w-3.5 h-3.5" />
+        <span className="text-xs">{timeAgo(analysis.createdAt)}</span>
       </div>
     </div>
   );
@@ -269,9 +238,19 @@ export default function MarketAnalysisPage() {
     return sentimentMatch && pairMatch;
   });
 
-  const bullCount = analyses.filter(a => a.sentiment === 'bullish').length;
-  const bearCount = analyses.filter(a => a.sentiment === 'bearish').length;
-  const neutCount = analyses.filter(a => a.sentiment === 'neutral').length;
+  const counts = {
+    all: analyses.length,
+    bullish: analyses.filter(a => a.sentiment === 'bullish').length,
+    bearish: analyses.filter(a => a.sentiment === 'bearish').length,
+    neutral: analyses.filter(a => a.sentiment === 'neutral').length,
+  };
+
+  const sentimentFilters = [
+    { val: 'all', label: 'All', icon: BarChart2, color: 'text-white', activeBg: 'bg-white text-black' },
+    { val: 'bullish', label: 'Bullish', icon: SENTIMENT_CONFIG.bullish.icon, color: SENTIMENT_CONFIG.bullish.color, activeBg: 'bg-emerald-500 text-black' },
+    { val: 'bearish', label: 'Bearish', icon: SENTIMENT_CONFIG.bearish.icon, color: SENTIMENT_CONFIG.bearish.color, activeBg: 'bg-rose-500 text-black' },
+    { val: 'neutral', label: 'Neutral', icon: SENTIMENT_CONFIG.neutral.icon, color: SENTIMENT_CONFIG.neutral.color, activeBg: 'bg-fiery-amber text-black' },
+  ] as const;
 
   // ── Loading state ──
   if (loading) {
@@ -293,12 +272,9 @@ export default function MarketAnalysisPage() {
         <div>
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-fiery-orange/10 border border-fiery-orange/20 text-xs font-bold text-fiery-amber mb-2">
             <LineChart className="w-3.5 h-3.5 text-fiery-orange" />
-            MARKET INTELLIGENCE
+            Market Intelligence
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-            Market{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-fiery-orange to-fiery-amber">Analysis</span>
-          </h1>
+          <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">Market Analysis</h1>
           <p className="text-xs sm:text-sm text-zinc-400 mt-1">Professional forex insights and technical analysis from our analyst team.</p>
         </div>
 
@@ -322,66 +298,42 @@ export default function MarketAnalysisPage() {
         </div>
       )}
 
-      {/* ══ SENTIMENT STAT CARDS ══ */}
-      <div className="grid grid-cols-3 gap-3">
-        {[
-          { label: 'Bullish', count: bullCount, icon: TrendingUp, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
-          { label: 'Bearish', count: bearCount, icon: TrendingDown, color: 'text-rose-400',   bg: 'bg-rose-500/10 border-rose-500/20' },
-          { label: 'Neutral', count: neutCount, icon: Minus,        color: 'text-fiery-amber',bg: 'bg-fiery-amber/10 border-fiery-amber/20' },
-        ].map(stat => (
-          <div key={stat.label} className={`rounded-2xl border p-4 flex items-center gap-3 ${stat.bg}`}>
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-white/5 shrink-0">
-              <stat.icon className={`w-4 h-4 ${stat.color}`} />
-            </div>
-            <div className="min-w-0">
-              <p className={`text-xl font-black ${stat.color}`}>{stat.count}</p>
-              <p className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider">{stat.label}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* ══ FILTER CONTROLS ══ */}
-      <div className="bg-card-dark/60 rounded-2xl border border-white/10 p-3 space-y-3">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Filter className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
-            {[
-              { val: 'all',     label: 'All',     emoji: '📊' },
-              { val: 'bullish', label: 'Bullish', emoji: '📈' },
-              { val: 'bearish', label: 'Bearish', emoji: '📉' },
-              { val: 'neutral', label: 'Neutral', emoji: '➖' },
-            ].map(f => (
+      {/* ══ FILTERS (sentiment pills double as the count summary — no separate stat row) ══ */}
+      <div className="bg-card-dark/60 rounded-2xl border border-white/10 p-3 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {sentimentFilters.map(f => {
+            const active = filterSentiment === f.val;
+            const Icon = f.icon;
+            return (
               <button
                 key={f.val}
                 onClick={() => setFilterSentiment(f.val)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all ${
-                  filterSentiment === f.val
-                    ? 'bg-fiery-orange text-black shadow-sm'
-                    : 'bg-transparent text-zinc-400 hover:text-white hover:bg-white/5'
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  active ? f.activeBg : `bg-panel-dark ${f.color} hover:bg-white/10`
                 }`}
               >
-                {f.emoji} {f.label}
+                <Icon className="w-3.5 h-3.5" />
+                {f.label}
+                <span className={active ? 'opacity-70' : 'text-zinc-500'}>{counts[f.val]}</span>
               </button>
-            ))}
-          </div>
+            );
+          })}
+        </div>
 
-          {availablePairs.length > 0 && (
+        {availablePairs.length > 0 && (
+          <div className="relative sm:ml-auto w-full sm:w-auto">
+            <Activity className="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <select
               value={filterPair}
               onChange={e => setFilterPair(e.target.value)}
-              className="sm:ml-auto px-3 py-1.5 bg-panel-dark border border-white/10 rounded-xl text-xs font-bold text-zinc-300 focus:outline-none focus:border-fiery-orange/60 transition-colors"
+              className="w-full sm:w-auto appearance-none pl-8 pr-8 py-1.5 bg-panel-dark border border-white/10 rounded-xl text-xs font-bold text-zinc-300 focus:outline-none focus:border-fiery-orange/60 transition-colors"
             >
               <option value="all">All Pairs</option>
               {availablePairs.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2 text-xs text-zinc-500 pt-2 border-t border-white/5">
-          <BarChart2 className="w-3.5 h-3.5" />
-          <span>Showing <span className="text-white font-bold">{filtered.length}</span> {filtered.length === 1 ? 'report' : 'reports'}</span>
-        </div>
+            <ChevronDown className="w-3 h-3 text-zinc-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+        )}
       </div>
 
       {/* ══ ANALYSIS GRID ══ */}

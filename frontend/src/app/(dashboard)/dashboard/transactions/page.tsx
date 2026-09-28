@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   ArrowUpRight,
   ArrowDownLeft,
   Wallet,
-  DollarSign,
   TrendingUp,
   Search,
   Download,
@@ -20,7 +19,6 @@ import {
   Check,
   Crown,
   Sparkles,
-  ExternalLink,
   ShieldCheck,
   X,
   FileText,
@@ -44,93 +42,62 @@ export interface TransactionRecord {
   netAmount?: number;
 }
 
-// ── Fallback Sample Data for seamless offline / instant preview experience ──
-const SAMPLE_TRANSACTIONS: TransactionRecord[] = [
-  {
-    id: 'TXN-882910',
-    type: 'deposit',
-    description: 'Capital Investment Deposit',
-    amount: 5000.00,
-    status: 'completed',
-    date: '2026-09-02',
-    time: '14:32:05',
-    reference: 'REF-DEP-994821',
-    method: 'Crypto (USDT TRC20)',
-    fee: 0.00,
-    netAmount: 5000.00,
-  },
-  {
-    id: 'TXN-882905',
-    type: 'profit',
-    description: 'Monthly Automated Signals Distribution',
-    amount: 642.50,
-    status: 'completed',
-    date: '2026-09-01',
-    time: '09:15:22',
-    reference: 'REF-PRF-773104',
-    method: 'Internal Growth Allocation',
-    fee: 0.00,
-    netAmount: 642.50,
-  },
-  {
-    id: 'TXN-882890',
-    type: 'withdrawal',
-    description: 'Profit Withdrawal to Wallet',
-    amount: -450.00,
-    status: 'completed',
-    date: '2026-08-28',
-    time: '18:40:11',
-    reference: 'REF-WTH-552190',
-    method: 'Bank Wire Transfer',
-    fee: 5.00,
-    netAmount: -455.00,
-  },
-  {
-    id: 'TXN-882845',
-    type: 'upgrade',
-    description: 'VIP Pro Tier Subscription',
-    amount: -99.00,
-    status: 'completed',
-    date: '2026-08-15',
-    time: '11:05:40',
-    reference: 'REF-[#SUB-VIP-01]',
-    method: 'Credit Card',
-    fee: 0.00,
-    netAmount: -99.00,
-  },
-  {
-    id: 'TXN-882790',
-    type: 'deposit',
-    description: 'Account Balance Top-up',
-    amount: 2500.00,
-    status: 'completed',
-    date: '2026-08-01',
-    time: '10:20:00',
-    reference: 'REF-DEP-331092',
-    method: 'Crypto (BTC)',
-    fee: 0.00,
-    netAmount: 2500.00,
-  },
-  {
-    id: 'TXN-882710',
-    type: 'withdrawal',
-    description: 'Capital Withdrawal Request',
-    amount: -1200.00,
-    status: 'pending',
-    date: '2026-07-25',
-    time: '16:55:00',
-    reference: 'REF-WTH-119283',
-    method: 'Crypto (USDT ERC20)',
-    fee: 10.00,
-    netAmount: -1210.00,
-  },
-];
+function normalizeTransaction(value: unknown): TransactionRecord | null {
+  if (!value || typeof value !== 'object') return null;
+
+  const record = value as Record<string, unknown>;
+  const id = record.id;
+  const amount = Number(record.amount);
+  if ((typeof id !== 'string' && typeof id !== 'number') || !Number.isFinite(amount)) return null;
+
+  let metadata: Record<string, unknown> = {};
+  if (typeof record.metadata === 'string') {
+    try {
+      const parsed = JSON.parse(record.metadata);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) metadata = parsed;
+    } catch {
+      metadata = {};
+    }
+  } else if (record.metadata && typeof record.metadata === 'object' && !Array.isArray(record.metadata)) {
+    metadata = record.metadata as Record<string, unknown>;
+  }
+
+  const createdAt = record.createdAt ?? record.date;
+  const parsedDate = createdAt ? new Date(String(createdAt)) : null;
+  const isValidDate = parsedDate && !Number.isNaN(parsedDate.getTime());
+  const stringValue = (...values: unknown[]) => {
+    const result = values.find((item) => typeof item === 'string' && item.trim());
+    return typeof result === 'string' ? result : undefined;
+  };
+
+  return {
+    id,
+    type: stringValue(record.type) ?? 'transaction',
+    description: stringValue(record.description) ?? 'Transaction',
+    amount,
+    status: stringValue(record.status) ?? 'unknown',
+    date: isValidDate ? parsedDate!.toLocaleDateString() : 'Date unavailable',
+    time: isValidDate ? parsedDate!.toLocaleTimeString() : undefined,
+    reference: stringValue(record.reference, metadata.reference, metadata.referenceId),
+    method: stringValue(record.method, metadata.method, metadata.paymentMethod),
+    fee: Number.isFinite(Number(record.fee ?? metadata.fee)) ? Number(record.fee ?? metadata.fee) : undefined,
+    netAmount: Number.isFinite(Number(record.netAmount ?? metadata.netAmount))
+      ? Number(record.netAmount ?? metadata.netAmount)
+      : undefined,
+  };
+}
+
+function signedAmount(transaction: TransactionRecord): number {
+  const amount = Math.abs(transaction.amount);
+  return ['withdrawal', 'investment', 'upgrade'].includes(transaction.type.toLowerCase()) ? -amount : amount;
+}
 
 export default function RefinedTransactionsPage() {
   const { user } = useAuthStore();
   
-  const [transactions, setTransactions] = useState<TransactionRecord[]>(SAMPLE_TRANSACTIONS);
-  const [isLoading, setIsLoading] = useState(false);
+  const [transactions, setTransactions] = useState<TransactionRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -138,63 +105,151 @@ export default function RefinedTransactionsPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
+  const requestId = useRef(0);
 
-  // Load backend transactions if available
-  const fetchTransactions = async () => {
-    if (!user?.id) return;
-    setIsLoading(true);
-    try {
-      const response = await transactionsApi.getUserTransactions(String(user.id));
-      if (Array.isArray(response) && response.length > 0) {
-        setTransactions(response);
-      } else if (response?.data && Array.isArray(response.data) && response.data.length > 0) {
-        setTransactions(response.data);
-      }
-    } catch (err) {
-      console.warn('Backend transactions load fallback:', err);
-    } finally {
+  const fetchTransactions = useCallback(async () => {
+    const currentRequestId = ++requestId.current;
+    if (!user?.id) {
+      setTransactions([]);
       setIsLoading(false);
+      return;
     }
-  };
 
-  useEffect(() => {
-    fetchTransactions();
+    setIsLoading(true);
+    setLoadError(null);
+    try {
+      const pageSize = 100;
+      const response = await transactionsApi.getUserTransactions(String(user.id), { limit: pageSize, offset: 0 });
+      if (requestId.current !== currentRequestId) return;
+      const getRecords = (result: unknown): unknown[] => {
+        if (Array.isArray(result)) return result;
+        if (result && typeof result === 'object' && Array.isArray((result as { data?: unknown }).data)) {
+          return (result as { data: unknown[] }).data;
+        }
+        return [];
+      };
+      const records = getRecords(response);
+      const reportedTotal = Number(response?.total);
+      const totalRecords = Number.isFinite(reportedTotal) ? Math.max(reportedTotal, records.length) : records.length;
+
+      for (let offset = pageSize; offset < totalRecords; offset += pageSize * 4) {
+        const offsets = Array.from(
+          { length: Math.min(4, Math.ceil((totalRecords - offset) / pageSize)) },
+          (_, index) => offset + index * pageSize
+        );
+        const pages = await Promise.all(
+          offsets.map((pageOffset) =>
+            transactionsApi.getUserTransactions(String(user.id), { limit: pageSize, offset: pageOffset })
+          )
+        );
+        if (requestId.current !== currentRequestId) return;
+        pages.forEach((page) => records.push(...getRecords(page)));
+      }
+
+      setTransactions(records.map(normalizeTransaction).filter((transaction): transaction is TransactionRecord => transaction !== null));
+      setCurrentPage(1);
+    } catch {
+      if (requestId.current === currentRequestId) {
+        setLoadError('Unable to load your transaction history. Please try again.');
+      }
+    } finally {
+      if (requestId.current === currentRequestId) setIsLoading(false);
+    }
   }, [user?.id]);
 
+  useEffect(() => {
+    void fetchTransactions();
+    return () => {
+      requestId.current += 1;
+    };
+  }, [fetchTransactions]);
+
   // Copy reference handler
-  const handleCopyRef = (ref: string, e: React.MouseEvent) => {
+  const handleCopyRef = async (ref: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(ref);
-    setCopiedId(ref);
-    toast.success('Reference copied to clipboard');
-    setTimeout(() => setCopiedId(null), 2000);
+    try {
+      await navigator.clipboard.writeText(ref);
+      setCopiedId(ref);
+      toast.success('Reference copied to clipboard');
+      window.setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      toast.error('Could not copy the reference.');
+    }
   };
 
   // Export statement handler
   const handleExportStatement = () => {
     const headers = ['Transaction ID', 'Type', 'Description', 'Amount ($)', 'Status', 'Date', 'Reference', 'Method'];
+    const escapeCsvCell = (value: string | number) => {
+      const rawValue = String(value);
+      const safeValue = typeof value === 'string' && /^[=+\-@\t\r]/.test(rawValue) ? `'${rawValue}` : rawValue;
+      return `"${safeValue.replace(/"/g, '""')}"`;
+    };
     const csvRows = [
-      headers.join(','),
-      ...filteredTransactions.map((t) =>
+      headers.map(escapeCsvCell).join(','),
+      ...filteredTransactions.map((transaction) =>
         [
-          t.id,
-          t.type,
-          `"${t.description.replace(/"/g, '""')}"`,
-          t.amount,
-          t.status,
-          t.date,
-          t.reference || 'N/A',
-          t.method || 'N/A',
-        ].join(',')
+          transaction.id,
+          transaction.type,
+          transaction.description,
+          transaction.amount,
+          transaction.status,
+          transaction.date,
+          transaction.reference || 'N/A',
+          transaction.method || 'N/A',
+        ].map(escapeCsvCell).join(',')
       ),
     ];
-    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+    const blob = new Blob([`\uFEFF${csvRows.join('\r\n')}`], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `EmpireOfForex_Statement_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
     toast.success('Transaction statement exported as CSV!');
+  };
+
+  const handlePrintReceipt = (transaction: TransactionRecord) => {
+    const printWindow = window.open('', '_blank', 'width=760,height=800');
+    if (!printWindow) {
+      toast.error('Allow pop-ups to print this receipt.');
+      return;
+    }
+
+    const escapeHtml = (value: string) => value.replace(/[&<>"']/g, (character) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    })[character]!);
+    const amount = signedAmount(transaction);
+    const details = [
+      ['Transaction ID', String(transaction.id)],
+      ['Type', transaction.type],
+      ['Description', transaction.description],
+      ['Payment method', transaction.method || 'Not provided'],
+      ['Date', `${transaction.date} ${transaction.time ?? ''}`.trim()],
+      ...(transaction.reference ? [['Reference', transaction.reference]] : []),
+    ];
+
+    printWindow.document.write(`<!doctype html><html><head><title>Receipt ${escapeHtml(String(transaction.id))}</title><style>
+      body{font:14px Arial,sans-serif;color:#18181b;margin:40px auto;max-width:680px;padding:0 24px}
+      header{border-bottom:2px solid #f97316;padding-bottom:16px;margin-bottom:24px}
+      h1{font-size:22px;margin:0 0 6px}p{color:#52525b;margin:0}
+      .amount{font-size:30px;font-weight:700;margin:24px 0 6px}.status{color:#52525b;text-transform:capitalize}
+      dl{margin-top:24px}dl div{display:flex;justify-content:space-between;gap:24px;padding:12px 0;border-bottom:1px solid #e4e4e7}
+      dt{color:#52525b}dd{margin:0;text-align:right;overflow-wrap:anywhere}
+      @media print{body{margin:0 auto;padding:0 12px}}
+    </style></head><body><header><h1>Transaction receipt</h1><p>Empire of Forex</p></header>
+      <p class="amount">${amount < 0 ? '-' : '+'}$${Math.abs(amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+      <p class="status">${escapeHtml(transaction.status)}</p><dl>${details.map(([label, value]) =>
+        `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`
+      ).join('')}</dl></body></html>`);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
   };
 
   // Filtered dataset
@@ -231,7 +286,7 @@ export default function RefinedTransactionsPage() {
       .filter((t) => t.type === 'profit' && t.status === 'completed')
       .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
-    const totalWithdrawals = transactions
+      const totalWithdrawals = transactions
       .filter((t) => t.type === 'withdrawal' && t.status === 'completed')
       .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
@@ -239,6 +294,21 @@ export default function RefinedTransactionsPage() {
 
     return { totalDeposits, totalProfits, totalWithdrawals, netBalance };
   }, [transactions]);
+
+  const hasLoadedTransactions = !isLoading && !loadError;
+
+  useEffect(() => {
+    if (!selectedTxn) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setSelectedTxn(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedTxn]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
 
   // Helper for Type Badges & Icons
   const getTypeBadge = (type: string) => {
@@ -317,13 +387,13 @@ export default function RefinedTransactionsPage() {
         <div>
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-fiery-orange/10 border border-fiery-orange/20 text-xs font-bold text-fiery-amber mb-2">
             <ShieldCheck className="w-3.5 h-3.5 text-fiery-orange" />
-            AUDITED FINANCIAL LEDGER
+            TRANSACTION LEDGER
           </div>
           <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
             Transaction <span className="text-transparent bg-clip-text bg-gradient-to-r from-fiery-orange to-fiery-amber">History</span>
           </h1>
           <p className="text-xs sm:text-sm text-zinc-400 mt-1">
-            Real-time track of all deposits, profits, withdrawals, and plan subscriptions.
+            Review your deposits, profits, withdrawals, and plan activity.
           </p>
         </div>
 
@@ -347,24 +417,38 @@ export default function RefinedTransactionsPage() {
         </div>
       </div>
 
+        {loadError && (
+          <div role="alert" className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+            <span>{loadError}</span>
+            <button
+              onClick={() => void fetchTransactions()}
+              disabled={isLoading}
+              className="inline-flex items-center gap-2 self-start sm:self-auto font-semibold text-white hover:text-rose-200 disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+              Retry
+            </button>
+          </div>
+        )}
+
       {/* ══ SUMMARY STATS ══ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
         {/* Net Flow */}
         <div className="bg-card-dark/80 backdrop-blur-xl p-5 rounded-3xl border border-white/10 relative overflow-hidden group hover:border-fiery-orange/40 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Account Capital</span>
+            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Net Completed Flow</span>
             <div className="w-9 h-9 rounded-xl bg-fiery-orange/10 border border-fiery-orange/20 flex items-center justify-center text-fiery-orange">
               <Wallet className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
             <p className="text-2xl font-black font-mono text-white">
-              ${stats.netBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              {hasLoadedTransactions ? `$${stats.netBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '—'}
             </p>
             <p className="text-[11px] text-zinc-500 mt-1 flex items-center gap-1">
               <Sparkles className="w-3 h-3 text-fiery-amber" />
-              Verified ledger total
+              Completed deposits + profits - withdrawals
             </p>
           </div>
         </div>
@@ -379,7 +463,7 @@ export default function RefinedTransactionsPage() {
           </div>
           <div className="mt-3">
             <p className="text-2xl font-black font-mono text-emerald-400">
-              +${stats.totalDeposits.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              {hasLoadedTransactions ? `+$${stats.totalDeposits.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '—'}
             </p>
             <p className="text-[11px] text-zinc-500 mt-1">Total funded capital</p>
           </div>
@@ -395,7 +479,7 @@ export default function RefinedTransactionsPage() {
           </div>
           <div className="mt-3">
             <p className="text-2xl font-black font-mono text-amber-400">
-              +${stats.totalProfits.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              {hasLoadedTransactions ? `+$${stats.totalProfits.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '—'}
             </p>
             <p className="text-[11px] text-zinc-500 mt-1">Calculated distributions</p>
           </div>
@@ -411,7 +495,7 @@ export default function RefinedTransactionsPage() {
           </div>
           <div className="mt-3">
             <p className="text-2xl font-black font-mono text-rose-400">
-              -${stats.totalWithdrawals.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              {hasLoadedTransactions ? `-$${stats.totalWithdrawals.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '—'}
             </p>
             <p className="text-[11px] text-zinc-500 mt-1">Processed payout volume</p>
           </div>
@@ -521,11 +605,18 @@ export default function RefinedTransactionsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5 text-xs">
-              {paginatedTransactions.length === 0 ? (
+              {isLoading ? (
+                <tr>
+                  <td colSpan={6} className="py-16 text-center text-zinc-400" role="status">
+                    <RefreshCw className="w-5 h-5 mx-auto mb-2 animate-spin text-fiery-orange" />
+                    Loading transactions...
+                  </td>
+                </tr>
+              ) : paginatedTransactions.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-16 text-center text-zinc-500">
                     <FileText className="w-8 h-8 text-zinc-600 mx-auto mb-2" />
-                    <p className="text-sm font-semibold">No transactions match your search filter.</p>
+                    <p className="text-sm font-semibold">{transactions.length === 0 ? 'No transactions yet.' : 'No transactions match your filters.'}</p>
                     <button
                       onClick={() => {
                         setSearchQuery('');
@@ -541,7 +632,8 @@ export default function RefinedTransactionsPage() {
               ) : (
                 paginatedTransactions.map((txn) => {
                   const typeMeta = getTypeBadge(txn.type);
-                  const isPositive = txn.amount > 0;
+                  const displayAmount = signedAmount(txn);
+                  const isPositive = displayAmount > 0;
                   return (
                     <tr
                       key={txn.id}
@@ -605,8 +697,8 @@ export default function RefinedTransactionsPage() {
                             isPositive ? 'text-emerald-400' : 'text-rose-400'
                           }`}
                         >
-                          {isPositive ? '+' : ''}
-                          ${Math.abs(txn.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                          {isPositive ? '+' : isPositive === false ? '-' : ''}
+                          ${Math.abs(displayAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                         </span>
                         <span className="text-[10px] text-zinc-500 block">USD</span>
                       </td>
@@ -620,15 +712,21 @@ export default function RefinedTransactionsPage() {
 
         {/* Mobile Feed View */}
         <div className="block md:hidden divide-y divide-white/5">
-          {paginatedTransactions.length === 0 ? (
+          {isLoading ? (
+            <div className="p-8 text-center text-zinc-400" role="status">
+              <RefreshCw className="w-5 h-5 mx-auto mb-2 animate-spin text-fiery-orange" />
+              <p className="text-xs font-semibold">Loading transactions...</p>
+            </div>
+          ) : paginatedTransactions.length === 0 ? (
             <div className="p-8 text-center text-zinc-500 space-y-2">
               <FileText className="w-8 h-8 mx-auto text-zinc-600" />
-              <p className="text-xs font-semibold">No transactions found.</p>
+              <p className="text-xs font-semibold">{transactions.length === 0 ? 'No transactions yet.' : 'No transactions match your filters.'}</p>
             </div>
           ) : (
             paginatedTransactions.map((txn) => {
               const typeMeta = getTypeBadge(txn.type);
-              const isPositive = txn.amount > 0;
+              const displayAmount = signedAmount(txn);
+              const isPositive = displayAmount > 0;
               return (
                 <div
                   key={txn.id}
@@ -648,7 +746,7 @@ export default function RefinedTransactionsPage() {
                         isPositive ? 'text-emerald-400' : 'text-rose-400'
                       }`}
                     >
-                      {isPositive ? '+' : ''}${Math.abs(txn.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      {isPositive ? '+' : '-'}${Math.abs(displayAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
 
@@ -696,21 +794,32 @@ export default function RefinedTransactionsPage() {
       {/* ══ TRANSACTION RECEIPT / DETAIL MODAL ══ */}
       <AnimatePresence>
         {selectedTxn && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+            role="presentation"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) setSelectedTxn(null);
+            }}
+          >
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-lg bg-[#09090D] border border-white/10 rounded-3xl p-6 shadow-2xl text-white overflow-hidden space-y-6"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="transaction-receipt-title"
+              tabIndex={-1}
+              className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto bg-[#09090D] border border-white/10 rounded-3xl p-6 shadow-2xl text-white space-y-6"
             >
               {/* Header */}
               <div className="flex items-center justify-between border-b border-white/10 pb-4">
                 <div className="flex items-center gap-2.5">
                   <FileText className="w-5 h-5 text-fiery-orange" />
-                  <h3 className="text-lg font-black">Transaction Receipt</h3>
+                  <h3 id="transaction-receipt-title" className="text-lg font-black">Transaction Receipt</h3>
                 </div>
                 <button
                   onClick={() => setSelectedTxn(null)}
+                  aria-label="Close transaction receipt"
                   className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white transition-colors"
                 >
                   <X className="w-4 h-4" />
@@ -720,8 +829,8 @@ export default function RefinedTransactionsPage() {
               {/* Top Amount Banner */}
               <div className="bg-panel-dark p-5 rounded-2xl border border-white/5 text-center space-y-1">
                 <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Gross Value</span>
-                <p className={`text-3xl font-black font-mono ${selectedTxn.amount > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                  {selectedTxn.amount > 0 ? '+' : ''}${Math.abs(selectedTxn.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                <p className={`text-3xl font-black font-mono ${signedAmount(selectedTxn) > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {signedAmount(selectedTxn) > 0 ? '+' : '-'}${Math.abs(signedAmount(selectedTxn)).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </p>
                 <div className="pt-2">{getStatusBadge(selectedTxn.status)}</div>
               </div>
@@ -759,13 +868,10 @@ export default function RefinedTransactionsPage() {
               {/* Modal Footer Actions */}
               <div className="flex items-center gap-3 pt-2">
                 <button
-                  onClick={() => {
-                    toast.success(`Receipt for ${selectedTxn.id} printed.`);
-                    setSelectedTxn(null);
-                  }}
+                  onClick={() => handlePrintReceipt(selectedTxn)}
                   className="w-full py-3 rounded-xl bg-gradient-to-r from-fiery-orange to-fiery-amber text-black font-extrabold text-xs flex items-center justify-center gap-2 shadow-fiery hover:scale-[1.02] transition-all"
                 >
-                  <Download className="w-4 h-4 text-black" /> Download PDF Receipt
+                  <Download className="w-4 h-4 text-black" /> Print / Save as PDF
                 </button>
               </div>
             </motion.div>

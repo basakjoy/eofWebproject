@@ -1,14 +1,17 @@
 'use client';
 
 import { Star } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function KeyMetrics() {
+  const { t } = useLanguage();
+
   const stats = [
-    { value: '130+', label: 'Countries' },
-    { value: '34K+', label: 'Qualified Analysis' },
-    { value: '320+', label: 'Traders' },
-    { value: '17K', label: 'Virtual Strategies' },
-    { value: '$320M+', label: 'Performance Fee' },
+    { value: '130+', label: t('metrics.countries', 'Countries') },
+    { value: '34K+', label: t('metrics.analysis', 'Qualified Analysis') },
+    { value: '320+', label: t('metrics.traders', 'Traders') },
+    { value: '17K', label: t('metrics.strategies', 'Virtual Strategies') },
+    { value: '$320M+', label: t('metrics.performanceFee', 'Performance Fee') },
   ];
 
   // Text-based marks, matching your original placeholder style —
@@ -31,13 +34,13 @@ export default function KeyMetrics() {
         {/* Rating Badge */}
         <div className="flex justify-center">
           <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white/[0.04] border border-white/10 text-xs">
-            <span className="font-semibold text-white">Excellent</span>
+            <span className="font-semibold text-white">{t('metrics.excellent', 'Excellent')}</span>
             <div className="flex items-center gap-0.5 text-emerald-400">
               {[...Array(5)].map((_, i) => (
                 <Star key={i} size={12} className="fill-emerald-400 text-emerald-400" />
               ))}
             </div>
-            <span className="text-[#8E8E93] text-[11px]">TurstPilot</span>
+            <span className="text-[#8E8E93] text-[11px]">{t('metrics.trustpilot', 'TrustPilot')}</span>
           </div>
         </div>
 
@@ -58,7 +61,7 @@ export default function KeyMetrics() {
         {/* Trust Marquee */}
         <div className="pt-8 space-y-6">
           <p className="text-center text-xs text-[#8E8E93] font-medium tracking-wider uppercase">
-            Trusted by 240+ Companies
+            {t('metrics.trustedCompanies', 'Trusted by 240+ Companies Worldwide')}
           </p>
 
           <div

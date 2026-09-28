@@ -30,6 +30,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { toast } from 'sonner';
+import { useLanguage, type Locale } from '@/context/LanguageContext';
 
 // ─── Toggle Switch ────────────────────────────────────────────────────────────
 function Toggle({ enabled, onChange }: { enabled: boolean; onChange: (v: boolean) => void }) {
@@ -107,6 +108,7 @@ interface NotifPrefs {
 export default function RefinedSettingsPage() {
   const router = useRouter();
   const { logout } = useAuthStore();
+  const { locale, setLocale, options: langOptions, t } = useLanguage();
 
   const [loading, setLoading] = useState(true);
   const [savingNotifs, setSavingNotifs] = useState(false);
@@ -115,7 +117,6 @@ export default function RefinedSettingsPage() {
 
   // Theme & Preferences
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('dark');
-  const [language, setLanguage] = useState('en');
   const [currency, setCurrency] = useState('USD');
   const [profileVisibility, setProfileVisibility] = useState<'private' | 'public'>('private');
 
@@ -350,21 +351,26 @@ export default function RefinedSettingsPage() {
             />
           </SectionCard>
 
-          <SectionCard title="Regional Language Settings" icon={Globe}>
+          <SectionCard title={t('settings.regionalLanguage', 'Regional Language Settings')} icon={Globe}>
             <SettingRow
-              label="Interface Language"
-              description="Select preferred platform language"
+              label={t('settings.interfaceLanguage', 'Interface Language')}
+              description={t('settings.interfaceLanguageDesc', 'Select preferred platform language')}
               action={
                 <select
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
-                  className="px-4 py-2 bg-panel-dark border border-white/10 rounded-xl text-xs text-white font-bold focus:outline-none focus:border-fiery-orange transition-colors"
+                  value={locale}
+                  onChange={(e) => {
+                    const newLoc = e.target.value as Locale;
+                    setLocale(newLoc);
+                    const opt = langOptions.find((o) => o.value === newLoc);
+                    toast.success(`Language updated to ${opt?.label || newLoc}`);
+                  }}
+                  className="px-4 py-2 bg-panel-dark border border-white/10 rounded-xl text-xs text-white font-bold focus:outline-none focus:border-fiery-orange transition-colors cursor-pointer"
                 >
-                  <option value="en">🇬🇧 English (US)</option>
-                  <option value="es">🇪🇸 Spanish</option>
-                  <option value="fr">🇫🇷 French</option>
-                  <option value="de">🇩🇪 German</option>
-                  <option value="ar">🇸🇦 Arabic</option>
+                  {langOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value} className="bg-[#111116] text-white">
+                      {opt.flag} {opt.nativeLabel} ({opt.label})
+                    </option>
+                  ))}
                 </select>
               }
             />

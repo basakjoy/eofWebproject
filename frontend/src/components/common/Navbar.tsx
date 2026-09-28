@@ -7,6 +7,8 @@ import { LogoIcon } from './LogoIcon';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/store/authStore';
 import { useRouter, usePathname } from 'next/navigation';
+import LanguageSwitcher from './LanguageSwitcher';
+import { getLocalizedPath, useLanguage } from '@/context/LanguageContext';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -16,6 +18,7 @@ export default function Navbar() {
   const { isAuthenticated, user, logout } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
+  const { locale, t } = useLanguage();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -47,13 +50,13 @@ export default function Navbar() {
   }, [pathname]);
 
   const navLinks = [
-    { name: 'Home', href: '/home' },
-    { name: 'Trading Signals', href: '/trading-signals' },
-    { name: 'About', href: '/about' },
-    { name: 'Services', href: '/services' },
-    { name: 'Plans', href: '/investment-plans' },
-    { name: 'Blog', href: '/blog' },
-    { name: 'Brokers', href: '/brokers' },
+    { name: t('nav.home', 'Home'), href: getLocalizedPath('/home', locale) },
+    { name: t('nav.signals', 'Trading Signals'), href: getLocalizedPath('/trading-signals', locale) },
+    { name: t('nav.about', 'About'), href: getLocalizedPath('/about', locale) },
+    { name: t('nav.services', 'Services'), href: getLocalizedPath('/services', locale) },
+    { name: t('nav.plans', 'Plans'), href: getLocalizedPath('/investment-plans', locale) },
+    { name: t('nav.blog', 'Blog'), href: getLocalizedPath('/blog', locale) },
+    { name: t('nav.brokers', 'Brokers'), href: getLocalizedPath('/brokers', locale) },
   ];
 
   const handleLogout = async () => {
@@ -77,7 +80,7 @@ export default function Navbar() {
             <div className="flex items-center gap-6 sm:gap-8 px-5 py-2.5 rounded-full bg-[#16161c]/80 backdrop-blur-2xl border border-white/10 shadow-[0_10px_35px_rgba(0,0,0,0.6)] transition-all">
 
           {/* Logo / Brand Icon */}
-          <Link href="/home" className="flex items-center gap-2 group">
+          <Link href={getLocalizedPath('/home', locale)} className="flex items-center gap-2 group">
             <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center border border-white/10 group-hover:border-[#FF6B00]/40 transition-all">
               <LogoIcon size={18} />
             </div>
@@ -98,6 +101,7 @@ export default function Navbar() {
 
           {/* Right Actions */}
           <div className="hidden md:flex items-center gap-3">
+            <LanguageSwitcher />
             {isAuthenticated && user ? (
               <div className="relative">
                 <button
@@ -121,14 +125,14 @@ export default function Navbar() {
                       onClick={() => setProfileOpen(false)}
                     >
                       <User size={13} />
-                      Dashboard
+                      {t('nav.dashboard', 'Dashboard')}
                     </Link>
                     <button
                       onClick={handleLogout}
                       className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-red-500/10 rounded-xl transition-colors"
                     >
                       <LogOut size={13} />
-                      Logout
+                      {t('nav.logout', 'Logout')}
                     </button>
                   </div>
                 )}
@@ -139,13 +143,13 @@ export default function Navbar() {
                   href="/login"
                   className="px-3.5 py-1.5 text-gray-300 hover:text-white text-xs font-medium transition-colors"
                 >
-                  Log In
+                  {t('nav.login', 'Log In')}
                 </Link>
                 <Link
                   href="/register"
                   className="px-4 py-1.5 bg-gradient-to-r from-[#FF6B00] to-[#FF8A00] hover:brightness-110 text-white text-xs font-semibold rounded-full transition-all shadow-[0_0_15px_rgba(255,107,0,0.35)] active:scale-95"
                 >
-                  Sign Up
+                  {t('nav.register', 'Sign Up')}
                 </Link>
               </div>
             )}
@@ -183,6 +187,9 @@ export default function Navbar() {
                   {link.name}
                 </Link>
               ))}
+              <div className="flex justify-end border-b border-white/5 pb-3">
+                <LanguageSwitcher />
+              </div>
               <div className="pt-3 border-t border-white/10">
                 {isAuthenticated && user ? (
                   <div className="space-y-2">
@@ -192,14 +199,14 @@ export default function Navbar() {
                       onClick={() => setIsOpen(false)}
                     >
                       <User size={13} />
-                      Dashboard ({user.name})
+                      {t('nav.dashboard', 'Dashboard')} ({user.name})
                     </Link>
                     <button
                       onClick={handleLogout}
                       className="w-full flex items-center justify-center gap-2 p-2.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-semibold"
                     >
                       <LogOut size={13} />
-                      Logout
+                      {t('nav.logout', 'Logout')}
                     </button>
                   </div>
                 ) : (
@@ -209,14 +216,14 @@ export default function Navbar() {
                       className="w-full flex items-center justify-center p-2.5 rounded-full bg-white/10 text-white text-xs font-semibold hover:bg-white/15 transition-colors"
                       onClick={() => setIsOpen(false)}
                     >
-                      Log In
+                      {t('nav.login', 'Log In')}
                     </Link>
                     <Link
                       href="/register"
                       className="w-full flex items-center justify-center p-2.5 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8A00] text-white text-xs font-semibold shadow-lg transition-all"
                       onClick={() => setIsOpen(false)}
                     >
-                      Sign Up
+                      {t('nav.register', 'Sign Up')}
                     </Link>
                   </div>
                 )}

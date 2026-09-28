@@ -2,19 +2,28 @@
 
 import { Zap, ShieldCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function BrokerTrustSection() {
+  const { t } = useLanguage();
+
   const items = [
     {
       num: '01',
-      title: 'Quick and Reliable Payouts',
-      desc: 'No waiting games. Our system is optimized for speed — ensuring your payouts land fast, without unnecessary delays or manual processing.',
+      title: t('whyChooseUs.feature1Title', 'Quick and Reliable Payouts'),
+      desc: t(
+        'whyChooseUs.feature1Desc',
+        'No waiting games. Our system is optimized for speed — ensuring your payouts land fast, without unnecessary delays or manual processing.'
+      ),
       icon: Zap,
     },
     {
       num: '02',
-      title: 'Up to 90% Profit Split',
-      desc: 'Retain the vast majority of your hard-earned trading gains with our industry-leading profit sharing tier structure.',
+      title: t('whyChooseUs.feature2Title', 'Up to 90% Profit Split'),
+      desc: t(
+        'whyChooseUs.feature2Desc',
+        'Retain the vast majority of your hard-earned trading gains with our industry-leading profit sharing tier structure.'
+      ),
       icon: ShieldCheck,
     },
   ];
@@ -26,10 +35,10 @@ export default function BrokerTrustSection() {
         {/* Top Header Row */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
           <h2 className="text-4xl sm:text-5xl font-semibold text-white tracking-tight">
-            Why Choose Us?
+            {t('whyChooseUs.title', 'Why Choose Us?')}
           </h2>
           <p className="text-sm text-[#8E8E93] max-w-md font-normal">
-            Backed by a suite of powerful tools at your fingertips.
+            {t('whyChooseUs.subtitle', 'Backed by a suite of powerful tools at your fingertips.')}
           </p>
         </div>
 

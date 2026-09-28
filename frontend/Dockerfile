@@ -1,5 +1,5 @@
 # Multi-stage build for frontend
-FROM node:18-alpine AS dependencies
+FROM node:20-alpine AS dependencies
 
 WORKDIR /app
 
@@ -27,13 +27,13 @@ COPY src ./src
 RUN npm run build
 
 # Production stage
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
 # Install only production dependencies
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci --include=dev
 
 # Copy built application from builder
 COPY --from=builder /app/.next ./.next
@@ -48,7 +48,7 @@ ENV NODE_ENV=production
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD wget --quiet --tries=1 --spider http://localhost:3000 || exit 1
+  CMD node -e "require('http').get('http://localhost:3000', (r) => { if (r.statusCode >= 500) process.exit(1); r.resume(); }).on('error', () => process.exit(1))"
 
 # Start application
 CMD ["npm", "start"]

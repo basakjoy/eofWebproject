@@ -23,10 +23,10 @@ interface SupportChatProps {
 }
 
 const QUICK_ACTIONS = [
-  { label: '💰 Deposit Help', prompt: 'How do I make a deposit into my account?' },
-  { label: '📊 Signals Guide', prompt: 'How do I access and follow your trading signals?' },
-  { label: '💳 Withdrawal Process', prompt: 'How long do withdrawals take to process?' },
-  { label: '🛡️ Verification (KYC)', prompt: 'What documents are required for account verification?' },
+  { label: 'Deposit Help', prompt: 'How do I make a deposit into my account?' },
+  { label: 'Signals Guide', prompt: 'How do I access and follow your trading signals?' },
+  { label: 'Withdrawal Process', prompt: 'How long do withdrawals take to process?' },
+  { label: 'Verification (KYC)', prompt: 'What documents are required for account verification?' },
 ];
 
 export default function SupportChat({ isOpen, onClose }: SupportChatProps) {

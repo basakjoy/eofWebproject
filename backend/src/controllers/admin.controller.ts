@@ -3,6 +3,17 @@ import { prisma } from '../database';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 
+const dashboardPeriods = [
+  { key: 'today', label: 'Today', start: (now: Date) => new Date(now.getFullYear(), now.getMonth(), now.getDate()), end: (now: Date) => now },
+  { key: 'yesterday', label: 'Yesterday', start: (now: Date) => new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1), end: (now: Date) => new Date(now.getFullYear(), now.getMonth(), now.getDate()) },
+  { key: 'thisWeek', label: 'This Week', start: (now: Date) => new Date(now.getFullYear(), now.getMonth(), now.getDate() - ((now.getDay() + 6) % 7)), end: (now: Date) => now },
+  { key: 'lastWeek', label: 'Last Week', start: (now: Date) => new Date(now.getFullYear(), now.getMonth(), now.getDate() - ((now.getDay() + 6) % 7) - 7), end: (now: Date) => new Date(now.getFullYear(), now.getMonth(), now.getDate() - ((now.getDay() + 6) % 7)) },
+  { key: 'thisMonth', label: 'This Month', start: (now: Date) => new Date(now.getFullYear(), now.getMonth(), 1), end: (now: Date) => now },
+  { key: 'lastMonth', label: 'Last Month', start: (now: Date) => new Date(now.getFullYear(), now.getMonth() - 1, 1), end: (now: Date) => new Date(now.getFullYear(), now.getMonth(), 1) },
+];
+
+const inPeriod = (date: Date, period: typeof dashboardPeriods[number], now: Date) => date >= period.start(now) && date < period.end(now);
+
 // Get all admin users
 export const getAllAdminUsers = async (req: Request, res: Response) => {
   try {
@@ -232,6 +243,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const dashboardStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
     const [
       totalUsers,
@@ -248,6 +260,10 @@ export const getDashboardStats = async (req: Request, res: Response) => {
       openTickets,
       totalArticles,
       publishedArticles,
+      dashboardTransactions,
+      dashboardWithdrawals,
+      dashboardUsers,
+      firstDeposits,
     ] = await Promise.all([
       prisma.user.count(),
       prisma.user.count({ where: { status: 'active' } }),
@@ -269,7 +285,57 @@ export const getDashboardStats = async (req: Request, res: Response) => {
       prisma.supportTicket.count({ where: { status: 'open' } }),
       prisma.faqArticle.count(),
       prisma.faqArticle.count({ where: { published: true } }),
+      prisma.transaction.findMany({
+        where: { createdAt: { gte: dashboardStart }, status: 'completed' },
+        select: { type: true, amount: true, createdAt: true },
+      }),
+      prisma.withdrawal.findMany({
+        where: { createdAt: { gte: dashboardStart } },
+        select: { amount: true, createdAt: true, status: true },
+      }),
+      prisma.user.findMany({
+        where: { createdAt: { gte: dashboardStart } },
+        select: { createdAt: true },
+      }),
+      prisma.transaction.findMany({
+        where: { type: 'deposit', status: 'completed' },
+        orderBy: { createdAt: 'asc' },
+        select: { userId: true, amount: true, createdAt: true },
+      }),
     ]);
+
+    const makeRows = (getValue: (period: typeof dashboardPeriods[number]) => { count: number; amount: number }) =>
+      dashboardPeriods.map(period => ({ period: period.label, ...getValue(period) }));
+    const periodTransactions = (type: string) => makeRows(period => {
+      const items = dashboardTransactions.filter(item => item.type === type && inPeriod(item.createdAt, period, now));
+      return { count: items.length, amount: items.reduce((sum, item) => sum + Number(item.amount), 0) };
+    });
+    const periodWithdrawals = makeRows(period => {
+      const items = dashboardWithdrawals.filter(item => inPeriod(item.createdAt, period, now));
+      return { count: items.length, amount: items.reduce((sum, item) => sum + Number(item.amount), 0) };
+    });
+    const periodUsers = dashboardPeriods.map(period => ({
+      period: period.label,
+      count: dashboardUsers.filter(userRecord => inPeriod(userRecord.createdAt, period, now)).length,
+    }));
+    const earliestDepositByUser = new Map<string, Date>();
+    for (const deposit of firstDeposits) {
+      if (!earliestDepositByUser.has(deposit.userId)) earliestDepositByUser.set(deposit.userId, deposit.createdAt);
+    }
+    const firstDepositRows = makeRows(period => {
+      const items = firstDeposits.filter(item => earliestDepositByUser.get(item.userId)?.getTime() === item.createdAt.getTime() && inPeriod(item.createdAt, period, now));
+      return { count: items.length, amount: items.reduce((sum, item) => sum + Number(item.amount), 0) };
+    });
+    const profitRows = periodTransactions('profit');
+    const turnoverRows = makeRows(period => {
+      const items = dashboardTransactions.filter(item => inPeriod(item.createdAt, period, now));
+      return { count: items.length, amount: items.reduce((sum, item) => sum + Number(item.amount), 0) };
+    });
+    const marginRows = profitRows.map((row, index) => ({
+      period: row.period,
+      count: row.count,
+      margin: turnoverRows[index].amount ? `${((row.amount / turnoverRows[index].amount) * 100).toFixed(2)}%` : '0%',
+    }));
 
     res.json({
       success: true,
@@ -300,6 +366,16 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         blog: {
           total: totalArticles,
           published: publishedArticles,
+        },
+        activity: {
+          deposits: { pending: await prisma.transaction.count({ where: { type: 'deposit', status: 'pending' } }), pendingAmount: Number((await prisma.transaction.aggregate({ where: { type: 'deposit', status: 'pending' }, _sum: { amount: true } }))._sum.amount || 0), rows: periodTransactions('deposit') },
+          withdrawals: { rows: periodWithdrawals },
+          registeredUsers: periodUsers,
+          firstDeposits: firstDepositRows,
+          bonuses: periodTransactions('bonus'),
+          winLoss: profitRows,
+          turnover: turnoverRows,
+          grossMargin: marginRows,
         },
       },
     });

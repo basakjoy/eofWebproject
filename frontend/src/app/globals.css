@@ -58,6 +58,33 @@ body {
   min-height: 100vh;
 }
 
+/* Multilingual Font Families & Typography */
+html[lang="bn"] body,
+body.font-bengali,
+[lang="bn"] {
+  font-family: var(--font-noto-bengali), 'Hind Siliguri', 'Kalpurush', var(--font-poppins), sans-serif;
+}
+
+html[lang="hi"] body,
+body.font-devanagari,
+[lang="hi"] {
+  font-family: var(--font-noto-devanagari), 'Noto Sans Devanagari', var(--font-poppins), sans-serif;
+}
+
+html[lang="ur"] body,
+body.font-urdu,
+[lang="ur"] {
+  font-family: var(--font-noto-urdu), 'Noto Nastaliq Urdu', 'Urdu Typesetting', Tahoma, sans-serif;
+  line-height: 1.85;
+}
+
+/* RTL layout helpers */
+[dir="rtl"] .ltr-preserve {
+  direction: ltr !important;
+  text-align: left !important;
+}
+
+
 a,
 button {
   cursor: pointer;

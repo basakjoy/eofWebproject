@@ -29,6 +29,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --only=production
 
+COPY prisma ./prisma
+RUN npx prisma generate
+
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
 
@@ -40,7 +43,7 @@ EXPOSE 5000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD-SHELL node -e "require('http').get('http://localhost:' + (process.env.PORT || 5000) + '/health', (r) => {if (r.statusCode !== 200) process.exit(1)})"
+  CMD node -e "require('http').get('http://localhost:' + (process.env.PORT || 5000) + '/health', (r) => { if (r.statusCode !== 200) process.exit(1); r.resume(); }).on('error', () => process.exit(1))"
 
 # Start application
 CMD ["node", "dist/server.js"]
