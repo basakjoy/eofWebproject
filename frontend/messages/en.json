@@ -330,7 +330,7 @@
   },
   "blog": {
     "heroBadge": "Market Intelligence",
-    "heroTitle": "Market Insights & Research",
+    "heroTitle": "Market Insights",
     "description": "Stay ahead with real-time institutional breakdowns, technical research, and market strategies curated by our trading desk.",
     "searchPlaceholder": "Search market reports, strategies, or topics...",
     "search": "Search",
@@ -361,6 +361,82 @@
     "investmentPlans": "Investment Plans",
     "marketAnalysis": "Market Analysis",
     "accountSettings": "Account Settings"
+  },
+  "userDashboard": {
+    "menu": {
+      "dashboard": "Dashboard",
+      "signals": "Signals",
+      "marketAnalysis": "Market Analysis",
+      "premiumDashboard": "Premium Dashboard",
+      "investments": "Investments",
+      "transactions": "Transactions",
+      "profile": "Profile",
+      "settings": "Settings",
+      "signOut": "Sign Out"
+    },
+    "signals": {
+      "badge": "LIVE SIGNAL TERMINAL",
+      "title": "Live",
+      "titleHighlight": "Opportunities",
+      "subtitle": "Institutional algorithmic setups refreshed continuously.",
+      "searchPlaceholder": "Search pair (e.g. XAU/USD)...",
+      "alertsOn": "Alerts On",
+      "muted": "Muted",
+      "syncFeed": "Sync Feed",
+      "lotCalculator": "Lot Calculator",
+      "totalAlerts": "Total Alerts",
+      "activeSignals": "Active Signals",
+      "winRate": "Win Rate"
+    },
+    "marketAnalysis": {
+      "all": "All",
+      "bullish": "Bullish",
+      "bearish": "Bearish",
+      "neutral": "Neutral"
+    },
+    "premium": {
+      "title": "Premium Dashboard",
+      "subtitle": "Advanced trading signals and market analysis.",
+      "activeSignals": "Active Signals",
+      "winRate": "Win Rate",
+      "monthlyProfit": "Monthly Profit",
+      "signalsThisMonth": "Signals This Month",
+      "tradingPerformance": "Trading Performance",
+      "signalDistribution": "Signal Distribution",
+      "features": "Premium Features"
+    },
+    "investments": {
+      "badge": "INSTITUTIONAL CAPITAL POOL",
+      "title": "Portfolio",
+      "titleHighlight": "Investments",
+      "subtitle": "Track active capital allocations, compound profits, and manage investment strategies.",
+      "explorePlans": "Explore Tiers & Plans"
+    },
+    "transactions": {
+      "badge": "TRANSACTION LEDGER",
+      "title": "Transaction",
+      "titleHighlight": "History",
+      "subtitle": "Review your deposits, profits, withdrawals, and plan activity.",
+      "exportStatement": "Export Statement (CSV)"
+    },
+    "profile": {
+      "badge": "VERIFIED TRADER IDENTITY",
+      "title": "User",
+      "titleHighlight": "Profile",
+      "subtitle": "Manage your personal identity, contact info, trading preferences, and security credentials.",
+      "cancelEditing": "Cancel Editing",
+      "editProfileInfo": "Edit Profile Info"
+    },
+    "settings": {
+      "badge": "SYSTEM PREFERENCES & SECURITY",
+      "title": "Account",
+      "titleHighlight": "Settings",
+      "subtitle": "Configure real-time alerts, appearance themes, security settings, and notifications.",
+      "notifications": "Notifications & Alerts",
+      "appearance": "Appearance & Display",
+      "security": "Security & Auth",
+      "accountActions": "Account Actions"
+    }
   },
   "settings": {
     "title": "Settings",

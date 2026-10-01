@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../database';
+import { Prisma } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -17,13 +18,23 @@ const inPeriod = (date: Date, period: typeof dashboardPeriods[number], now: Date
 // Get all admin users
 export const getAllAdminUsers = async (req: Request, res: Response) => {
   try {
-    const users = await prisma.user.findMany({
-      orderBy: { createdAt: 'desc' },
-      select: { id: true, name: true, email: true, role: true, status: true, createdAt: true, updatedAt: true },
-    });
+    const limit = Math.min(Math.max(Number(req.query.limit) || 20, 1), 100);
+    const offset = Math.max(Number(req.query.offset) || 0, 0);
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset,
+        select: { id: true, name: true, email: true, role: true, status: true, createdAt: true, updatedAt: true },
+      }),
+      prisma.user.count(),
+    ]);
     res.json({
       success: true,
       data: users,
+      total,
+      limit,
+      offset,
     });
   } catch (error: any) {
     res.status(500).json({
@@ -238,12 +249,10 @@ export const getAdminLogs = async (req: Request, res: Response) => {
 // Get dashboard stats — uses Prisma for full aggregate data
 export const getDashboardStats = async (req: Request, res: Response) => {
   try {
-    const { prisma } = await import('../database');
-
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const dashboardStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const periodValues = Prisma.join(dashboardPeriods.map(period => Prisma.sql`(${period.label}, ${period.start(now)}, ${period.end(now)})`));
 
     const [
       totalUsers,
@@ -260,10 +269,12 @@ export const getDashboardStats = async (req: Request, res: Response) => {
       openTickets,
       totalArticles,
       publishedArticles,
-      dashboardTransactions,
-      dashboardWithdrawals,
-      dashboardUsers,
-      firstDeposits,
+      transactionRows,
+      withdrawalRows,
+      userRows,
+      firstDepositRows,
+      pendingDeposits,
+      pendingDepositAmount,
     ] = await Promise.all([
       prisma.user.count(),
       prisma.user.count({ where: { status: 'active' } }),
@@ -285,51 +296,67 @@ export const getDashboardStats = async (req: Request, res: Response) => {
       prisma.supportTicket.count({ where: { status: 'open' } }),
       prisma.faqArticle.count(),
       prisma.faqArticle.count({ where: { published: true } }),
-      prisma.transaction.findMany({
-        where: { createdAt: { gte: dashboardStart }, status: 'completed' },
-        select: { type: true, amount: true, createdAt: true },
-      }),
-      prisma.withdrawal.findMany({
-        where: { createdAt: { gte: dashboardStart } },
-        select: { amount: true, createdAt: true, status: true },
-      }),
-      prisma.user.findMany({
-        where: { createdAt: { gte: dashboardStart } },
-        select: { createdAt: true },
-      }),
-      prisma.transaction.findMany({
-        where: { type: 'deposit', status: 'completed' },
-        orderBy: { createdAt: 'asc' },
-        select: { userId: true, amount: true, createdAt: true },
-      }),
+      prisma.$queryRaw<Array<{ period: string; type: string; count: number; amount: number }>>(Prisma.sql`
+        WITH periods(label, starts_at, ends_at) AS (VALUES ${periodValues})
+        SELECT p.label AS period, t.type, COUNT(t.id)::int AS count,
+          COALESCE(SUM(t.amount), 0)::float8 AS amount
+        FROM periods p
+        LEFT JOIN transactions t ON t."createdAt" >= p.starts_at AND t."createdAt" < p.ends_at AND t.status = 'completed'
+        GROUP BY p.label, t.type
+      `),
+      prisma.$queryRaw<Array<{ period: string; count: number; amount: number }>>(Prisma.sql`
+        WITH periods(label, starts_at, ends_at) AS (VALUES ${periodValues})
+        SELECT p.label AS period, COUNT(w.id)::int AS count,
+          COALESCE(SUM(w.amount), 0)::float8 AS amount
+        FROM periods p
+        LEFT JOIN withdrawals w ON w."createdAt" >= p.starts_at AND w."createdAt" < p.ends_at
+        GROUP BY p.label
+      `),
+      prisma.$queryRaw<Array<{ period: string; count: number }>>(Prisma.sql`
+        WITH periods(label, starts_at, ends_at) AS (VALUES ${periodValues})
+        SELECT p.label AS period, COUNT(u.id)::int AS count
+        FROM periods p
+        LEFT JOIN users u ON u."createdAt" >= p.starts_at AND u."createdAt" < p.ends_at
+        GROUP BY p.label
+      `),
+      prisma.$queryRaw<Array<{ period: string; count: number; amount: number }>>(Prisma.sql`
+        WITH periods(label, starts_at, ends_at) AS (VALUES ${periodValues}),
+        first_deposits AS (
+          SELECT DISTINCT ON ("userId") "userId", amount, "createdAt"
+          FROM transactions
+          WHERE type = 'deposit' AND status = 'completed'
+          ORDER BY "userId", "createdAt" ASC
+        )
+        SELECT p.label AS period, COUNT(fd."userId")::int AS count,
+          COALESCE(SUM(fd.amount), 0)::float8 AS amount
+        FROM periods p
+        LEFT JOIN first_deposits fd ON fd."createdAt" >= p.starts_at AND fd."createdAt" < p.ends_at
+        GROUP BY p.label
+      `),
+      prisma.transaction.count({ where: { type: 'deposit', status: 'pending' } }),
+      prisma.transaction.aggregate({ where: { type: 'deposit', status: 'pending' }, _sum: { amount: true } }),
     ]);
 
-    const makeRows = (getValue: (period: typeof dashboardPeriods[number]) => { count: number; amount: number }) =>
-      dashboardPeriods.map(period => ({ period: period.label, ...getValue(period) }));
-    const periodTransactions = (type: string) => makeRows(period => {
-      const items = dashboardTransactions.filter(item => item.type === type && inPeriod(item.createdAt, period, now));
-      return { count: items.length, amount: items.reduce((sum, item) => sum + Number(item.amount), 0) };
+    const periodTransactions = (type: string) => dashboardPeriods.map(period => {
+      const row = transactionRows.find(item => item.period === period.label && item.type === type);
+      return { period: period.label, count: Number(row?.count || 0), amount: Number(row?.amount || 0) };
     });
-    const periodWithdrawals = makeRows(period => {
-      const items = dashboardWithdrawals.filter(item => inPeriod(item.createdAt, period, now));
-      return { count: items.length, amount: items.reduce((sum, item) => sum + Number(item.amount), 0) };
+    const periodWithdrawals = dashboardPeriods.map(period => {
+      const row = withdrawalRows.find(item => item.period === period.label);
+      return { period: period.label, count: Number(row?.count || 0), amount: Number(row?.amount || 0) };
     });
     const periodUsers = dashboardPeriods.map(period => ({
       period: period.label,
-      count: dashboardUsers.filter(userRecord => inPeriod(userRecord.createdAt, period, now)).length,
+      count: Number(userRows.find(item => item.period === period.label)?.count || 0),
     }));
-    const earliestDepositByUser = new Map<string, Date>();
-    for (const deposit of firstDeposits) {
-      if (!earliestDepositByUser.has(deposit.userId)) earliestDepositByUser.set(deposit.userId, deposit.createdAt);
-    }
-    const firstDepositRows = makeRows(period => {
-      const items = firstDeposits.filter(item => earliestDepositByUser.get(item.userId)?.getTime() === item.createdAt.getTime() && inPeriod(item.createdAt, period, now));
-      return { count: items.length, amount: items.reduce((sum, item) => sum + Number(item.amount), 0) };
+    const periodFirstDeposits = dashboardPeriods.map(period => {
+      const row = firstDepositRows.find(item => item.period === period.label);
+      return { period: period.label, count: Number(row?.count || 0), amount: Number(row?.amount || 0) };
     });
     const profitRows = periodTransactions('profit');
-    const turnoverRows = makeRows(period => {
-      const items = dashboardTransactions.filter(item => inPeriod(item.createdAt, period, now));
-      return { count: items.length, amount: items.reduce((sum, item) => sum + Number(item.amount), 0) };
+    const turnoverRows = dashboardPeriods.map(period => {
+      const rows = transactionRows.filter(item => item.period === period.label);
+      return { period: period.label, count: rows.reduce((sum, item) => sum + Number(item.count), 0), amount: rows.reduce((sum, item) => sum + Number(item.amount), 0) };
     });
     const marginRows = profitRows.map((row, index) => ({
       period: row.period,
@@ -368,10 +395,10 @@ export const getDashboardStats = async (req: Request, res: Response) => {
           published: publishedArticles,
         },
         activity: {
-          deposits: { pending: await prisma.transaction.count({ where: { type: 'deposit', status: 'pending' } }), pendingAmount: Number((await prisma.transaction.aggregate({ where: { type: 'deposit', status: 'pending' }, _sum: { amount: true } }))._sum.amount || 0), rows: periodTransactions('deposit') },
+          deposits: { pending: pendingDeposits, pendingAmount: Number(pendingDepositAmount._sum.amount || 0), rows: periodTransactions('deposit') },
           withdrawals: { rows: periodWithdrawals },
           registeredUsers: periodUsers,
-          firstDeposits: firstDepositRows,
+          firstDeposits: periodFirstDeposits,
           bonuses: periodTransactions('bonus'),
           winLoss: profitRows,
           turnover: turnoverRows,

@@ -60,6 +60,7 @@ import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
 
 type DashboardTab = "overview" | "articles" | "users" | "signals" | "forex" | "blog" | "education" | "transactions" | "notifications" | "settings" | "traffic";
+const LIST_PAGE_SIZE = 20;
 
 
 interface Article {
@@ -141,6 +142,58 @@ interface Notification {
   type: "info" | "warning" | "success" | "error";
   date: string;
   read: boolean;
+}
+
+interface AdminUserRecord {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  role?: string | null;
+  status?: string | null;
+  createdAt?: string | Date | null;
+}
+
+interface ArticleRecord {
+  id: string;
+  title: string;
+  excerpt?: string | null;
+  content?: string | null;
+  category?: string | null;
+  published?: boolean;
+  viewCount?: number;
+  helpfulCount?: number;
+  author?: string | null;
+  createdAt?: string | Date | null;
+  readTime?: string | null;
+}
+
+interface SignalRecord {
+  id: string;
+  pair?: string | null;
+  type?: string | null;
+  entryPrice?: number | null;
+  takeProfit?: number | null;
+  stopLoss?: number | null;
+  reliability?: number | null;
+  timeframe?: string | null;
+  status?: string | null;
+}
+
+interface WithdrawalRecord {
+  id: string;
+  userId?: string | null;
+  amount?: number | string | null;
+  createdAt?: string | Date | null;
+  status?: string | null;
+}
+
+interface NotificationRecord {
+  id: string;
+  title?: string | null;
+  message?: string | null;
+  type?: string | null;
+  createdAt?: string | Date | null;
+  read?: boolean | null;
 }
 
 interface DashboardStats {
@@ -242,122 +295,141 @@ export default function AdminDashboard() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   
   // Loading and error states
-  const [loading, setLoading] = useState(true);
+  const [loadingPage, setLoadingPage] = useState(false);
+  const [pageIndex, setPageIndex] = useState(0);
+  const [hasNextPage, setHasNextPage] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch dashboard data
+  // Fetch overview stats independently so other dashboard lists do not delay first render.
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchStats = async () => {
       try {
-        setLoading(true);
-        setError(null);
-        
-        const [statsRes, usersRes, signalsRes, withdrawalsRes, notificationsRes, articlesRes] = await Promise.all([
-          adminApi.getDashboardStats().catch(() => ({ success: false, data: null })),
-          adminApi.getAllUsers({ limit: 50 }).catch(() => ({ success: false, data: [] })),
-          adminApi.getAllSignals().catch(() => ({ success: false, data: [] })),
-          adminApi.getAllWithdrawals({ limit: 50 }).catch(() => ({ success: false, data: [] })),
-          adminApi.getAllNotifications({ limit: 50 }).catch(() => ({ success: false, data: [] })),
-          adminApi.getAllArticles({ limit: 50 }).catch(() => ({ success: false, data: [] })),
-        ]);
-
+        const statsRes = await adminApi.getDashboardStats();
         if (statsRes.success && statsRes.data) {
           setDashboardStats(statsRes.data);
         }
-
-        // Update users
-        if (usersRes.success && Array.isArray(usersRes.data)) {
-          setUsers(usersRes.data.map((u: any) => ({
-            id: u.id,
-            name: u.name || "Unknown",
-            email: u.email || "",
-            role: u.role || "User",
-            status: u.status || "active",
-            joinDate: u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "N/A",
-          })));
-        }
-
-        // Update signals
-        if (signalsRes.success && Array.isArray(signalsRes.data)) {
-          setSignals(signalsRes.data.map((s: any) => ({
-            id: s.id,
-            pair: s.pair || "N/A",
-            direction: s.type === 'BUY' ? 'BUY' : 'SELL',
-            entryPrice: s.entryPrice || 0,
-            takeProfits: s.takeProfit ? [s.takeProfit] : [],
-            stopLoss: s.stopLoss || 0,
-            accuracy: s.reliability ? s.reliability * 100 : 0,
-            timeframe: s.timeframe || "1H",
-            status: s.status || "active",
-            profitLoss: 0,
-          })));
-        }
-
-        // Update notifications
-        if (notificationsRes.success && Array.isArray(notificationsRes.data)) {
-          setNotifications(notificationsRes.data.map((n: any) => ({
-            id: n.id,
-            title: n.title || "Notification",
-            message: n.message || "",
-            type: n.type || "info",
-            date: n.createdAt ? new Date(n.createdAt).toLocaleDateString() : "N/A",
-            read: n.read || false,
-          })));
-        }
-
-        if (articlesRes.success && Array.isArray(articlesRes.data)) {
-          const mappedArticles = articlesRes.data.map((article: any) => ({
-            id: article.id,
-            title: article.title,
-            excerpt: article.excerpt || article.content?.slice(0, 120) || "",
-            category: article.category || "General",
-            status: article.published ? "published" : "draft",
-            views: article.viewCount || 0,
-            comments: article.helpfulCount || 0,
-            author: article.author || user?.name || "Admin",
-            date: article.createdAt ? new Date(article.createdAt).toLocaleDateString() : "N/A",
-            readTime: article.readTime || "5 min",
-          }));
-
-          setArticles(mappedArticles);
-          setBlogPosts(mappedArticles.map((article: Article) => ({
-            id: article.id,
-            title: article.title,
-            excerpt: article.excerpt,
-            author: article.author,
-            date: article.date,
-            views: article.views,
-            category: article.category,
-          })));
-        }
-
-        if (withdrawalsRes.success && Array.isArray(withdrawalsRes.data)) {
-          setTransactions(withdrawalsRes.data.map((w: any) => ({
-            id: w.id,
-            user: w.userId || "Unknown",
-            type: "withdrawal",
-            amount: Number(w.amount || 0),
-            date: w.createdAt ? new Date(w.createdAt).toLocaleDateString() : "N/A",
-            status: w.status || "pending",
-          })));
-        }
-
       } catch (err) {
-        console.error('Error fetching dashboard data:', err);
-        setError('Failed to load dashboard data');
-      } finally {
-        setLoading(false);
+        console.error('Error fetching dashboard stats:', err);
+        setError('Failed to load dashboard stats');
       }
     };
 
-    fetchData();
+    fetchStats();
   }, []);
 
   // Update activeTab whenever search params change
   useEffect(() => {
     const tab = (searchParams.get("tab") as DashboardTab) || "overview";
     setActiveTab(tab);
+    setPageIndex(0);
   }, [searchParams]);
+
+  useEffect(() => {
+    const offset = pageIndex * LIST_PAGE_SIZE;
+    let cancelled = false;
+    const fetchPage = async () => {
+      if (["overview", "settings", "education", "signals", "traffic"].includes(activeTab)) return;
+      setLoadingPage(true);
+      setError(null);
+      try {
+        let pageLength = 0;
+        if (activeTab === "users") {
+          const response = await adminApi.getAllUsers({ limit: LIST_PAGE_SIZE, offset }) as { success: boolean; data: AdminUserRecord[] };
+          pageLength = response.data.length;
+          if (!cancelled && response.success) {
+            setUsers(response.data.map(u => ({
+              id: u.id,
+              name: u.name || "Unknown",
+              email: u.email || "",
+              role: u.role || "User",
+              status: u.status === "active" ? "active" : "inactive",
+              joinDate: u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "N/A",
+            })));
+          }
+        } else if (activeTab === "articles" || activeTab === "blog") {
+          const response = await adminApi.getAllArticles({ limit: LIST_PAGE_SIZE, offset, published: "all" }) as { success: boolean; data: ArticleRecord[] };
+          pageLength = response.data.length;
+          if (!cancelled && response.success) {
+            const mappedArticles: Article[] = response.data.map(article => ({
+              id: article.id,
+              title: article.title,
+              excerpt: article.excerpt || article.content?.slice(0, 120) || "",
+              category: article.category || "General",
+              status: article.published ? "published" : "draft",
+              views: article.viewCount || 0,
+              comments: article.helpfulCount || 0,
+              author: article.author || user?.name || "Admin",
+              date: article.createdAt ? new Date(article.createdAt).toLocaleDateString() : "N/A",
+              readTime: article.readTime || "5 min",
+            }));
+            setArticles(mappedArticles);
+            setBlogPosts(mappedArticles.map(article => ({
+              id: article.id,
+              title: article.title,
+              excerpt: article.excerpt,
+              author: article.author,
+              date: article.date,
+              views: article.views,
+              category: article.category,
+            })));
+          }
+        } else if (activeTab === "forex") {
+          const response = await adminApi.getAllSignals({ limit: LIST_PAGE_SIZE, offset }) as { success: boolean; data: SignalRecord[] };
+          pageLength = response.data.length;
+          if (!cancelled && response.success) {
+            setSignals(response.data.map(s => ({
+              id: s.id,
+              pair: s.pair || "N/A",
+              direction: s.type === "BUY" ? "BUY" : "SELL",
+              entryPrice: s.entryPrice || 0,
+              takeProfits: s.takeProfit ? [s.takeProfit] : [],
+              stopLoss: s.stopLoss || 0,
+              accuracy: s.reliability ? s.reliability * 100 : 0,
+              timeframe: s.timeframe || "1H",
+              status: s.status === "closed" ? "closed" : "active",
+              profitLoss: 0,
+            })));
+          }
+        } else if (activeTab === "transactions") {
+          const response = await adminApi.getAllWithdrawals({ limit: LIST_PAGE_SIZE, offset }) as { success: boolean; data: WithdrawalRecord[] };
+          pageLength = response.data.length;
+          if (!cancelled && response.success) {
+            setTransactions(response.data.map(w => ({
+              id: w.id,
+              user: w.userId || "Unknown",
+              type: "withdrawal",
+              amount: Number(w.amount || 0),
+              date: w.createdAt ? new Date(w.createdAt).toLocaleDateString() : "N/A",
+              status: w.status === "completed" ? "completed" : w.status === "failed" || w.status === "rejected" ? "failed" : "pending",
+            })));
+          }
+        } else if (activeTab === "notifications") {
+          const response = await adminApi.getAllNotifications({ limit: LIST_PAGE_SIZE, offset }) as { success: boolean; data: NotificationRecord[] };
+          pageLength = response.data.length;
+          if (!cancelled && response.success) {
+            setNotifications(response.data.map(n => ({
+              id: n.id,
+              title: n.title || "Notification",
+              message: n.message || "",
+              type: n.type === "warning" || n.type === "success" || n.type === "error" ? n.type : "info",
+              date: n.createdAt ? new Date(n.createdAt).toLocaleDateString() : "N/A",
+              read: n.read || false,
+            })));
+          }
+        }
+        if (!cancelled) setHasNextPage(pageLength === LIST_PAGE_SIZE);
+      } catch (err) {
+        if (!cancelled) {
+          console.error(`Error fetching ${activeTab} page:`, err);
+          setError(`Failed to load ${activeTab}`);
+        }
+      } finally {
+        if (!cancelled) setLoadingPage(false);
+      }
+    };
+    fetchPage();
+    return () => { cancelled = true; };
+  }, [activeTab, pageIndex, user?.name]);
 
   const handleDeleteUser = (userId: string) => {
     setDeleteConfirm({ open: true, userId, userName: users.find(u => u.id === userId)?.name || "User" });
@@ -1360,6 +1432,18 @@ export default function AdminDashboard() {
               </Button>
             </div>
           </div>
+        </div>
+      )}
+
+      {["articles", "blog", "users", "forex", "transactions", "notifications"].includes(activeTab) && (
+        <div className="flex items-center justify-center gap-4 px-6 sm:px-8">
+          <Button variant="outline" size="sm" disabled={pageIndex === 0 || loadingPage} onClick={() => setPageIndex(page => Math.max(0, page - 1))}>
+            Previous
+          </Button>
+          <span className="text-xs text-slate-400">Page {pageIndex + 1}{loadingPage ? " · Loading" : ""}</span>
+          <Button variant="outline" size="sm" disabled={!hasNextPage || loadingPage} onClick={() => setPageIndex(page => page + 1)}>
+            Next
+          </Button>
         </div>
       )}
 

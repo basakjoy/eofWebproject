@@ -27,6 +27,7 @@ import { toast } from 'sonner';
 import investmentApi from '@/lib/investmentApi';
 import { transactionsApi } from '@/lib/transactionsApi';
 import { useAuthStore } from '@/store/authStore';
+import { useLanguage } from '@/context/LanguageContext';
 
 const formatMoney = (val: number) => `$${val.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
 
@@ -62,6 +63,7 @@ const PAYMENT_OPTIONS = ['card', 'binance', 'bkash', 'nagad'];
 
 export default function RefinedInvestmentsPage() {
   const { user } = useAuthStore();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [portfolio, setPortfolio] = useState<{ totalInvested?: number; totalReturns?: number; activePlansCount?: number } | null>(null);
 
@@ -165,13 +167,13 @@ export default function RefinedInvestmentsPage() {
         <div>
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-fiery-orange/10 border border-fiery-orange/20 text-xs font-bold text-fiery-amber mb-2">
             <ShieldCheck className="w-3.5 h-3.5 text-fiery-orange" />
-            INSTITUTIONAL CAPITAL POOL
+            {t('userDashboard.investments.badge', 'INSTITUTIONAL CAPITAL POOL')}
           </div>
           <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-            Portfolio <span className="text-transparent bg-clip-text bg-gradient-to-r from-fiery-orange to-fiery-amber">Investments</span>
+            {t('userDashboard.investments.title', 'Portfolio')} <span className="text-transparent bg-clip-text bg-gradient-to-r from-fiery-orange to-fiery-amber">{t('userDashboard.investments.titleHighlight', 'Investments')}</span>
           </h1>
           <p className="text-xs sm:text-sm text-zinc-400 mt-1">
-            Track active capital allocations, compound profits, and manage investment strategies.
+            {t('userDashboard.investments.subtitle', 'Track active capital allocations, compound profits, and manage investment strategies.')}
           </p>
         </div>
 
@@ -190,7 +192,7 @@ export default function RefinedInvestmentsPage() {
             className="px-5 py-3 rounded-2xl bg-gradient-to-r from-fiery-orange via-fiery-red to-fiery-amber text-black font-extrabold text-xs sm:text-sm flex items-center gap-2 shadow-fiery hover:scale-[1.02] active:scale-[0.98] transition-all"
           >
             <Zap className="w-4 h-4 text-black fill-black" />
-            Explore Tiers &amp; Plans
+            {t('userDashboard.investments.explorePlans', 'Explore Tiers & Plans')}
           </a>
         </div>
       </div>

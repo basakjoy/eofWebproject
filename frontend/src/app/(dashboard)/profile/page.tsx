@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/store/authStore';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface UserProfile {
   id: string;
@@ -53,6 +54,7 @@ interface ProfileForm {
 
 export default function RefinedProfilePage() {
   const { user } = useAuthStore();
+  const { t } = useLanguage();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -175,13 +177,13 @@ export default function RefinedProfilePage() {
         <div>
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-fiery-orange/10 border border-fiery-orange/20 text-xs font-bold text-fiery-amber mb-2">
             <ShieldCheck className="w-3.5 h-3.5 text-fiery-orange" />
-            VERIFIED TRADER IDENTITY
+            {t('userDashboard.profile.badge', 'VERIFIED TRADER IDENTITY')}
           </div>
           <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-            User <span className="text-transparent bg-clip-text bg-gradient-to-r from-fiery-orange to-fiery-amber">Profile</span>
+            {t('userDashboard.profile.title', 'User')} <span className="text-transparent bg-clip-text bg-gradient-to-r from-fiery-orange to-fiery-amber">{t('userDashboard.profile.titleHighlight', 'Profile')}</span>
           </h1>
           <p className="text-xs sm:text-sm text-zinc-400 mt-1">
-            Manage your personal identity, contact info, trading preferences, and security credentials.
+            {t('userDashboard.profile.subtitle', 'Manage your personal identity, contact info, trading preferences, and security credentials.')}
           </p>
         </div>
 
@@ -197,7 +199,7 @@ export default function RefinedProfilePage() {
           }`}
         >
           {editing ? <X className="w-4 h-4" /> : <Pencil className="w-4 h-4 text-black" />}
-          {editing ? 'Cancel Editing' : 'Edit Profile Info'}
+          {editing ? t('userDashboard.profile.cancelEditing', 'Cancel Editing') : t('userDashboard.profile.editProfileInfo', 'Edit Profile Info')}
         </button>
       </div>
 

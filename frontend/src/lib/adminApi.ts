@@ -94,7 +94,7 @@ export const adminApi = {
     action: string;
     targetId?: string;
     targetType?: string;
-    changes?: Record<string, any>;
+    changes?: Record<string, unknown>;
     reason?: string;
     ipAddress?: string;
   }) => {
@@ -153,9 +153,9 @@ export const adminApi = {
   },
 
   // Signals
-  getAllSignals: async () => {
+  getAllSignals: async (options?: { limit?: number; offset?: number; status?: string }) => {
     try {
-      const response = await apiClient.get('/signals');
+      const response = await apiClient.get('/signals', { params: options });
       return response.data;
     } catch (error) {
       console.error('Error fetching signals:', error);

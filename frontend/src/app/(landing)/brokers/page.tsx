@@ -22,45 +22,12 @@ import {
   Clock,
   Users,
   Search,
-  Filter,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { brokersApi } from '@/lib/brokersApi';
 import { useLanguage } from '@/context/LanguageContext';
 
 /* ── Stat counters ── */
-const LIVE_STATS = [
-  { label: 'Partner Brokers', value: '40+', icon: Layers },
-  { label: 'Avg. Spread', value: '0.1 pips', icon: BarChart2 },
-  { label: 'Active Traders', value: '12,000+', icon: Users },
-  { label: 'Avg. Execution', value: '< 10ms', icon: Clock },
-];
-
-/* ── Trust advantages ── */
-const TRUST_FEATURES = [
-  {
-    icon: ShieldCheck,
-    title: 'Strict Regulation',
-    desc: 'Only brokers regulated by top-tier financial authorities like FCA, ASIC, and CySEC — guaranteeing full fund safety at every step.',
-  },
-  {
-    icon: TrendingUp,
-    title: 'Exceptional Conditions',
-    desc: 'Lowest spreads, zero-commission accounts, and ultra-fast institutional-grade execution speeds across all market conditions.',
-  },
-  {
-    icon: Star,
-    title: 'Verified Reviews',
-    desc: 'Real feedback from real traders. Our transparent review system helps you make an informed, unbiased decision.',
-  },
-  {
-    icon: Zap,
-    title: 'Instant Onboarding',
-    desc: 'All partner brokers offer streamlined KYC, same-day deposit funding, and sub-minute live account activation.',
-  },
-];
-
-/* ── Comparison table columns ── */
 const COMPARISON_KEYS = [
   { key: 'minimumDeposit', label: 'Min Deposit', prefix: '$' },
   { key: 'leverage', label: 'Leverage', prefix: '' },
@@ -68,11 +35,58 @@ const COMPARISON_KEYS = [
   { key: 'rating', label: 'Rating', prefix: '' },
 ];
 
+type BrokerRecord = {
+  id?: string;
+  name?: string;
+  country?: string;
+  features?: string | string[];
+  status?: string;
+  rating?: number | string;
+  reviewCount?: number;
+  minimumDeposit?: number | string;
+  leverage?: string;
+  spreads?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
+  logo?: string;
+};
+
 export default function BrokersPromotionalPage() {
   const { t } = useLanguage();
-  const [brokers, setBrokers] = useState<any[]>([]);
+  const [brokers, setBrokers] = useState<BrokerRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+
+  const LIVE_STATS = [
+    { label: t('brokers.stat1', 'Partner Brokers'), value: '40+', icon: Layers },
+    { label: t('brokers.stat2', 'Avg. Spread'), value: '0.1 pips', icon: BarChart2 },
+    { label: t('brokers.stat3', 'Active Traders'), value: '12,000+', icon: Users },
+    { label: t('brokers.stat4', 'Avg. Execution'), value: '< 10ms', icon: Clock },
+  ];
+
+  const TRUST_FEATURES = [
+    {
+      icon: ShieldCheck,
+      title: t('brokers.trust1Title', 'Strict Regulation'),
+      desc: t('brokers.trust1Desc', 'Only brokers regulated by top-tier financial authorities like FCA, ASIC, and CySEC — guaranteeing full fund safety at every step.'),
+    },
+    {
+      icon: TrendingUp,
+      title: t('brokers.trust2Title', 'Exceptional Conditions'),
+      desc: t('brokers.trust2Desc', 'Lowest spreads, zero-commission accounts, and ultra-fast institutional-grade execution speeds across all market conditions.'),
+    },
+    {
+      icon: Star,
+      title: t('brokers.trust3Title', 'Verified Reviews'),
+      desc: t('brokers.trust3Desc', 'Real feedback from real traders. Our transparent review system helps you make an informed, unbiased decision.'),
+    },
+    {
+      icon: Zap,
+      title: t('brokers.trust4Title', 'Instant Onboarding'),
+      desc: t('brokers.trust4Desc', 'All partner brokers offer streamlined KYC, same-day deposit funding, and sub-minute live account activation.'),
+    },
+  ];
 
   useEffect(() => {
     const fetchBrokers = async () => {
@@ -123,7 +137,7 @@ export default function BrokersPromotionalPage() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#FF6B00]/10 border border-[#FF6B00]/20 text-xs font-bold text-[#FF6B00] mb-8 backdrop-blur-md"
             >
               <Award className="w-3.5 h-3.5" />
-              TRUSTED &amp; VERIFIED PARTNERS · EMPIRE OF FOREX
+              {t('brokers.heroBadge', 'TRUSTED & VERIFIED PARTNERS · EMPIRE OF FOREX')}
             </motion.div>
 
             <motion.h1
@@ -132,9 +146,9 @@ export default function BrokersPromotionalPage() {
               transition={{ duration: 0.7, delay: 0.1 }}
               className="text-5xl sm:text-7xl lg:text-[5.5rem] text-white leading-[1.05] tracking-tight mb-6"
             >
-              Top Forex{' '}
+              {t('brokers.heroTitlePrefix', 'Top Forex')}{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] via-[#FF8C00] to-[#FFB800]">
-                Brokers 2026
+                {t('brokers.heroTitleHighlight', 'Brokers 2026')}
               </span>
             </motion.h1>
 
@@ -144,8 +158,7 @@ export default function BrokersPromotionalPage() {
               transition={{ duration: 0.7, delay: 0.2 }}
               className="text-lg leading-relaxed max-w-2xl mx-auto font-light mb-10 text-zinc-300"
             >
-              Trade with confidence using our carefully curated list of industry-leading forex brokers.
-              Enjoy tight spreads, high leverage, and unmatched institutional reliability.
+              {t('brokers.heroDescription', 'Trade with confidence using our carefully curated list of industry-leading forex brokers. Enjoy tight spreads, high leverage, and unmatched institutional reliability.')}
             </motion.p>
 
             <motion.div
@@ -158,13 +171,13 @@ export default function BrokersPromotionalPage() {
                 href="#brokers-list"
                 className="inline-flex items-center gap-2 px-10 py-4 rounded-full border border-white/20 hover:border-[#FF6B00]/40 text-white text-sm transition-all"
               >
-                Compare Brokers <ArrowRight className="w-4 h-4" />
+                {t('brokers.compareBrokers', 'Compare Brokers')} <ArrowRight className="w-4 h-4" />
               </a>
               <a
                 href="#why-trust"
                 className="inline-flex items-center gap-2 px-8 py-4 rounded-full border border-white/20 hover:border-[#FF6B00]/40 text-white text-sm transition-all"
               >
-                Our Methodology <ChevronRight className="w-4 h-4" />
+                {t('brokers.methodology', 'Our Methodology')} <ChevronRight className="w-4 h-4" />
               </a>
             </motion.div>
 
@@ -407,10 +420,11 @@ export default function BrokersPromotionalPage() {
                   <thead>
                     <tr className="border-b border-white/[0.06]">
                       <th className="text-left px-6 py-4 text-xs font-bold uppercase tracking-widest text-zinc-400">Broker</th>
-                      <th className="text-center px-4 py-4 text-xs font-bold uppercase tracking-widest text-zinc-400">Min Deposit</th>
-                      <th className="text-center px-4 py-4 text-xs font-bold uppercase tracking-widest text-zinc-400">Leverage</th>
-                      <th className="text-center px-4 py-4 text-xs font-bold uppercase tracking-widest text-zinc-400">Spreads</th>
-                      <th className="text-center px-4 py-4 text-xs font-bold uppercase tracking-widest text-zinc-400">Rating</th>
+                      {COMPARISON_KEYS.map(({ label }) => (
+                        <th key={label} className="text-center px-4 py-4 text-xs font-bold uppercase tracking-widest text-zinc-400">
+                          {label}
+                        </th>
+                      ))}
                       <th className="text-center px-4 py-4 text-xs font-bold uppercase tracking-widest text-zinc-400">Action</th>
                     </tr>
                   </thead>

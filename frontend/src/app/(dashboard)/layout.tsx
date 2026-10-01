@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { LogoIcon } from '@/components/common/LogoIcon';
 import { useAuthStore } from '@/store/authStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
+import { useLanguage } from '@/context/LanguageContext';
 import Link from 'next/link';
 import {
   LayoutDashboard,
@@ -28,22 +29,22 @@ import {
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
-const MENU_GROUPS = {
+const getMenuGroups = (t: (key: string, fallback?: string) => string) => ({
   navigation: [
-    { title: 'Dashboard',       url: '/dashboard/user',          icon: LayoutDashboard,  isPremium: false },
-    { title: 'Signals',         url: '/signals',                  icon: Signal,           isPremium: false },
-    { title: 'Market Analysis', url: '/market-analysis',          icon: LineChart,        isPremium: false },
+    { title: t('userDashboard.menu.dashboard', 'Dashboard'), url: '/dashboard/user', icon: LayoutDashboard, isPremium: false },
+    { title: t('userDashboard.menu.signals', 'Signals'), url: '/signals', icon: Signal, isPremium: false },
+    { title: t('userDashboard.menu.marketAnalysis', 'Market Analysis'), url: '/market-analysis', icon: LineChart, isPremium: false },
   ],
   account: [
-    { title: 'Premium Dashboard', url: '/dashboard/premium',       icon: Crown,            isPremium: true },
-    { title: 'Investments',       url: '/dashboard/investments',   icon: TrendingUp,       isPremium: false },
-    { title: 'Transactions',      url: '/dashboard/transactions',  icon: Wallet,           isPremium: false },
+    { title: t('userDashboard.menu.premiumDashboard', 'Premium Dashboard'), url: '/dashboard/premium', icon: Crown, isPremium: true },
+    { title: t('userDashboard.menu.investments', 'Investments'), url: '/dashboard/investments', icon: TrendingUp, isPremium: false },
+    { title: t('userDashboard.menu.transactions', 'Transactions'), url: '/dashboard/transactions', icon: Wallet, isPremium: false },
   ],
   settings: [
-    { title: 'Profile',  url: '/profile',  icon: User,     isPremium: false },
-    { title: 'Settings', url: '/settings', icon: Settings, isPremium: false },
+    { title: t('userDashboard.menu.profile', 'Profile'), url: '/profile', icon: User, isPremium: false },
+    { title: t('userDashboard.menu.settings', 'Settings'), url: '/settings', icon: Settings, isPremium: false },
   ],
-};
+});
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -54,9 +55,9 @@ function isRouteActive(itemUrl: string, pathname: string): boolean {
   return pathname === itemUrl || pathname.startsWith(itemUrl + '/');
 }
 
-function getPageTitle(pathname: string): string {
-  const all = Object.values(MENU_GROUPS).flat();
-  return all.find(i => isRouteActive(i.url, pathname))?.title ?? 'Dashboard';
+function getPageTitle(pathname: string, t: (key: string, fallback?: string) => string): string {
+  const all = Object.values(getMenuGroups(t)).flat();
+  return all.find(i => isRouteActive(i.url, pathname))?.title ?? t('userDashboard.menu.dashboard', 'Dashboard');
 }
 
 // ─── Layout ───────────────────────────────────────────────────────────────────
@@ -65,6 +66,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const { user, isReady } = useRequireAuth();
   const { logout } = useAuthStore();
+  const { t } = useLanguage();
+  const MENU_GROUPS = getMenuGroups(t);
 
   const [collapsed, setCollapsed]       = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -195,17 +198,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {userMenuOpen && !collapsed && (
             <div className="absolute bottom-full left-3 right-3 mb-2 bg-[#111116] border border-white/[0.08] rounded-xl shadow-2xl overflow-hidden z-50 animate-in slide-in-from-bottom-2 duration-150">
               <Link href="/profile" className="flex items-center gap-2.5 px-4 py-3 text-sm text-white/60 hover:text-white hover:bg-white/[0.04] transition-colors">
-                <User className="w-4 h-4" /> Profile
+                <User className="w-4 h-4" /> {t('userDashboard.menu.profile', 'Profile')}
               </Link>
               <Link href="/settings" className="flex items-center gap-2.5 px-4 py-3 text-sm text-white/60 hover:text-white hover:bg-white/[0.04] transition-colors">
-                <Settings className="w-4 h-4" /> Settings
+                <Settings className="w-4 h-4" /> {t('userDashboard.menu.settings', 'Settings')}
               </Link>
               <div className="border-t border-white/[0.06]" />
               <button
                 onClick={() => logout()}
                 className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-rose-400 hover:bg-rose-500/10 transition-colors"
               >
-                <LogOut className="w-4 h-4" /> Sign Out
+                <LogOut className="w-4 h-4" /> {t('userDashboard.menu.signOut', 'Sign Out')}
               </button>
             </div>
           )}
@@ -295,7 +298,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <nav className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest">
               <span className="text-white/20">Pages</span>
               <ChevronRight className="w-3 h-3 text-white/10" />
-              <span className="text-white/70">{getPageTitle(pathname)}</span>
+              <span className="text-white/70">{getPageTitle(pathname, t)}</span>
             </nav>
           </div>
 

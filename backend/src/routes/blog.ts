@@ -47,6 +47,10 @@ router.get('/', async (req: Request, res: Response) => {
       offset = '0',
       published,
     } = req.query;
+    const requestedLimit = Number.parseInt(String(limit), 10);
+    const requestedOffset = Number.parseInt(String(offset), 10);
+    const pageLimit = Number.isFinite(requestedLimit) ? Math.min(Math.max(requestedLimit, 1), 100) : 20;
+    const pageOffset = Number.isFinite(requestedOffset) ? Math.max(requestedOffset, 0) : 0;
 
     const where: any = {};
 
@@ -71,8 +75,8 @@ router.get('/', async (req: Request, res: Response) => {
     const [articles, total] = await Promise.all([
       prisma.faqArticle.findMany({
         where,
-        take: parseInt(String(limit)),
-        skip: parseInt(String(offset)),
+        take: pageLimit,
+        skip: pageOffset,
         orderBy: { createdAt: 'desc' },
         select: {
           id: true,
@@ -101,7 +105,7 @@ router.get('/', async (req: Request, res: Response) => {
       readTime: Math.max(1, Math.ceil(a.content.split(/\s+/).length / 200)) + ' min read',
     }));
 
-    res.json({ success: true, data, total, limit: parseInt(String(limit)), offset: parseInt(String(offset)) });
+    res.json({ success: true, data, total, limit: pageLimit, offset: pageOffset });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message || 'Failed to fetch articles' });
   }

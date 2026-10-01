@@ -59,15 +59,18 @@ export const ChartContainer = React.forwardRef<
         ref={ref}
         data-chart={chartId}
         className={cn(
-          "flex aspect-video justify-center text-xs",
+          "relative flex w-full min-w-0 flex-col justify-center text-xs",
+          "min-h-[220px]",
           className
         )}
         {...props}
       >
         <ChartStyle id={chartId} config={config} />
-        <RechartsPrimitive.ResponsiveContainer>
-          {children}
-        </RechartsPrimitive.ResponsiveContainer>
+        <div className="relative h-full w-full min-w-0">
+          <RechartsPrimitive.ResponsiveContainer width="100%" height="100%">
+            {children}
+          </RechartsPrimitive.ResponsiveContainer>
+        </div>
       </div>
     </ChartContext.Provider>
   );

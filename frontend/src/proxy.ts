@@ -3,7 +3,7 @@ import { locales, defaultLocale, type Locale } from './i18n/routing';
 
 const localePattern = new RegExp(`^/(${locales.join('|')})(?:/(.*)|$)`);
 
-export default function middleware(request: NextRequest) {
+export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Match locale-prefixed routes, e.g. /bn, /hi/services, /ur/trading-signals

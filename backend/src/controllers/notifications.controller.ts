@@ -11,22 +11,36 @@ export const getNotifications = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.userId;
     const { read, limit = 20, offset = 0 } = req.query;
+    const requestedLimit = Number(limit);
+    const requestedOffset = Number(offset);
+    const parsedLimit = Number.isFinite(requestedLimit) ? Math.min(Math.max(Math.trunc(requestedLimit) || 20, 1), 100) : 20;
+    const parsedOffset = Number.isFinite(requestedOffset) ? Math.max(Math.trunc(requestedOffset), 0) : 0;
 
     let query = 'SELECT * FROM notifications WHERE userId = ?';
+    let countQuery = 'SELECT COUNT(*) AS total FROM notifications WHERE userId = ?';
     const params: any[] = [userId];
+    const countParams: any[] = [userId];
 
     if (read !== undefined) {
       query += ' AND read = ?';
       params.push(read === 'true' ? 1 : 0);
+      countQuery += ' AND read = ?';
+      countParams.push(read === 'true' ? 1 : 0);
     }
 
     query += ' ORDER BY createdAt DESC LIMIT ? OFFSET ?';
-    params.push(limit, offset);
+    params.push(parsedLimit, parsedOffset);
 
-    const notifications = await allAsync(query, params);
+    const [notifications, count] = await Promise.all([
+      allAsync(query, params),
+      getAsync(countQuery, countParams),
+    ]);
     res.json({
       success: true,
       data: notifications,
+      total: Number(count?.total || 0),
+      limit: parsedLimit,
+      offset: parsedOffset,
     });
   } catch (error: any) {
     res.status(500).json({

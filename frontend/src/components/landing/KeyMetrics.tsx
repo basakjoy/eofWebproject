@@ -67,7 +67,7 @@ export default function KeyMetrics() {
           <div
             className="group relative w-full overflow-hidden [mask-image:linear-gradient(to_right,transparent_0,black_96px,black_calc(100%-96px),transparent_100%)]"
           >
-            <div className="flex items-center w-max animate-marquee group-hover:[animation-play-state:paused]">
+            <div className="flex items-center w-max animate-marquee group-hover:[animation-play-state: paused]">
               {logoTrack.map((logo, index) => (
                 <span
                   key={index}

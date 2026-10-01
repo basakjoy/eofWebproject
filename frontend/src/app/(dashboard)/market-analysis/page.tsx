@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { analysisApi } from '@/lib/analysisApi';
+import { useLanguage } from '@/context/LanguageContext';
 import {
   TrendingUp, TrendingDown, Minus, LineChart, RefreshCw,
   Clock, ChevronDown, ChevronUp, Activity, BarChart2,
@@ -196,6 +197,7 @@ function AnalysisCard({ analysis }: { analysis: Analysis }) {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function MarketAnalysisPage() {
+  const { t } = useLanguage();
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -246,10 +248,10 @@ export default function MarketAnalysisPage() {
   };
 
   const sentimentFilters = [
-    { val: 'all', label: 'All', icon: BarChart2, color: 'text-white', activeBg: 'bg-white text-black' },
-    { val: 'bullish', label: 'Bullish', icon: SENTIMENT_CONFIG.bullish.icon, color: SENTIMENT_CONFIG.bullish.color, activeBg: 'bg-emerald-500 text-black' },
-    { val: 'bearish', label: 'Bearish', icon: SENTIMENT_CONFIG.bearish.icon, color: SENTIMENT_CONFIG.bearish.color, activeBg: 'bg-rose-500 text-black' },
-    { val: 'neutral', label: 'Neutral', icon: SENTIMENT_CONFIG.neutral.icon, color: SENTIMENT_CONFIG.neutral.color, activeBg: 'bg-fiery-amber text-black' },
+    { val: 'all', label: t('userDashboard.marketAnalysis.all', 'All'), icon: BarChart2, color: 'text-white', activeBg: 'bg-white text-black' },
+    { val: 'bullish', label: t('userDashboard.marketAnalysis.bullish', 'Bullish'), icon: SENTIMENT_CONFIG.bullish.icon, color: SENTIMENT_CONFIG.bullish.color, activeBg: 'bg-emerald-500 text-black' },
+    { val: 'bearish', label: t('userDashboard.marketAnalysis.bearish', 'Bearish'), icon: SENTIMENT_CONFIG.bearish.icon, color: SENTIMENT_CONFIG.bearish.color, activeBg: 'bg-rose-500 text-black' },
+    { val: 'neutral', label: t('userDashboard.marketAnalysis.neutral', 'Neutral'), icon: SENTIMENT_CONFIG.neutral.icon, color: SENTIMENT_CONFIG.neutral.color, activeBg: 'bg-fiery-amber text-black' },
   ] as const;
 
   // ── Loading state ──

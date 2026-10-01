@@ -11,6 +11,7 @@ import { signalsApi, type SignalRecord } from '@/lib/signalsApi';
 import SignalDetailModal from '@/components/signals/SignalDetailModal';
 import RiskCalculatorModal from '@/components/signals/RiskCalculatorModal';
 import SignalAnalyticsOverview from '@/components/signals/SignalAnalyticsOverview';
+import { useLanguage } from '@/context/LanguageContext';
 
 const DEMO_SIGNALS: SignalRecord[] = [
   {
@@ -86,6 +87,7 @@ const DEMO_SIGNALS: SignalRecord[] = [
 ];
 
 export default function SignalsPage() {
+  const { t } = useLanguage();
   const [signals, setSignals] = useState<SignalRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -171,12 +173,12 @@ export default function SignalsPage() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-fiery-orange opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-fiery-orange" />
             </span>
-            LIVE SIGNAL TERMINAL
+            {t('userDashboard.signals.badge', 'LIVE SIGNAL TERMINAL')}
           </div>
           <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-            Live <span className="text-transparent bg-clip-text bg-gradient-to-r from-fiery-orange to-fiery-amber">Opportunities</span>
+            {t('userDashboard.signals.title', 'Live')} <span className="text-transparent bg-clip-text bg-gradient-to-r from-fiery-orange to-fiery-amber">{t('userDashboard.signals.titleHighlight', 'Opportunities')}</span>
           </h1>
-          <p className="text-xs sm:text-sm text-zinc-400 mt-1">Institutional algorithmic setups refreshed continuously.</p>
+          <p className="text-xs sm:text-sm text-zinc-400 mt-1">{t('userDashboard.signals.subtitle', 'Institutional algorithmic setups refreshed continuously.')}</p>
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">
@@ -190,7 +192,7 @@ export default function SignalsPage() {
             title={soundEnabled ? 'Audio Alerts Enabled' : 'Audio Alerts Muted'}
           >
             {soundEnabled ? <Volume2 className="w-4 h-4 text-fiery-orange" /> : <VolumeX className="w-4 h-4" />}
-            <span className="hidden sm:inline">{soundEnabled ? 'Alerts On' : 'Muted'}</span>
+            <span className="hidden sm:inline">{soundEnabled ? t('userDashboard.signals.alertsOn', 'Alerts On') : t('userDashboard.signals.muted', 'Muted')}</span>
           </button>
 
           <button
@@ -201,7 +203,7 @@ export default function SignalsPage() {
             className="px-4 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-bold text-white flex items-center gap-1.5 transition-all"
           >
             <Calculator className="w-4 h-4 text-fiery-orange" />
-            Lot Calculator
+            {t('userDashboard.signals.lotCalculator', 'Lot Calculator')}
           </button>
 
           <button
@@ -210,7 +212,7 @@ export default function SignalsPage() {
             className="px-4 py-2.5 bg-fiery-orange text-black font-extrabold rounded-xl text-xs flex items-center gap-1.5 transition-all hover:scale-105 disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-            <span>Sync Feed</span>
+            <span>{t('userDashboard.signals.syncFeed', 'Sync Feed')}</span>
           </button>
         </div>
       </div>
@@ -218,9 +220,9 @@ export default function SignalsPage() {
       {/* ══ QUICK METRIC STATS ══ */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: 'Total Alerts', value: stats.total, icon: BarChart3, color: 'text-fiery-orange', bg: 'bg-fiery-orange/10 border-fiery-orange/20' },
-          { label: 'Active Signals', value: stats.active, icon: Activity, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
-          { label: 'Win Rate', value: `${stats.winRate}%`, icon: Target, color: 'text-fiery-amber', bg: 'bg-fiery-amber/10 border-fiery-amber/20' },
+          { label: t('userDashboard.signals.totalAlerts', 'Total Alerts'), value: stats.total, icon: BarChart3, color: 'text-fiery-orange', bg: 'bg-fiery-orange/10 border-fiery-orange/20' },
+          { label: t('userDashboard.signals.activeSignals', 'Active Signals'), value: stats.active, icon: Activity, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
+          { label: t('userDashboard.signals.winRate', 'Win Rate'), value: `${stats.winRate}%`, icon: Target, color: 'text-fiery-amber', bg: 'bg-fiery-amber/10 border-fiery-amber/20' },
         ].map(({ label, value, icon: Icon, color, bg }) => (
           <div key={label} className="bg-card-dark/70 border border-white/10 rounded-2xl p-4 flex items-center gap-3">
             <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${bg}`}>
@@ -245,7 +247,7 @@ export default function SignalsPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search pair (e.g. XAU/USD)..."
+              placeholder={t('userDashboard.signals.searchPlaceholder', 'Search pair (e.g. XAU/USD)...')}
               className="w-full bg-panel-dark border border-white/10 rounded-xl py-2 pl-9 pr-3 text-xs font-medium text-white placeholder-zinc-500 focus:outline-none focus:border-fiery-orange/60 transition-colors"
             />
           </div>

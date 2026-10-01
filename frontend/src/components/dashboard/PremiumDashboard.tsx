@@ -2,6 +2,7 @@
 
 import StatCard from '@/components/common/StatCard';
 import Card from '@/components/common/Card';
+import { useLanguage } from '@/context/LanguageContext';
 import { DollarSign, TrendingUp, Users, Activity } from 'lucide-react';
 import {
   LineChart,
@@ -18,6 +19,7 @@ import {
 } from 'recharts';
 
 export default function PremiumDashboard() {
+  const { t } = useLanguage();
   const portfolioData = [
     { month: 'Jan', value: 3500 },
     { month: 'Feb', value: 3000 },
@@ -37,33 +39,33 @@ export default function PremiumDashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Premium Dashboard</h1>
-        <p className="text-gray-600 mt-1">Advanced trading signals and market analysis.</p>
+        <h1 className="text-3xl font-bold text-gray-900">{t('userDashboard.premium.title', 'Premium Dashboard')}</h1>
+        <p className="text-gray-600 mt-1">{t('userDashboard.premium.subtitle', 'Advanced trading signals and market analysis.')}</p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
-          label="Active Signals"
+          label={t('userDashboard.premium.activeSignals', 'Active Signals')}
           value="12"
           icon={<Activity className="w-6 h-6" />}
           color="blue"
         />
         <StatCard
-          label="Win Rate"
+          label={t('userDashboard.premium.winRate', 'Win Rate')}
           value="72%"
           icon={<TrendingUp className="w-6 h-6" />}
           color="green"
         />
         <StatCard
-          label="Monthly Profit"
+          label={t('userDashboard.premium.monthlyProfit', 'Monthly Profit')}
           value="$4,520"
           icon={<DollarSign className="w-6 h-6" />}
           color="green"
           trend={{ value: 15, isPositive: true }}
         />
         <StatCard
-          label="Signals This Month"
+          label={t('userDashboard.premium.signalsThisMonth', 'Signals This Month')}
           value="28"
           icon={<Users className="w-6 h-6" />}
           color="yellow"
@@ -73,7 +75,7 @@ export default function PremiumDashboard() {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <h2 className="text-lg font-semibold mb-4">Trading Performance</h2>
+          <h2 className="text-lg font-semibold mb-4">{t('userDashboard.premium.tradingPerformance', 'Trading Performance')}</h2>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={portfolioData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -87,7 +89,7 @@ export default function PremiumDashboard() {
         </Card>
 
         <Card>
-          <h2 className="text-lg font-semibold mb-4">Signal Distribution</h2>
+          <h2 className="text-lg font-semibold mb-4">{t('userDashboard.premium.signalDistribution', 'Signal Distribution')}</h2>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
@@ -112,7 +114,7 @@ export default function PremiumDashboard() {
 
       {/* Premium Features */}
       <Card>
-        <h2 className="text-lg font-semibold mb-4">Premium Features</h2>
+        <h2 className="text-lg font-semibold mb-4">{t('userDashboard.premium.features', 'Premium Features')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="border rounded-lg p-4">
             <h3 className="font-semibold text-gray-900 mb-2">Real-Time Signals</h3>

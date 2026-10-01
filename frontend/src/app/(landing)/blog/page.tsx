@@ -265,6 +265,8 @@ export default function BlogPage() {
   };
 
   const totalPages = Math.ceil(total / LIMIT);
+  const heroTitle = t('blog.heroTitle', 'Market Insights');
+  const heroTitleWords = heroTitle.split(/\s+/).filter(Boolean);
 
   const heroArticle = articles.length > 0 && !search && page === 0 ? articles[0] : null;
   const gridArticles = heroArticle ? articles.slice(1) : articles;
@@ -298,7 +300,7 @@ export default function BlogPage() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-fiery-orange/10 border border-fiery-orange/20 text-xs font-bold text-fiery-orange mb-8 backdrop-blur-md"
             >
               <Sparkles className="w-3.5 h-3.5 fill-fiery-orange" />
-              {t('Blog.title', 'Market Insights')} · {t('Blog.published', 'Research & Analysis')}
+              {t('Blog.title')} · {t('Blog.published', 'Research & Analysis')}
             </motion.div>
 
             <motion.h1
@@ -307,9 +309,9 @@ export default function BlogPage() {
               transition={{ duration: 0.7, delay: 0.1 }}
               className="text-5xl sm:text-7xl lg:text-[5.5rem] text-white leading-[1.05] tracking-tight mb-6"
             >
-              {t('Blog.title', 'Market')}{' '}
+              {heroTitleWords[0] ?? 'Market'}{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] via-[#FF8C00] to-[#FFB800]">
-                {t('Blog.title', 'Insights')}
+                {heroTitleWords.slice(1).join(' ') || 'Insights'}
               </span>
             </motion.h1>
 

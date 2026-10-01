@@ -27,6 +27,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/store/authStore';
 import { transactionsApi } from '@/lib/transactionsApi';
 import { toast } from 'sonner';
+import { useLanguage } from '@/context/LanguageContext';
 
 export interface TransactionRecord {
   id: string | number;
@@ -94,6 +95,7 @@ function signedAmount(transaction: TransactionRecord): number {
 
 export default function RefinedTransactionsPage() {
   const { user } = useAuthStore();
+  const { t } = useLanguage();
   
   const [transactions, setTransactions] = useState<TransactionRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -387,13 +389,13 @@ export default function RefinedTransactionsPage() {
         <div>
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-fiery-orange/10 border border-fiery-orange/20 text-xs font-bold text-fiery-amber mb-2">
             <ShieldCheck className="w-3.5 h-3.5 text-fiery-orange" />
-            TRANSACTION LEDGER
+            {t('userDashboard.transactions.badge', 'TRANSACTION LEDGER')}
           </div>
           <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-            Transaction <span className="text-transparent bg-clip-text bg-gradient-to-r from-fiery-orange to-fiery-amber">History</span>
+            {t('userDashboard.transactions.title', 'Transaction')} <span className="text-transparent bg-clip-text bg-gradient-to-r from-fiery-orange to-fiery-amber">{t('userDashboard.transactions.titleHighlight', 'History')}</span>
           </h1>
           <p className="text-xs sm:text-sm text-zinc-400 mt-1">
-            Review your deposits, profits, withdrawals, and plan activity.
+            {t('userDashboard.transactions.subtitle', 'Review your deposits, profits, withdrawals, and plan activity.')}
           </p>
         </div>
 
@@ -412,7 +414,7 @@ export default function RefinedTransactionsPage() {
             className="px-5 py-3 rounded-2xl bg-gradient-to-r from-fiery-orange via-fiery-red to-fiery-amber text-black font-extrabold text-xs sm:text-sm flex items-center gap-2 shadow-fiery hover:scale-[1.02] active:scale-[0.98] transition-all"
           >
             <Download className="w-4 h-4 text-black" />
-            Export Statement (CSV)
+            {t('userDashboard.transactions.exportStatement', 'Export Statement (CSV)')}
           </button>
         </div>
       </div>

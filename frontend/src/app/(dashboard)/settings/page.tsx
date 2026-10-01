@@ -221,13 +221,13 @@ export default function RefinedSettingsPage() {
         <div>
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-fiery-orange/10 border border-fiery-orange/20 text-xs font-bold text-fiery-amber mb-2">
             <Sliders className="w-3.5 h-3.5 text-fiery-orange" />
-            SYSTEM PREFERENCES & SECURITY
+            {t('userDashboard.settings.badge', 'SYSTEM PREFERENCES & SECURITY')}
           </div>
           <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-            Account <span className="text-transparent bg-clip-text bg-gradient-to-r from-fiery-orange to-fiery-amber">Settings</span>
+            {t('userDashboard.settings.title', 'Account')} <span className="text-transparent bg-clip-text bg-gradient-to-r from-fiery-orange to-fiery-amber">{t('userDashboard.settings.titleHighlight', 'Settings')}</span>
           </h1>
           <p className="text-xs sm:text-sm text-zinc-400 mt-1">
-            Configure real-time alerts, appearance themes, security settings, and notifications.
+            {t('userDashboard.settings.subtitle', 'Configure real-time alerts, appearance themes, security settings, and notifications.')}
           </p>
         </div>
       </div>
@@ -235,10 +235,10 @@ export default function RefinedSettingsPage() {
       {/* ══ TAB NAVIGATION BAR ══ */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-white/5">
         {[
-          { id: 'notifications', label: 'Notifications & Alerts', icon: Bell },
-          { id: 'appearance', label: 'Appearance & Display', icon: Palette },
-          { id: 'security', label: 'Security & Auth', icon: Shield },
-          { id: 'account', label: 'Account Actions', icon: Lock },
+          { id: 'notifications', label: t('userDashboard.settings.notifications', 'Notifications & Alerts'), icon: Bell },
+          { id: 'appearance', label: t('userDashboard.settings.appearance', 'Appearance & Display'), icon: Palette },
+          { id: 'security', label: t('userDashboard.settings.security', 'Security & Auth'), icon: Shield },
+          { id: 'account', label: t('userDashboard.settings.accountActions', 'Account Actions'), icon: Lock },
         ].map((tab) => (
           <button
             key={tab.id}
