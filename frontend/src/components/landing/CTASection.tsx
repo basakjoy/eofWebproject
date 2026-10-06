@@ -4,10 +4,12 @@ import { Mail, Phone, MessageSquare } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useLanguage } from '@/context/LanguageContext';
 
 gsap.registerPlugin(ScrollTrigger);
 
 export default function CTASection() {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -26,70 +28,28 @@ export default function CTASection() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Form submitted:', formData);
-    // Handle form submission
   };
 
   useEffect(() => {
-    // Animate section header
     gsap.from('.cta-header', {
-      scrollTrigger: {
-        trigger: '.cta-header',
-        start: 'top 80%',
-        once: true,
-      },
-      duration: 0.8,
-      opacity: 0,
-      y: 30,
+      scrollTrigger: { trigger: '.cta-header', start: 'top 80%', once: true },
+      duration: 0.8, opacity: 0, y: 30,
     });
-
-    // Animate left content
     gsap.from('.cta-content', {
-      scrollTrigger: {
-        trigger: '.cta-content',
-        start: 'top 80%',
-        once: true,
-      },
-      duration: 0.8,
-      opacity: 0,
-      x: -40,
+      scrollTrigger: { trigger: '.cta-content', start: 'top 80%', once: true },
+      duration: 0.8, opacity: 0, x: -40,
     });
-
-    // Animate form
     gsap.from('.cta-form', {
-      scrollTrigger: {
-        trigger: '.cta-form',
-        start: 'top 80%',
-        once: true,
-      },
-      duration: 0.8,
-      opacity: 0,
-      x: 40,
+      scrollTrigger: { trigger: '.cta-form', start: 'top 80%', once: true },
+      duration: 0.8, opacity: 0, x: 40,
     });
-
-    // Animate contact info items
     gsap.from('.contact-item', {
-      scrollTrigger: {
-        trigger: '.contact-items',
-        start: 'top 80%',
-        once: true,
-      },
-      duration: 0.8,
-      opacity: 0,
-      y: 20,
-      stagger: 0.1,
+      scrollTrigger: { trigger: '.contact-items', start: 'top 80%', once: true },
+      duration: 0.8, opacity: 0, y: 20, stagger: 0.1,
     });
-
-    // Animate form fields
     gsap.from('.form-field', {
-      scrollTrigger: {
-        trigger: '.cta-form',
-        start: 'top 80%',
-        once: true,
-      },
-      duration: 0.6,
-      opacity: 0,
-      y: 15,
-      stagger: 0.05,
+      scrollTrigger: { trigger: '.cta-form', start: 'top 80%', once: true },
+      duration: 0.6, opacity: 0, y: 15, stagger: 0.05,
     });
   }, []);
 
@@ -100,15 +60,16 @@ export default function CTASection() {
           {/* Left Content */}
           <div className="space-y-6 sm:space-y-8 md:space-y-10 cta-content">
             <div className="cta-header">
-              <p className="text-blue-400 font-medium text-xs sm:text-sm tracking-widest uppercase mb-4 sm:mb-6">Get Started</p>
+              <p className="text-blue-400 font-medium text-xs sm:text-sm tracking-widest uppercase mb-4 sm:mb-6">
+                {t('cta.badge', 'Get Started')}
+              </p>
               <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white leading-tight">
-                Ready to Transform Your Trading?
+                {t('cta.title', 'Ready to Transform Your Trading?')}
               </h2>
             </div>
 
             <p className="text-gray-400 text-sm sm:text-base md:text-lg leading-relaxed max-w-xl font-light">
-              Our studio is a safe space where traders scale and shine. Join thousands of successful investors
-              who've already experienced the difference.
+              {t('cta.description', 'Our studio is a safe space where traders scale and shine. Join thousands of successful investors who\'ve already experienced the difference.')}
             </p>
 
             {/* Contact Info */}
@@ -118,7 +79,7 @@ export default function CTASection() {
                   <Mail className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-gray-500 text-sm">Email</p>
+                  <p className="text-gray-500 text-sm">{t('contact.email', 'Email')}</p>
                   <p className="text-white font-semibold">hello@empireofforex.com</p>
                 </div>
               </div>
@@ -127,7 +88,7 @@ export default function CTASection() {
                   <Phone className="w-6 h-6 text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-gray-500 text-sm">Phone</p>
+                  <p className="text-gray-500 text-sm">{t('contact.phone', 'Phone')}</p>
                   <p className="text-white font-semibold">+1 (555) 123-4567</p>
                 </div>
               </div>
@@ -136,8 +97,8 @@ export default function CTASection() {
                   <MessageSquare className="w-6 h-6 text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-gray-500 text-sm">Live Chat</p>
-                  <p className="text-white font-semibold">Available 24/7</p>
+                  <p className="text-gray-500 text-sm">{t('contact.liveChat', 'Live Chat')}</p>
+                  <p className="text-white font-semibold">{t('contact.liveChatAvail', 'Available 24/7')}</p>
                 </div>
               </div>
             </div>
@@ -145,24 +106,24 @@ export default function CTASection() {
 
           {/* Form */}
           <div className="bg-gray-950 border border-gray-800 rounded-xl p-8 lg:p-12 cta-form">
-            <h3 className="text-2xl font-bold text-white mb-6">Tell Us About Your Project</h3>
+            <h3 className="text-2xl font-bold text-white mb-6">{t('cta.formTitle', 'Tell Us About Your Project')}</h3>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="form-field">
-                <label className="block text-sm font-medium text-gray-300 mb-2">Full Name</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">{t('auth.fullName', 'Full Name')}</label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
                   className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                  placeholder="Your name"
+                  placeholder={t('auth.namePlaceholder', 'Your name')}
                   required
                 />
               </div>
 
               <div className="form-field">
-                <label className="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">{t('auth.email', 'Email Address')}</label>
                 <input
                   type="email"
                   name="email"
@@ -176,29 +137,29 @@ export default function CTASection() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="form-field">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">I'm Interested In</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">{t('cta.interestedIn', "I'm Interested In")}</label>
                   <select
                     name="interest"
                     value={formData.interest}
                     onChange={handleChange}
                     className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                   >
-                    <option value="">Select...</option>
-                    <option value="signals">Trading Signals</option>
-                    <option value="portfolio">Portfolio Management</option>
-                    <option value="analysis">Market Analysis</option>
-                    <option value="premium">Premium Plan</option>
+                    <option value="">{t('common.select', 'Select...')}</option>
+                    <option value="signals">{t('nav.signals', 'Trading Signals')}</option>
+                    <option value="portfolio">{t('services.portfolio', 'Portfolio Management')}</option>
+                    <option value="analysis">{t('dashboard.marketAnalysis', 'Market Analysis')}</option>
+                    <option value="premium">{t('plans.premium', 'Premium Plan')}</option>
                   </select>
                 </div>
                 <div className="form-field">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Budget (USD)</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">{t('cta.budget', 'Budget (USD)')}</label>
                   <select
                     name="budget"
                     value={formData.budget}
                     onChange={handleChange}
                     className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                   >
-                    <option value="">Select...</option>
+                    <option value="">{t('common.select', 'Select...')}</option>
                     <option value="5k">≤ $5,000</option>
                     <option value="20k">$10K - $20K</option>
                     <option value="50k">$30K - $50K</option>
@@ -208,14 +169,14 @@ export default function CTASection() {
               </div>
 
               <div className="form-field">
-                <label className="block text-sm font-medium text-gray-300 mb-2">Tell us more</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">{t('cta.tellUsMore', 'Tell us more')}</label>
                 <textarea
                   name="message"
                   value={formData.message}
                   onChange={handleChange}
                   rows={4}
                   className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-none"
-                  placeholder="Share details about your project..."
+                  placeholder={t('cta.messagePlaceholder', 'Share details about your project...')}
                 />
               </div>
 
@@ -223,7 +184,7 @@ export default function CTASection() {
                 type="submit"
                 className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-blue-600/50 form-field"
               >
-                Submit Request
+                {t('cta.submitButton', 'Submit Request')}
               </button>
             </form>
           </div>

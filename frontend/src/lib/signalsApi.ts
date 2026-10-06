@@ -13,6 +13,9 @@ export interface SignalRecord {
   takeProfit1?: number | null;
   takeProfit2?: number | null;
   takeProfit3?: number | null;
+  takeProfit1Hit?: boolean;
+  takeProfit2Hit?: boolean;
+  takeProfit3Hit?: boolean;
   takeProfits?: number[];
   accuracy?: number | null;
   reliability?: number | null;
@@ -38,6 +41,9 @@ interface RawSignalRecord {
   takeProfit1?: number | null;
   takeProfit2?: number | null;
   takeProfit3?: number | null;
+  takeProfit1Hit?: boolean;
+  takeProfit2Hit?: boolean;
+  takeProfit3Hit?: boolean;
   takeProfits?: Array<number | null>;
   accuracy?: number | null;
   reliability?: number | null;
@@ -91,6 +97,9 @@ function normalizeSignal(raw: RawSignalRecord): SignalRecord {
     entryPrice: raw.entryPrice ?? null,
     stopLoss,
     takeProfits,
+    takeProfit1Hit: raw.takeProfit1Hit ?? false,
+    takeProfit2Hit: raw.takeProfit2Hit ?? false,
+    takeProfit3Hit: raw.takeProfit3Hit ?? false,
     accuracy: raw.accuracy ?? null,
     reliability: raw.reliability ?? null,
     timeframe: raw.timeframe ?? null,

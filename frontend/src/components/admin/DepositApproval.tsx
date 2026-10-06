@@ -5,6 +5,7 @@ import Card from '@/components/common/Card';
 import Badge from '@/components/common/Badge';
 import { Check, Eye, RefreshCw, X } from 'lucide-react';
 import { transactionsApi } from '@/lib/transactionsApi';
+import { useLanguage } from '@/context/LanguageContext';
 
 type Deposit = {
   id: string;
@@ -59,29 +60,30 @@ export default function DepositApproval() {
     }
   };
 
+  const { t } = useLanguage();
   const formatStatus = (status: string) => status.charAt(0).toUpperCase() + status.slice(1);
 
   return (
     <Card className="text-white">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold">Deposit Requests</h2>
+          <h2 className="text-2xl font-bold">{t('admin.depositRequests', 'Deposit Requests')}</h2>
           <p className="mt-1 text-sm text-slate-400">Review and record incoming deposits.</p>
         </div>
         <button onClick={() => void loadDeposits()} disabled={loading} className="inline-flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-slate-300 hover:bg-white/10 disabled:opacity-50">
-          <RefreshCw className={loading ? 'h-4 w-4 animate-spin' : 'h-4 w-4'} /> Refresh
+          <RefreshCw className={loading ? 'h-4 w-4 animate-spin' : 'h-4 w-4'} /> {t('admin.refresh', 'Refresh')}
         </button>
       </div>
       {error && <div className="mb-4 rounded-lg border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">{error}</div>}
       <div className="overflow-x-auto">
-        {loading ? <div className="py-12 text-center text-sm text-slate-400">Loading deposit requests...</div> : deposits.length === 0 ? <div className="py-12 text-center text-sm text-slate-400">No deposit requests found.</div> : <table className="w-full text-sm">
+        {loading ? <div className="py-12 text-center text-sm text-slate-400">{t('common.loading', 'Loading deposit requests...')}</div> : deposits.length === 0 ? <div className="py-12 text-center text-sm text-slate-400">{t('common.noData', 'No deposit requests found.')}</div> : <table className="w-full text-sm">
           <thead className="border-b border-white/10 text-slate-400">
             <tr>
-              <th className="px-4 py-3 text-left font-semibold">User</th>
-              <th className="px-4 py-3 text-left font-semibold">Amount</th>
-              <th className="px-4 py-3 text-left font-semibold">Date</th>
-              <th className="px-4 py-3 text-left font-semibold">Status</th>
-              <th className="px-4 py-3 text-left font-semibold">Actions</th>
+              <th className="px-4 py-3 text-left font-semibold">{t('admin.users', 'User')}</th>
+              <th className="px-4 py-3 text-left font-semibold">{t('transactions.amount', 'Amount')}</th>
+              <th className="px-4 py-3 text-left font-semibold">{t('transactions.date', 'Date')}</th>
+              <th className="px-4 py-3 text-left font-semibold">{t('transactions.status', 'Status')}</th>
+              <th className="px-4 py-3 text-left font-semibold">{t('common.actions', 'Actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -141,8 +143,8 @@ export default function DepositApproval() {
       <div className="mt-5 flex items-center justify-between border-t border-white/10 pt-4 text-sm text-slate-400">
         <span>{total ? `Showing ${page * PAGE_SIZE + 1}-${Math.min((page + 1) * PAGE_SIZE, total)} of ${total}` : 'No results'}</span>
         <div className="flex gap-2">
-          <button disabled={page === 0 || loading} onClick={() => setPage(value => value - 1)} className="rounded border border-white/10 px-3 py-1 hover:bg-white/10 disabled:opacity-40">Previous</button>
-          <button disabled={(page + 1) * PAGE_SIZE >= total || loading} onClick={() => setPage(value => value + 1)} className="rounded border border-white/10 px-3 py-1 hover:bg-white/10 disabled:opacity-40">Next</button>
+          <button disabled={page === 0 || loading} onClick={() => setPage(value => value - 1)} className="rounded border border-white/10 px-3 py-1 hover:bg-white/10 disabled:opacity-40">{t('common.back', 'Previous')}</button>
+          <button disabled={(page + 1) * PAGE_SIZE >= total || loading} onClick={() => setPage(value => value + 1)} className="rounded border border-white/10 px-3 py-1 hover:bg-white/10 disabled:opacity-40">{t('common.next', 'Next')}</button>
         </div>
       </div>
     </Card>

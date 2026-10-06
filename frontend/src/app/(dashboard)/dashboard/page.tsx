@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import investmentApi from '@/lib/investmentApi';
 import { withdrawalsApi } from '@/lib/withdrawalsApi';
+import { useLanguage } from '@/context/LanguageContext';
 import {
   Wallet, TrendingUp, ArrowUpRight, ArrowDownLeft, History,
   DollarSign, PieChart, Activity, BarChart3, Eye, EyeOff,
@@ -59,44 +60,41 @@ const fmt = (n: number) =>
   new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 
 const statusStyle: Record<string, string> = {
-  completed: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
-  active: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
+  active: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+  completed: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
   pending: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
   failed: 'bg-rose-500/10 text-rose-400 border border-rose-500/20',
-  cancelled: 'bg-slate-500/10 text-slate-400 border border-slate-500/20',
 };
 
-// ─── Sub-components ──────────────────────────────────────────────────────────
+// ─── Sub-Components ──────────────────────────────────────────────────────────
 
-function StatCard({ label, value, sub, icon: Icon, accent }: {
-  label: string; value: string; sub?: string;
-  icon: React.ElementType; accent: string;
+function StatCard({
+  label, value, sub, icon: Icon, accent
+}: {
+  label: string; value: string; sub?: string; icon: React.ElementType; accent: string;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-slate-900/60 border border-slate-800/60 backdrop-blur-sm p-5 group hover:border-slate-700 transition-all duration-300">
-      <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br ${accent} pointer-events-none`} />
-      <div className="relative z-10">
-        <div className={`inline-flex items-center justify-center w-10 h-10 rounded-xl mb-3 bg-gradient-to-br ${accent} opacity-80`}>
-          <Icon className="w-5 h-5 text-white" />
+    <div className={`relative overflow-hidden rounded-2xl bg-slate-900/60 border border-slate-800/60 p-5 backdrop-blur-sm transition-all hover:border-slate-700/60`}>
+      <div className={`absolute top-0 right-0 w-24 h-24 rounded-full bg-gradient-to-br ${accent} blur-2xl -mr-6 -mt-6 pointer-events-none`} />
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{label}</span>
+        <div className="p-2 rounded-xl bg-slate-800/80 border border-slate-700/50">
+          <Icon className="w-4 h-4 text-blue-400" />
         </div>
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-1">{label}</p>
-        <p className="text-2xl font-black text-white">{value}</p>
-        {sub && <p className="text-xs text-emerald-400 font-medium mt-1">{sub}</p>}
       </div>
+      <p className="text-2xl font-black text-white tracking-tight">{value}</p>
+      {sub && <p className="text-xs text-emerald-400 font-bold mt-1">{sub}</p>}
     </div>
   );
 }
 
-function Modal({ title, onClose, children }: {
-  title: string; onClose: () => void; children: React.ReactNode;
-}) {
+function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+      <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between p-6 border-b border-slate-800">
-          <h3 className="text-lg font-bold text-white">{title}</h3>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors">
+          <h3 className="font-bold text-white text-lg">{title}</h3>
+          <button onClick={onClose} className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -121,6 +119,7 @@ function Toast({ message, type, onClose }: { message: string; type: 'success' | 
 
 export default function UserDashboard() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [userId, setUserId] = useState('');
   const [userName, setUserName] = useState('User');
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
@@ -177,7 +176,7 @@ export default function UserDashboard() {
 
   const handleWithdraw = async () => {
     if (!withdrawForm.amount || Number(withdrawForm.amount) <= 0) {
-      showToast('Please enter a valid amount.', 'error'); return;
+      showToast(t('investments.validAmountError', 'Please enter a valid amount.'), 'error'); return;
     }
     setSubmitting(true);
     try {
@@ -186,12 +185,12 @@ export default function UserDashboard() {
         method: withdrawForm.method,
         notes: withdrawForm.reason,
       });
-      showToast('Withdrawal request submitted successfully!', 'success');
+      showToast(t('investments.withdrawSuccess', 'Withdrawal request submitted successfully!'), 'success');
       setShowWithdrawModal(false);
       setWithdrawForm({ amount: '', method: 'bank', reason: '' });
       await loadData(userId);
     } catch {
-      showToast('Failed to submit withdrawal. Please try again.', 'error');
+      showToast(t('investments.withdrawError', 'Failed to submit withdrawal. Please try again.'), 'error');
     } finally {
       setSubmitting(false);
     }
@@ -199,7 +198,7 @@ export default function UserDashboard() {
 
   const handleInvest = async () => {
     if (!investForm.amount || Number(investForm.amount) < 100) {
-      showToast('Minimum investment amount is $100.', 'error'); return;
+      showToast(t('investments.minInvestmentError', 'Minimum investment amount is $100.'), 'error'); return;
     }
     setSubmitting(true);
     try {
@@ -209,12 +208,12 @@ export default function UserDashboard() {
         plan: investForm.plan,
         duration: Number(investForm.duration),
       });
-      showToast('Investment created successfully!', 'success');
+      showToast(t('investments.investSuccess', 'Investment created successfully!'), 'success');
       setShowInvestModal(false);
       setInvestForm({ amount: '', plan: 'Standard', duration: '6' });
       await loadData(userId);
     } catch {
-      showToast('Failed to create investment. Please try again.', 'error');
+      showToast(t('investments.investError', 'Failed to create investment. Please try again.'), 'error');
     } finally {
       setSubmitting(false);
     }
@@ -233,7 +232,7 @@ export default function UserDashboard() {
       <div className="min-h-screen flex items-center justify-center bg-slate-950">
         <div className="text-center space-y-4">
           <div className="w-14 h-14 rounded-full border-4 border-blue-600 border-t-transparent animate-spin mx-auto" />
-          <p className="text-slate-400 text-sm font-medium">Loading your dashboard…</p>
+          <p className="text-slate-400 text-sm font-medium">{t('common.loading', 'Loading your dashboard…')}</p>
         </div>
       </div>
     );
@@ -251,16 +250,16 @@ export default function UserDashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-white">
-            Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">{userName}</span> 👋
+            {t('dashboard.welcome', 'Welcome back')}, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">{userName}</span> 👋
           </h1>
-          <p className="text-slate-400 text-sm mt-1">Here's your portfolio overview for today.</p>
+          <p className="text-slate-400 text-sm mt-1">{t('dashboard.overviewSubtitle', "Here's your portfolio overview for today.")}</p>
         </div>
         <button
           onClick={handleRefresh}
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm font-medium text-slate-300 transition-all"
         >
           <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-          Refresh
+          {t('admin.refresh', 'Refresh')}
         </button>
       </div>
 
@@ -272,7 +271,7 @@ export default function UserDashboard() {
 
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
           <div>
-            <p className="text-blue-200 text-sm font-semibold uppercase tracking-widest mb-2">Total Portfolio Value</p>
+            <p className="text-blue-200 text-sm font-semibold uppercase tracking-widest mb-2">{t('investments.totalPortfolioValue', 'Total Portfolio Value')}</p>
             <div className="flex items-center gap-3">
               <h2 className="text-4xl sm:text-5xl font-black text-white tracking-tight">
                 {showBalance ? `$${fmt(totalBalance)}` : '$••••••'}
@@ -287,7 +286,7 @@ export default function UserDashboard() {
             {portfolio?.totalReturns != null && (
               <p className="text-emerald-300 text-sm font-bold mt-2 flex items-center gap-1">
                 <TrendingUp className="w-4 h-4" />
-                +${fmt(portfolio.totalReturns)} returns · ROI: {portfolio.roi}%
+                +${fmt(portfolio.totalReturns)} {t('investments.returns', 'returns')} · ROI: {portfolio.roi}%
               </p>
             )}
           </div>
@@ -297,13 +296,13 @@ export default function UserDashboard() {
               onClick={() => setShowInvestModal(true)}
               className="flex items-center gap-2 px-5 py-3 rounded-xl bg-white text-blue-700 font-bold text-sm hover:bg-blue-50 transition-all shadow-lg shadow-blue-900/50"
             >
-              <Plus className="w-4 h-4" /> New Investment
+              <Plus className="w-4 h-4" /> {t('investments.newInvestment', 'New Investment')}
             </button>
             <button
               onClick={() => setShowWithdrawModal(true)}
               className="flex items-center gap-2 px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-sm transition-all backdrop-blur-sm"
             >
-              <ArrowUpRight className="w-4 h-4" /> Withdraw
+              <ArrowUpRight className="w-4 h-4" /> {t('dashboard.withdraw', 'Withdraw')}
             </button>
           </div>
         </div>
@@ -312,26 +311,26 @@ export default function UserDashboard() {
       {/* ── Stat Cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          label="Active Investments"
+          label={t('investments.activeInvestments', 'Active Investments')}
           value={String(portfolio?.activeInvestments ?? 0)}
           icon={Zap}
           accent="from-blue-600/20 to-blue-700/5"
         />
         <StatCard
-          label="Total Invested"
+          label={t('investments.totalInvested', 'Total Invested')}
           value={`$${fmt(portfolio?.totalInvested ?? 0)}`}
           icon={DollarSign}
           accent="from-indigo-600/20 to-indigo-700/5"
         />
         <StatCard
-          label="Total Returns"
+          label={t('investments.totalReturns', 'Total Returns')}
           value={`$${fmt(portfolio?.totalReturns ?? 0)}`}
           sub={portfolio?.roi ? `+${portfolio.roi}% ROI` : undefined}
           icon={TrendingUp}
           accent="from-emerald-600/20 to-emerald-700/5"
         />
         <StatCard
-          label="Completed Plans"
+          label={t('investments.completedPlans', 'Completed Plans')}
           value={String(portfolio?.completedInvestments ?? 0)}
           icon={CheckCircle}
           accent="from-violet-600/20 to-violet-700/5"
@@ -346,13 +345,13 @@ export default function UserDashboard() {
           <div className="flex items-center justify-between p-5 border-b border-slate-800">
             <div className="flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-blue-400" />
-              <h3 className="font-bold text-white">Active Investments</h3>
+              <h3 className="font-bold text-white">{t('investments.activeInvestments', 'Active Investments')}</h3>
             </div>
             <button
               onClick={() => router.push('/dashboard/investments')}
               className="text-xs font-semibold text-blue-400 hover:text-blue-300 flex items-center gap-1 transition-colors"
             >
-              View all <ChevronRight className="w-3 h-3" />
+              {t('common.viewAll', 'View all')} <ChevronRight className="w-3 h-3" />
             </button>
           </div>
 
@@ -365,7 +364,7 @@ export default function UserDashboard() {
                       <TrendingUp className="w-5 h-5 text-blue-400" />
                     </div>
                     <div>
-                      <p className="font-semibold text-white text-sm">{inv.plan} Plan</p>
+                      <p className="font-semibold text-white text-sm">{inv.plan} {t('plans.title', 'Plan')}</p>
                       <p className="text-xs text-slate-500 mt-0.5">
                         {new Date(inv.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </p>
@@ -385,13 +384,13 @@ export default function UserDashboard() {
             ) : (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <PieChart className="w-12 h-12 text-slate-700 mb-3" />
-                <p className="text-slate-400 font-medium">No investments yet</p>
-                <p className="text-slate-600 text-sm mt-1">Start your first investment today</p>
+                <p className="text-slate-400 font-medium">{t('investments.noInvestments', 'No investments yet')}</p>
+                <p className="text-slate-600 text-sm mt-1">{t('investments.startInvesting', 'Start your first investment today')}</p>
                 <button
                   onClick={() => setShowInvestModal(true)}
                   className="mt-4 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold transition-colors"
                 >
-                  Get Started
+                  {t('hero.getStarted', 'Get Started')}
                 </button>
               </div>
             )}
@@ -403,20 +402,20 @@ export default function UserDashboard() {
           {/* Cashflow summary */}
           <div className="rounded-2xl bg-slate-900/60 border border-slate-800/60 backdrop-blur-sm p-5">
             <h3 className="font-bold text-white mb-4 flex items-center gap-2">
-              <Activity className="w-5 h-5 text-blue-400" /> Cash Flow
+              <Activity className="w-5 h-5 text-blue-400" /> {t('dashboard.cashFlow', 'Cash Flow')}
             </h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
                 <div className="flex items-center gap-2">
                   <ArrowDownLeft className="w-4 h-4 text-emerald-400" />
-                  <span className="text-sm text-slate-300">Deposits</span>
+                  <span className="text-sm text-slate-300">{t('dashboard.deposit', 'Deposits')}</span>
                 </div>
                 <span className="text-emerald-400 font-bold text-sm">${fmt(txDeposits)}</span>
               </div>
               <div className="flex items-center justify-between p-3 rounded-xl bg-rose-500/5 border border-rose-500/10">
                 <div className="flex items-center gap-2">
                   <ArrowUpRight className="w-4 h-4 text-rose-400" />
-                  <span className="text-sm text-slate-300">Withdrawals</span>
+                  <span className="text-sm text-slate-300">{t('dashboard.withdrawal', 'Withdrawals')}</span>
                 </div>
                 <span className="text-rose-400 font-bold text-sm">${fmt(txWithdrawals)}</span>
               </div>
@@ -427,15 +426,15 @@ export default function UserDashboard() {
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-600/10 border border-amber-500/20 p-5">
             <Crown className="absolute -top-3 -right-3 w-16 h-16 text-amber-500/10" />
             <Crown className="w-7 h-7 text-amber-400 mb-3" />
-            <h4 className="font-bold text-white text-sm mb-1">Go Premium</h4>
+            <h4 className="font-bold text-white text-sm mb-1">{t('dashboard.goPremium', 'Go Premium')}</h4>
             <p className="text-slate-400 text-xs mb-4 leading-relaxed">
-              Unlock exclusive signals, advanced analytics, and priority support.
+              {t('dashboard.goPremiumDesc', 'Unlock exclusive signals, advanced analytics, and priority support.')}
             </p>
             <button
               onClick={() => router.push('/dashboard/premium')}
               className="flex items-center gap-2 text-xs font-bold text-amber-400 hover:text-amber-300 transition-colors"
             >
-              Upgrade now <ArrowRight className="w-3 h-3" />
+              {t('dashboard.upgradeNow', 'Upgrade now')} <ArrowRight className="w-3 h-3" />
             </button>
           </div>
         </div>
@@ -446,13 +445,13 @@ export default function UserDashboard() {
         <div className="flex items-center justify-between p-5 border-b border-slate-800">
           <div className="flex items-center gap-2">
             <History className="w-5 h-5 text-blue-400" />
-            <h3 className="font-bold text-white">Recent Transactions</h3>
+            <h3 className="font-bold text-white">{t('dashboard.recentTransactions', 'Recent Transactions')}</h3>
           </div>
           <button
             onClick={() => router.push('/dashboard/transactions')}
             className="text-xs font-semibold text-blue-400 hover:text-blue-300 flex items-center gap-1 transition-colors"
           >
-            View all <ChevronRight className="w-3 h-3" />
+            {t('common.viewAll', 'View all')} <ChevronRight className="w-3 h-3" />
           </button>
         </div>
 
@@ -461,9 +460,11 @@ export default function UserDashboard() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-slate-800/60">
-                  {['Type', 'Amount', 'Status', 'Description', 'Date'].map(h => (
-                    <th key={h} className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-widest">{h}</th>
-                  ))}
+                  <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-widest">{t('transactions.type', 'Type')}</th>
+                  <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-widest">{t('transactions.amount', 'Amount')}</th>
+                  <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-widest">{t('transactions.status', 'Status')}</th>
+                  <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-widest">{t('common.description', 'Description')}</th>
+                  <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-widest">{t('transactions.date', 'Date')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/40">
@@ -506,7 +507,7 @@ export default function UserDashboard() {
           ) : (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <Wallet className="w-12 h-12 text-slate-700 mb-3" />
-              <p className="text-slate-400 font-medium">No transactions yet</p>
+              <p className="text-slate-400 font-medium">{t('transactions.noTransactions', 'No transactions yet')}</p>
             </div>
           )}
         </div>
@@ -514,10 +515,10 @@ export default function UserDashboard() {
 
       {/* ── Withdraw Modal ── */}
       {showWithdrawModal && (
-        <Modal title="Request Withdrawal" onClose={() => setShowWithdrawModal(false)}>
+        <Modal title={t('dashboard.withdraw', 'Request Withdrawal')} onClose={() => setShowWithdrawModal(false)}>
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Amount (USD)</label>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t('transactions.amount', 'Amount (USD)')}</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
                 <input
@@ -529,7 +530,7 @@ export default function UserDashboard() {
               </div>
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Method</label>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t('transactions.paymentMethod', 'Method')}</label>
               <select
                 value={withdrawForm.method}
                 onChange={e => setWithdrawForm(p => ({ ...p, method: e.target.value }))}
@@ -542,7 +543,7 @@ export default function UserDashboard() {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Reason (optional)</label>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t('transactions.note', 'Reason (optional)')}</label>
               <textarea
                 rows={3} placeholder="Reason for withdrawal..."
                 value={withdrawForm.reason}
@@ -552,7 +553,7 @@ export default function UserDashboard() {
             </div>
             <div className="flex gap-3 pt-2">
               <button onClick={() => setShowWithdrawModal(false)} className="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm transition-colors">
-                Cancel
+                {t('common.cancel', 'Cancel')}
               </button>
               <button
                 onClick={handleWithdraw}
@@ -560,7 +561,7 @@ export default function UserDashboard() {
                 className="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-sm transition-colors flex items-center justify-center gap-2"
               >
                 {submitting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ArrowUpRight className="w-4 h-4" />}
-                Submit Request
+                {t('investments.submitRequest', 'Submit Request')}
               </button>
             </div>
           </div>
@@ -569,10 +570,10 @@ export default function UserDashboard() {
 
       {/* ── Invest Modal ── */}
       {showInvestModal && (
-        <Modal title="New Investment" onClose={() => setShowInvestModal(false)}>
+        <Modal title={t('investments.newInvestment', 'New Investment')} onClose={() => setShowInvestModal(false)}>
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Amount (Min $100)</label>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t('investments.amount', 'Amount (Min $100)')}</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
                 <input
@@ -584,15 +585,15 @@ export default function UserDashboard() {
               </div>
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Investment Plan</label>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t('investments.plan', 'Investment Plan')}</label>
               <div className="grid grid-cols-3 gap-2">
                 {['Standard', 'Growth', 'Premium'].map(p => (
                   <button
                     key={p}
                     onClick={() => setInvestForm(f => ({ ...f, plan: p }))}
                     className={`py-2.5 rounded-xl text-sm font-bold border transition-all ${investForm.plan === p
-                        ? 'bg-blue-600 border-blue-500 text-white'
-                        : 'bg-slate-800 border-slate-700 text-slate-300 hover:border-slate-600'
+                      ? 'bg-blue-600 border-blue-500 text-white'
+                      : 'bg-slate-800 border-slate-700 text-slate-300 hover:border-slate-600'
                       }`}
                   >
                     {p}
@@ -601,15 +602,15 @@ export default function UserDashboard() {
               </div>
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Duration</label>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t('investments.duration', 'Duration')}</label>
               <div className="grid grid-cols-4 gap-2">
                 {['3', '6', '12', '24'].map(d => (
                   <button
                     key={d}
                     onClick={() => setInvestForm(f => ({ ...f, duration: d }))}
                     className={`py-2.5 rounded-xl text-sm font-bold border transition-all ${investForm.duration === d
-                        ? 'bg-blue-600 border-blue-500 text-white'
-                        : 'bg-slate-800 border-slate-700 text-slate-300 hover:border-slate-600'
+                      ? 'bg-blue-600 border-blue-500 text-white'
+                      : 'bg-slate-800 border-slate-700 text-slate-300 hover:border-slate-600'
                       }`}
                   >
                     {d}mo
@@ -620,7 +621,7 @@ export default function UserDashboard() {
 
             {investForm.amount && Number(investForm.amount) >= 100 && (
               <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
-                <p className="text-xs text-slate-400 mb-1">Estimated Returns (6% monthly)</p>
+                <p className="text-xs text-slate-400 mb-1">{t('investments.estimatedReturns', 'Estimated Returns (6% monthly)')}</p>
                 <p className="text-lg font-black text-emerald-400">
                   +${investmentApi.calculateEstimatedReturns(Number(investForm.amount), Number(investForm.duration))}
                 </p>
@@ -629,7 +630,7 @@ export default function UserDashboard() {
 
             <div className="flex gap-3 pt-2">
               <button onClick={() => setShowInvestModal(false)} className="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm transition-colors">
-                Cancel
+                {t('common.cancel', 'Cancel')}
               </button>
               <button
                 onClick={handleInvest}
@@ -637,7 +638,7 @@ export default function UserDashboard() {
                 className="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-sm transition-colors flex items-center justify-center gap-2"
               >
                 {submitting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <DollarSign className="w-4 h-4" />}
-                Invest Now
+                {t('investments.investNow', 'Invest Now')}
               </button>
             </div>
           </div>

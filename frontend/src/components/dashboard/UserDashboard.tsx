@@ -120,11 +120,10 @@ function DashStatCard({ label, value, icon, accentClass, trend, loading }: StatC
             <p className="text-2xl font-extrabold text-white tabular-nums tracking-tight truncate">{value}</p>
           )}
           {trend && !loading && (
-            <span className={`inline-flex items-center gap-1 mt-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${
-              trend.positive
+            <span className={`inline-flex items-center gap-1 mt-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${trend.positive
                 ? 'bg-emerald-500/10 text-emerald-400'
                 : 'bg-rose-500/10 text-rose-400'
-            }`}>
+              }`}>
               {trend.positive ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
               {trend.value}
             </span>
@@ -143,11 +142,10 @@ function DashStatCard({ label, value, icon, accentClass, trend, loading }: StatC
 function DirectionChip({ type }: { type: string }) {
   const isBuy = type.toUpperCase() === 'BUY';
   return (
-    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${
-      isBuy
+    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${isBuy
         ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
         : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-    }`}>
+      }`}>
       {isBuy ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
       {type}
     </span>
@@ -162,8 +160,8 @@ function StatusChip({ status }: { status: string }) {
     s === 'active'
       ? 'bg-[#FF6B00]/10 text-[#FF6B00] border-[#FF6B00]/20'
       : s === 'closed'
-      ? 'bg-white/5 text-white/30 border-white/10'
-      : 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+        ? 'bg-white/5 text-white/30 border-white/10'
+        : 'bg-amber-500/10 text-amber-400 border-amber-500/20';
 
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${config}`}>
@@ -196,8 +194,8 @@ export default function UserDashboard() {
 
   // ── Derived Metrics ───────────────────────────────────────────────────────
   const totalInvested = Number(portfolio?.totalInvested ?? 0);
-  const totalReturns  = Number(portfolio?.totalReturns ?? 0);
-  const roi           = portfolio ? investmentApi_calculateROI(totalInvested, totalReturns) : '—';
+  const totalReturns = Number(portfolio?.totalReturns ?? 0);
+  const roi = portfolio ? investmentApi_calculateROI(totalInvested, totalReturns) : '—';
   const activeSignals = signals.filter(s => s.status?.toLowerCase() === 'active').length;
 
   const currentMonth = new Date();
@@ -314,7 +312,7 @@ export default function UserDashboard() {
         <DashStatCard
           label={t('dashboard.accountBalance', 'Account Balance')}
           value={`$${totalInvested.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          icon={<DollarSign className="w-5 h-5 text-[#FF6B00]" />}
+          icon={<DollarSign className="w-5 h-5" />}
           accentClass="bg-[#FF6B00]"
           trend={null}
           loading={portfolioLoading}
@@ -322,7 +320,7 @@ export default function UserDashboard() {
         <DashStatCard
           label={t('dashboard.monthlyProfit', 'Monthly Profit')}
           value={`$${monthlyProfit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          icon={<TrendingUp className="w-5 h-5 text-emerald-400" />}
+          icon={<TrendingUp className="w-5 h-5 " />}
           accentClass="bg-emerald-500"
           trend={monthlyProfit > 0 ? { value: `+$${monthlyProfit.toFixed(0)}`, positive: true } : null}
           loading={portfolioLoading}
@@ -330,7 +328,7 @@ export default function UserDashboard() {
         <DashStatCard
           label={t('dashboard.activeSignals', 'Active Signals')}
           value={signalsLoading ? '—' : String(activeSignals)}
-          icon={<Activity className="w-5 h-5 text-amber-400" />}
+          icon={<Activity className="w-5 h-5 " />}
           accentClass="bg-amber-500"
           trend={activeSignals > 0 ? { value: `${activeSignals} ${t('dashboard.liveShort', 'live')}`, positive: true } : null}
           loading={signalsLoading}
@@ -338,7 +336,7 @@ export default function UserDashboard() {
         <DashStatCard
           label={t('dashboard.totalRoi', 'Total ROI')}
           value={portfolioLoading ? '—' : `${roi}%`}
-          icon={<BarChart3 className="w-5 h-5 text-indigo-400" />}
+          icon={<BarChart3 className="w-5 h-5 " />}
           accentClass="bg-indigo-500"
           trend={Number(roi) > 0 ? { value: t('dashboard.profitable', 'Profitable'), positive: true } : null}
           loading={portfolioLoading}
@@ -556,9 +554,8 @@ export default function UserDashboard() {
                 const isCredit = ['profit', 'deposit', 'return'].includes(tx.type?.toLowerCase());
                 return (
                   <div key={tx.id} className="flex items-start gap-3 px-5 py-4 hover:bg-white/[0.02] transition-colors">
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                      isCredit ? 'bg-emerald-500/10' : 'bg-rose-500/10'
-                    }`}>
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${isCredit ? 'bg-emerald-500/10' : 'bg-rose-500/10'
+                      }`}>
                       {isCredit
                         ? <ArrowDownRight className="w-4 h-4 text-emerald-400" />
                         : <ArrowUpRight className="w-4 h-4 text-rose-400" />}
@@ -608,9 +605,8 @@ export default function UserDashboard() {
               <div key={pairKey} className="bg-[#0C0C10] border border-white/[0.06] rounded-xl p-4 hover:border-white/[0.12] transition-all duration-200 group">
                 <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-2">{rate.pair}</p>
                 <p className="text-lg font-extrabold text-white tabular-nums tracking-tight">{rate.rate}</p>
-                <span className={`inline-flex items-center gap-0.5 text-[10px] font-bold mt-1.5 ${
-                  rate.isPositive ? 'text-emerald-400' : 'text-rose-400'
-                }`}>
+                <span className={`inline-flex items-center gap-0.5 text-[10px] font-bold mt-1.5 ${rate.isPositive ? 'text-emerald-400' : 'text-rose-400'
+                  }`}>
                   {rate.isPositive ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
                   {rate.change}
                 </span>

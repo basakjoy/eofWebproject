@@ -6,6 +6,7 @@ import { LogoIcon } from '@/components/common/LogoIcon';
 import { useAuthStore } from '@/store/authStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useLanguage } from '@/context/LanguageContext';
+import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import Link from 'next/link';
 import {
   LayoutDashboard,
@@ -81,7 +82,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!isReady) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#050508] text-sm text-white/50">
-        Loading your account...
+        {t('common.loading', 'Loading your account...')}
       </div>
     );
   }
@@ -90,6 +91,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     name:   user?.name  || 'User',
     email:  user?.email || '',
     avatar: user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=FF6B00&color=fff&bold=true`,
+  };
+
+  const groupLabels: Record<string, string> = {
+    navigation: t('userDashboard.menu.navigation', 'Navigation'),
+    account: t('userDashboard.menu.account', 'Account'),
+    settings: t('userDashboard.menu.settings', 'Settings'),
   };
 
   return (
@@ -120,7 +127,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div key={group} className="space-y-1">
               {!collapsed && (
                 <p className="px-3 mb-2 text-[9px] font-black uppercase tracking-[0.22em] text-white/20">
-                  {group}
+                  {groupLabels[group] || group}
                 </p>
               )}
               {items.map(item => {
@@ -239,7 +246,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="flex-1 overflow-y-auto py-5 px-3 space-y-6 scrollbar-hide">
               {Object.entries(MENU_GROUPS).map(([group, items]) => (
                 <div key={group} className="space-y-1">
-                  <p className="px-3 mb-2 text-[9px] font-black uppercase tracking-[0.22em] text-white/20">{group}</p>
+                  <p className="px-3 mb-2 text-[9px] font-black uppercase tracking-[0.22em] text-white/20">{groupLabels[group] || group}</p>
                   {items.map(item => {
                     const active = isRouteActive(item.url, pathname);
                     return (
@@ -296,20 +303,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </button>
             {/* Breadcrumb */}
             <nav className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest">
-              <span className="text-white/20">Pages</span>
+              <span className="text-white/20">{t('nav.menu', 'Pages')}</span>
               <ChevronRight className="w-3 h-3 text-white/10" />
               <span className="text-white/70">{getPageTitle(pathname, t)}</span>
             </nav>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
+            <LanguageSwitcher />
             {/* Search */}
             <div className="relative hidden md:flex items-center">
               <Search className="absolute left-3 w-3.5 h-3.5 text-white/20" />
               <input
                 type="text"
-                placeholder="Search..."
-                className="bg-white/[0.04] border border-white/[0.06] rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder:text-white/20 w-52 focus:outline-none focus:border-[#FF6B00]/30 focus:bg-white/[0.06] transition-all"
+                placeholder={t('common.search', 'Search...')}
+                className="bg-white/[0.04] border border-white/[0.06] rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder:text-white/20 w-44 lg:w-52 focus:outline-none focus:border-[#FF6B00]/30 focus:bg-white/[0.06] transition-all"
               />
             </div>
             {/* Notification bell */}

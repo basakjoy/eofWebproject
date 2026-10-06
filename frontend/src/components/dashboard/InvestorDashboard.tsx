@@ -8,6 +8,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { investmentApi } from '@/lib/investmentApi';
 import { useAuthStore } from '@/store/authStore';
+import { useLanguage } from '@/context/LanguageContext';
 import {
   LineChart,
   Line,
@@ -20,8 +21,6 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-
-// ─── Types ───────────────────────────────────────────────────────────────────
 
 type InvestmentStatus = 'active' | 'completed' | 'pending' | string;
 
@@ -47,11 +46,8 @@ interface PortfolioData {
   activeInvestments: number;
   completedInvestments: number;
   investments: Investment[];
-  // Optional monthly series from the backend.
   monthlyPerformance?: MonthlyPerformancePoint[];
 }
-
-// ─── Constants ───────────────────────────────────────────────────────────────
 
 const STATUS_STYLES: Record<string, string> = {
   active: 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100',
@@ -75,17 +71,14 @@ function currency(value?: number): string {
   return `$${(value ?? 0).toLocaleString()}`;
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
-
 export default function InvestorDashboard() {
   const { user } = useAuthStore();
+  const { t } = useLanguage();
   const router = useRouter();
   const [portfolio, setPortfolio] = useState<PortfolioData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Guards against setState calls after the component has unmounted or the
-  // user has changed mid-request (avoids the classic React warning + stale UI).
   const isMountedRef = useRef(true);
   useEffect(() => {
     isMountedRef.current = true;
@@ -111,9 +104,6 @@ export default function InvestorDashboard() {
       console.error('Error fetching portfolio:', err);
       if (!isMountedRef.current) return;
       setError('Failed to load your portfolio. Please try again.');
-      // Intentionally keep any previously loaded portfolio data on screen
-      // rather than clearing it, so a transient network error doesn't wipe
-      // out a dashboard the user was already looking at.
     } finally {
       if (isMountedRef.current) setLoading(false);
     }
@@ -128,13 +118,13 @@ export default function InvestorDashboard() {
 
   const chartData = portfolio?.monthlyPerformance ?? [];
 
-  const handleNewInvestment = () => router.push('/dashboard/investments/new');
+  const handleNewInvestment = () => router.push('/dashboard/investments');
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Investor Dashboard</h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">Manage your investments and track returns.</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t('investorDashboard.title', 'Investor Dashboard')}</h1>
+        <p className="text-gray-600 dark:text-gray-400 mt-1">{t('investorDashboard.subtitle', 'Manage your investments and track returns.')}</p>
       </div>
 
       {error && (
@@ -148,7 +138,7 @@ export default function InvestorDashboard() {
             className="inline-flex items-center gap-1.5 text-sm font-semibold underline hover:no-underline shrink-0"
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            Retry
+            {t('common.retry', 'Retry')}
           </button>
         </div>
       )}
@@ -167,26 +157,26 @@ export default function InvestorDashboard() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
-            label="Total Invested"
+            label={t('investorDashboard.totalInvested', 'Total Invested')}
             value={currency(portfolio?.totalInvested)}
             icon={<Wallet className="w-6 h-6" />}
             color="blue"
           />
           <StatCard
-            label="Total Profit"
+            label={t('investorDashboard.totalProfit', 'Total Profit')}
             value={currency(portfolio?.totalReturns)}
             icon={<TrendingUp className="w-6 h-6" />}
             color="green"
             trend={{ value: roiValue, isPositive: roiValue >= 0 }}
           />
           <StatCard
-            label="Average ROI"
+            label={t('investorDashboard.averageRoi', 'Average ROI')}
             value={`${portfolio?.roi ?? '0'}%`}
             icon={<ArrowUpRight className="w-6 h-6" />}
             color="green"
           />
           <StatCard
-            label="Active Investments"
+            label={t('investorDashboard.activeInvestments', 'Active Investments')}
             value={`${portfolio?.activeInvestments ?? 0}`}
             icon={<DollarSign className="w-6 h-6" />}
             color="blue"
@@ -198,7 +188,7 @@ export default function InvestorDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Investment Growth</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t('investorDashboard.growthChart', 'Investment Growth')}</h2>
           </div>
           {loading && !portfolio ? (
             <div className="h-[300px] rounded bg-gray-100 dark:bg-gray-800 animate-pulse" role="status" aria-label="Loading investment growth" />
@@ -231,7 +221,7 @@ export default function InvestorDashboard() {
 
         <Card>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Invested vs Profit</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t('investorDashboard.investedVsProfit', 'Invested vs Profit')}</h2>
           </div>
           {loading && !portfolio ? (
             <div className="h-[300px] rounded bg-gray-100 dark:bg-gray-800 animate-pulse" role="status" aria-label="Loading invested versus profit chart" />
@@ -256,8 +246,8 @@ export default function InvestorDashboard() {
       {/* Active Investments */}
       <Card>
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">My Investments</h2>
-          <Button size="sm" onClick={handleNewInvestment}>New Investment</Button>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t('investorDashboard.myInvestments', 'My Investments')}</h2>
+          <Button size="sm" onClick={handleNewInvestment}>{t('investorDashboard.newInvestment', 'New Investment')}</Button>
         </div>
         {loading && investments.length === 0 ? (
           <div className="space-y-2" aria-hidden="true">
@@ -270,11 +260,11 @@ export default function InvestorDashboard() {
             <table className="w-full text-sm">
               <thead className="bg-gray-100 dark:bg-gray-800">
                 <tr>
-                  <th className="px-4 py-3 text-left font-semibold">Amount</th>
-                  <th className="px-4 py-3 text-left font-semibold">Duration</th>
-                  <th className="px-4 py-3 text-left font-semibold">Status</th>
-                  <th className="px-4 py-3 text-left font-semibold">Returns</th>
-                  <th className="px-4 py-3 text-left font-semibold">Created</th>
+                  <th className="px-4 py-3 text-left font-semibold">{t('investorDashboard.amount', 'Amount')}</th>
+                  <th className="px-4 py-3 text-left font-semibold">{t('investorDashboard.duration', 'Duration')}</th>
+                  <th className="px-4 py-3 text-left font-semibold">{t('investorDashboard.status', 'Status')}</th>
+                  <th className="px-4 py-3 text-left font-semibold">{t('investorDashboard.returns', 'Returns')}</th>
+                  <th className="px-4 py-3 text-left font-semibold">{t('investorDashboard.created', 'Created')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -304,8 +294,8 @@ export default function InvestorDashboard() {
           </div>
         ) : (
           <div className="text-center py-8 text-gray-500">
-            <p>No investments yet. Create one to get started!</p>
-            <Button className="mt-4" onClick={handleNewInvestment}>Create Investment</Button>
+            <p>{t('investorDashboard.noInvestments', 'No investments yet. Create one to get started!')}</p>
+            <Button className="mt-4" onClick={handleNewInvestment}>{t('investorDashboard.createInvestment', 'Create Investment')}</Button>
           </div>
         )}
       </Card>

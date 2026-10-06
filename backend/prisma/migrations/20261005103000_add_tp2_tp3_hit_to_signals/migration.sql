@@ -1,0 +1,3 @@
+ALTER TABLE "signals"
+ADD COLUMN "takeProfit2Hit" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN "takeProfit3Hit" BOOLEAN NOT NULL DEFAULT false;

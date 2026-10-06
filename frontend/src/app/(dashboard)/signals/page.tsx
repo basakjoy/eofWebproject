@@ -386,6 +386,11 @@ export default function SignalsPage() {
                   <span className="text-[10px] font-black px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                     {signal.accuracy || 88}% Win
                   </span>
+                  {[signal.takeProfit1Hit, signal.takeProfit2Hit, signal.takeProfit3Hit].map((hit, index) => hit && (
+                    <span key={index} className="text-[10px] font-black px-2 py-1 rounded bg-emerald-400 text-emerald-950">
+                      TP{index + 1} HIT
+                    </span>
+                  ))}
                 </div>
 
                 {/* Footer Actions */}
@@ -453,7 +458,12 @@ export default function SignalsPage() {
                         </span>
                       </td>
                       <td className="py-3.5 px-4 text-center text-zinc-200 font-mono text-xs">{signal.entryPrice}</td>
-                      <td className="py-3.5 px-4 text-center text-emerald-400 font-mono font-bold text-xs">{signal.takeProfit1 || signal.takeProfit}</td>
+                      <td className="py-3.5 px-4 text-center text-emerald-400 font-mono font-bold text-xs">
+                        <span>{signal.takeProfit1 || signal.takeProfit}</span>
+                        {[signal.takeProfit1Hit, signal.takeProfit2Hit, signal.takeProfit3Hit].map((hit, index) => hit && (
+                          <span key={index} className="ml-2 rounded bg-emerald-500/15 px-1.5 py-1 font-sans text-[9px] text-emerald-300">TP{index + 1} HIT</span>
+                        ))}
+                      </td>
                       <td className="py-3.5 px-4 text-center text-rose-400 font-mono text-xs">{signal.stopLoss || signal.stoploss}</td>
                       <td className="py-3.5 px-4 text-center text-zinc-400 font-semibold text-xs">{signal.timeframe || '4H'}</td>
                       <td className="py-3.5 px-4 text-center text-fiery-amber font-bold text-xs">{signal.accuracy || 88}%</td>

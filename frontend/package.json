@@ -54,6 +54,7 @@
     "next-auth": "^4.24.13",
     "next-intl": "^4.14.7",
     "next-themes": "^0.4.6",
+    "postcss": "^8.5.28",
     "react": "19.2.3",
     "react-day-picker": "^9.13.0",
     "react-dom": "19.2.3",
@@ -68,14 +69,14 @@
     "zustand": "^5.0.9"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
-    "tailwindcss": "^4",
+    "tailwindcss": "^4.3.3",
     "typescript": "^5"
   }
 }

@@ -4,33 +4,36 @@ import { BarChart3, TrendingUp, Shield, Zap } from 'lucide-react';
 import { useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useLanguage } from '@/context/LanguageContext';
 
 gsap.registerPlugin(ScrollTrigger);
 
 export default function ServicesSection() {
+  const { t } = useLanguage();
+
   const services = [
     {
       number: '01',
-      title: 'Trading Signals',
-      description: 'AI-powered market signals with real-time notifications and accuracy metrics for strategic entries.',
+      title: t('services.signals', 'Trading Signals'),
+      description: t('services.signalsDesc', 'AI-powered market signals with real-time notifications and accuracy metrics for strategic entries.'),
       icon: TrendingUp,
     },
     {
       number: '02',
-      title: 'Portfolio Management',
-      description: 'Complete portfolio tracking with analytics, risk assessment, and automated rebalancing tools.',
+      title: t('services.portfolio', 'Portfolio Management'),
+      description: t('services.portfolioDesc', 'Complete portfolio tracking with analytics, risk assessment, and automated rebalancing tools.'),
       icon: BarChart3,
     },
     {
       number: '03',
-      title: 'Risk Protection',
-      description: 'Advanced risk management with stop-loss strategies and portfolio insurance solutions.',
+      title: t('services.risk', 'Risk Protection'),
+      description: t('services.riskDesc', 'Advanced risk management with stop-loss strategies and portfolio insurance solutions.'),
       icon: Shield,
     },
     {
       number: '04',
-      title: 'Lightning Fast',
-      description: 'Millisecond execution speeds with advanced infrastructure for optimal trading performance.',
+      title: t('services.execution', 'Lightning Fast'),
+      description: t('services.executionDesc', 'Millisecond execution speeds with advanced infrastructure for optimal trading performance.'),
       icon: Zap,
     },
   ];
@@ -66,9 +69,9 @@ export default function ServicesSection() {
     <section className="py-12 sm:py-20 md:py-32 px-4 sm:px-6 bg-black">
       <div className="max-w-7xl mx-auto">
         <div className="mb-12 sm:mb-20 md:mb-24 services-header">
-          <p className="text-blue-400 font-medium text-xs sm:text-sm tracking-widest uppercase mb-4 sm:mb-6">Our Services</p>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl XXL:text-8xl font-black text-white leading-tight max-w-3xl">
-            We Create What Others Can't
+          <p className="text-blue-400 font-medium text-xs sm:text-sm tracking-widest uppercase mb-4 sm:mb-6">{t('nav.services', 'Our Services')}</p>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white leading-tight max-w-3xl">
+            {t('services.mainTitle', 'We Create What Others Can\'t')}
           </h2>
         </div>
 

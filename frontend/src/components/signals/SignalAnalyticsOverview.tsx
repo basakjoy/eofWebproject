@@ -25,6 +25,7 @@ import {
   Pie, 
   Cell 
 } from 'recharts';
+import { useLanguage } from '@/context/LanguageContext';
 
 // --- Data Constants ---
 const pipsHistoryData = [
@@ -43,12 +44,6 @@ const pairPerformanceData = [
   { pair: 'XAU/USD', wins: 56, losses: 4, winRate: 93.3 },
   { pair: 'USD/JPY', wins: 38, losses: 5, winRate: 88.3 },
   { pair: 'BTC/USD', wins: 35, losses: 8, winRate: 81.3 },
-];
-
-const assetDistribution = [
-  { name: 'Forex Pairs', value: 55, color: '#ff6b00' },
-  { name: 'Gold & Metals', value: 25, color: '#edc157' },
-  { name: 'Crypto Assets', value: 20, color: '#343539' },
 ];
 
 // --- Framer Motion Variants ---
@@ -70,7 +65,14 @@ const itemVariants: Variants = {
 };
 
 export default function SignalAnalyticsOverview() {
+  const { t } = useLanguage();
   const [timeRange, setTimeRange] = useState<'1W' | '1M' | '3M' | 'ALL'>('3M');
+
+  const assetDistribution = [
+    { name: t('tradingSignals.forexPairs', 'Forex Pairs'), value: 55, color: '#ff6b00' },
+    { name: t('tradingSignals.goldMetals', 'Gold & Metals'), value: 25, color: '#edc157' },
+    { name: t('tradingSignals.cryptoAssets', 'Crypto Assets'), value: 20, color: '#343539' },
+  ];
 
   return (
     <motion.div 
@@ -82,17 +84,17 @@ export default function SignalAnalyticsOverview() {
       
       {/* Header */}
       <motion.div variants={itemVariants} className="flex flex-col mb-6">
-        <h2 className="text-2xl font-bold text-white tracking-tight">Performance Analytics</h2>
-        <p className="text-sm text-zinc-400 mt-1">Comprehensive overview of trading signal metrics and asset distribution.</p>
+        <h2 className="text-2xl font-bold text-white tracking-tight">{t('tradingSignals.performanceAnalytics', 'Performance Analytics')}</h2>
+        <p className="text-sm text-zinc-400 mt-1">{t('tradingSignals.performanceSubtitle', 'Comprehensive overview of trading signal metrics and asset distribution.')}</p>
       </motion.div>
 
       {/* Top Key Metrics Banner */}
       <motion.div variants={containerVariants} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Total Pips Captured', value: '+5,480', suffix: 'pips', trend: '+18.4% vs last mo', icon: TrendingUp, color: 'text-fiery-orange', bg: 'bg-fiery-orange/10' },
-          { label: 'Historical Win Rate', value: '87.4', suffix: '%', trend: 'Verified 800+ signals', icon: CheckCircle2, color: 'text-fiery-orange', bg: 'bg-fiery-orange/10' },
-          { label: 'Average R:R Ratio', value: '1:3.2', suffix: '', trend: 'High expectancy', icon: Zap, color: 'text-amber-300', bg: 'bg-amber-300/10' },
-          { label: 'Active Win Streak', value: '14', suffix: 'trades', trend: 'Current momentum', icon: Award, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+          { label: t('tradingSignals.totalPipsCaptured', 'Total Pips Captured'), value: '+5,480', suffix: 'pips', trend: '+18.4% vs last mo', icon: TrendingUp, color: 'text-fiery-orange', bg: 'bg-fiery-orange/10' },
+          { label: t('tradingSignals.historicalWinRate', 'Historical Win Rate'), value: '87.4', suffix: '%', trend: 'Verified 800+ signals', icon: CheckCircle2, color: 'text-fiery-orange', bg: 'bg-fiery-orange/10' },
+          { label: t('tradingSignals.averageRR', 'Average R:R Ratio'), value: '1:3.2', suffix: '', trend: 'High expectancy', icon: Zap, color: 'text-amber-300', bg: 'bg-amber-300/10' },
+          { label: t('tradingSignals.activeWinStreak', 'Active Win Streak'), value: '14', suffix: 'trades', trend: 'Current momentum', icon: Award, color: 'text-amber-500', bg: 'bg-amber-500/10' },
         ].map((item, idx) => {
           const Icon = item.icon;
           return (
@@ -127,10 +129,10 @@ export default function SignalAnalyticsOverview() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 relative z-10">
             <div>
               <h3 className="text-base font-semibold text-white flex items-center gap-2">
-                <Activity className="w-4 h-4 text-fiery-orange" />
-                Cumulative Pips Growth
+                <Activity className="w-4 h-4 text-[#FF6B00]" />
+                {t('tradingSignals.cumulativeGrowth', 'Cumulative Pips Growth')}
               </h3>
-              <p className="text-xs text-zinc-400 mt-1">Net profit accumulation over time</p>
+              <p className="text-xs text-zinc-400 mt-1">{t('tradingSignals.netProfitAccumulation', 'Net profit accumulation over time')}</p>
             </div>
             
             {/* Interactive Sliding Tab Menu using Framer Motion layoutId */}
@@ -195,10 +197,10 @@ export default function SignalAnalyticsOverview() {
         <motion.div variants={itemVariants} className="border border-white/10 rounded-lg p-6 shadow-sm flex flex-col hover:border-amber-300/30 transition-colors liquid-panel glass-card">
           <div className="mb-2">
             <h3 className="text-base font-semibold text-white flex items-center gap-2">
-              <PieChartIcon className="w-4 h-4 text-fiery-amber" />
-              Asset Allocation
+              <PieChartIcon className="w-4 h-4 text-[#FF8C33]" />
+              {t('tradingSignals.assetAllocation', 'Asset Allocation')}
             </h3>
-            <p className="text-xs text-zinc-400 mt-1">Signal distribution by market</p>
+            <p className="text-xs text-zinc-400 mt-1">{t('tradingSignals.signalDistribution', 'Signal distribution by market')}</p>
           </div>
 
           <div className="w-full flex-1 min-h-[200px] relative flex items-center justify-center my-4 group">
@@ -237,7 +239,7 @@ export default function SignalAnalyticsOverview() {
               className="absolute flex flex-col items-center justify-center pointer-events-none"
             >
               <span className="text-2xl font-bold text-white leading-none mb-1">800+</span>
-              <span className="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold">Signals</span>
+              <span className="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold">{t('nav.signals', 'Signals')}</span>
             </motion.div>
           </div>
 
@@ -264,10 +266,10 @@ export default function SignalAnalyticsOverview() {
       <motion.div variants={itemVariants} className="border border-white/10 rounded-lg p-6 shadow-sm liquid-panel glass-card">
         <div className="mb-6">
           <h3 className="text-base font-semibold text-white flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-fiery-orange" />
-            Performance by Instrument
+            <BarChart3 className="w-4 h-4 text-[#FF6B00]" />
+            {t('tradingSignals.performanceByInstrument', 'Performance by Instrument')}
           </h3>
-          <p className="text-xs text-zinc-400 mt-1">Win/Loss ratio for the top traded symbols</p>
+          <p className="text-xs text-zinc-400 mt-1">{t('tradingSignals.winLossRatioTopSymbols', 'Win/Loss ratio for the top traded symbols')}</p>
         </div>
 
         <div className="w-full h-72">

@@ -58,6 +58,7 @@ import Badge from "@/components/common/Badge";
 import adminApi from "@/lib/adminApi";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
+import { useLanguage } from "@/context/LanguageContext";
 
 type DashboardTab = "overview" | "articles" | "users" | "signals" | "forex" | "blog" | "education" | "transactions" | "notifications" | "settings" | "traffic";
 const LIST_PAGE_SIZE = 20;
@@ -242,6 +243,7 @@ export default function AdminDashboard() {
   const router = useRouter();
   const colors = useThemeColors();
   const { user } = useAuthStore();
+  const { t } = useLanguage();
   
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview");

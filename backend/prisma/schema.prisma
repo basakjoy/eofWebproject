@@ -154,6 +154,9 @@ model Signal {
   takeProfit1 String?
   takeProfit2 String?
   takeProfit3 String?
+  takeProfit1Hit Boolean @default(false)
+  takeProfit2Hit Boolean @default(false)
+  takeProfit3Hit Boolean @default(false)
   accuracy    String   @default("0%")
   reliability String?
   timeframe   String?

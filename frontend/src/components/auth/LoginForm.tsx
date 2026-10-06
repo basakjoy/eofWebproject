@@ -10,10 +10,12 @@ import { authApi } from '@/lib/authApi';
 import { normalizeAuthUser } from '@/lib/authUtils';
 import { signIn } from 'next-auth/react';
 import { Eye, EyeOff, Lock, Mail, Loader2 } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function LoginForm() {
   const router = useRouter();
   const { setSession } = useAuthStore();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOAuthLoading] = useState(false);
   const [error, setError] = useState('');
@@ -24,7 +26,7 @@ export default function LoginForm() {
     password: '',
   });
 
-  // Prefill remembered email only (never auto-submits or auto-logs in)
+  // Prefill remembered email only
   useEffect(() => {
     try {
       const rememberedEmail = localStorage.getItem('rememberEmail');
@@ -111,7 +113,6 @@ export default function LoginForm() {
       if (result?.error) {
         setError(result.error || 'Google authentication failed.');
       } else if (result?.ok) {
-        // If login succeeded, retrieve user session and navigate
         const user = authApi.getCurrentUser();
         const token = authApi.getToken();
         if (user && token) {
@@ -140,7 +141,7 @@ export default function LoginForm() {
         {/* Email Field */}
         <div className="space-y-1.5">
           <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-            Email Address
+            {t('auth.emailAddress', 'Email Address')}
           </label>
           <div className="relative flex items-center">
             <Mail className="absolute left-3.5 w-4 h-4 text-gray-400 pointer-events-none" />
@@ -163,13 +164,13 @@ export default function LoginForm() {
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-              Password
+              {t('auth.password', 'Password')}
             </label>
             <Link
               href="/forgot-password"
               className="text-xs font-bold text-[#0c243c] hover:underline"
             >
-              Forgot Password?
+              {t('auth.forgotPassword', 'Forgot Password?')}
             </Link>
           </div>
           <div className="relative flex items-center">
@@ -212,7 +213,7 @@ export default function LoginForm() {
               onChange={(e) => setRememberMe(e.target.checked)}
               className="w-4 h-4 rounded border-gray-300 text-[#0c243c] focus:ring-[#0c243c] cursor-pointer"
             />
-            Remember Email
+            {t('auth.rememberEmail', 'Remember Email')}
           </label>
         </div>
 
@@ -225,10 +226,10 @@ export default function LoginForm() {
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              Signing In...
+              {t('auth.signingIn', 'Signing In...')}
             </>
           ) : (
-            'Sign In'
+            t('auth.signIn', 'Sign In')
           )}
         </Button>
 
@@ -238,7 +239,7 @@ export default function LoginForm() {
             <div className="w-full border-t border-gray-100"></div>
           </div>
           <span className="relative px-3 bg-white text-[11px] text-gray-400 font-medium uppercase tracking-wider">
-            or Sign In with
+            {t('auth.orSignInWith', 'or Sign In with')}
           </span>
         </div>
 
@@ -248,7 +249,7 @@ export default function LoginForm() {
             type="button"
             onClick={handleGoogleLogin}
             disabled={oauthLoading}
-            className="w-full flex items-center justify-center gap-3 py-2.5 px-4 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all font-bold text-gray-700 text-xs shadow-sm hover:border-gray-300 active:scale-[0.99] disabled:opacity-60"
+            className="w-full flex items-center justify-center gap-3 py-2.5 px-4 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all font-bold text-gray-700 text-xs shadow-sm hover:border-gray-300 active:scale-[0.99] disabled:opacity-60 cursor-pointer"
           >
             {oauthLoading ? (
               <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
@@ -272,27 +273,10 @@ export default function LoginForm() {
                 />
               </svg>
             )}
-            Continue with Google
-          </button>
-
-          <button
-            type="button"
-            disabled
-            aria-disabled="true"
-            className="w-full flex items-center justify-center gap-3 py-2.5 px-4 bg-gray-50 border border-gray-200 rounded-xl font-bold text-gray-400 text-xs cursor-not-allowed"
-          >
-            <svg
-              className="w-4 h-4 text-[#1877F2] opacity-50"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.248h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-            </svg>
-            Facebook sign-in unavailable
+            {t('auth.continueWithGoogle', 'Continue with Google')}
           </button>
         </div>
       </form>
     </div>
   );
 }
-

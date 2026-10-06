@@ -6,7 +6,6 @@ import {
   Briefcase,
   BarChart3,
   BookOpen,
-  Shield,
   CheckCircle2,
   ArrowRight,
   ChevronRight,
@@ -17,7 +16,6 @@ import {
   Globe,
   Lock,
   Star,
-  ArrowUpRight,
   ShieldCheck,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -108,51 +106,17 @@ const SERVICES = [
   },
 ];
 
-/* ── Tier Data ── */
-const TIERS = [
-  {
-    name: 'Standard',
-    price: 'Free',
-    period: '',
-    desc: 'Essential tools for the retail trader starting their journey.',
-    services: ['Basic Signals (Limited)', 'Daily Market Briefing', 'Educational Hub Access', 'Community Forum','24/7 Customer Support ', 'Backtesting Workshops with real data'],
-    cta: 'Get Started Free',
-    href: '/register',
-    featured: false,
-  },
-  {
-    name: 'Professional',
-    price: '$99',
-    period: '/mo',
-    desc: 'Full institutional desk access for serious retail traders.',
-    services: ['Unlimited Premium Signals', 'Portfolio Tracker & Analytics', 'Risk Calculator & Manager', 'Priority Real-Time Alerts', 'Telegram Signal Channel', '1-on-1 Onboarding Call'],
-    cta: 'Start Professional',
-    href: '/register',
-    featured: true,
-  },
-  {
-    name: 'Enterprise',
-    price: 'Custom',
-    period: '',
-    desc: 'Bespoke solutions for large capital and institutional clients.',
-    services: ['Full Fund Management', 'Dedicated Account Manager', 'API Execution Access', 'White-label Solutions', 'Custom Risk Profiles', '24/7 Priority Support'],
-    cta: 'Contact Our Desk',
-    href: '/contact',
-    featured: false,
-  },
-];
-
-const WHY_US = [
-  { icon: ShieldCheck, title: 'Audited & Transparent', desc: 'All signals publicly tracked. No cherry-picked results, ever.' },
-  { icon: Zap, title: 'Real-Time Delivery', desc: 'Instant push notifications via portal, Telegram, and email.' },
-  { icon: Target, title: '87% Win Rate', desc: 'Consistently above industry average with full historical logs.' },
-  { icon: Globe, title: 'Global Coverage', desc: '40+ countries. 24/7 operations. Multi-language support.' },
-  { icon: LineChart, title: 'Multi-Asset', desc: 'Forex, Crypto, Metals, Indices — all in one platform.' },
-  { icon: Lock, title: 'Bank-Grade Security', desc: 'End-to-end encryption. Your capital, always protected.' },
-];
-
 export default function ServicesPage() {
   const { t } = useLanguage();
+
+  const WHY_US = [
+    { icon: ShieldCheck, title: t('services.why1Title', 'Audited & Transparent'), desc: t('services.why1Desc', 'All signals publicly tracked. No cherry-picked results, ever.') },
+    { icon: Zap, title: t('services.why2Title', 'Real-Time Delivery'), desc: t('services.why2Desc', 'Instant push notifications via portal, Telegram, and email.') },
+    { icon: Target, title: t('services.why3Title', '87% Win Rate'), desc: t('services.why3Desc', 'Consistently above industry average with full historical logs.') },
+    { icon: Globe, title: t('services.why4Title', 'Global Coverage'), desc: t('services.why4Desc', '40+ countries. 24/7 operations. Multi-language support.') },
+    { icon: LineChart, title: t('services.why5Title', 'Multi-Asset'), desc: t('services.why5Desc', 'Forex, Crypto, Metals, Indices — all in one platform.') },
+    { icon: Lock, title: t('services.why6Title', 'Bank-Grade Security'), desc: t('services.why6Desc', 'End-to-end encryption. Your capital, always protected.') },
+  ];
 
   const services = [
     {
@@ -160,24 +124,106 @@ export default function ServicesPage() {
       title: t('services.service1Title', 'Trading Signals'),
       subtitle: t('services.service1Subtitle', 'Real-Time Institutional Alerts'),
       description: t('services.service1Desc', SERVICES[0].description),
+      benefits: [
+        t('services.signalBenefit1', 'Real-time delivery via Private Portal & Telegram'),
+        t('services.signalBenefit2', 'Precise entry, stop-loss, and TP targets'),
+        t('services.signalBenefit3', 'Proprietary multi-timeframe confluence framework'),
+        t('services.signalBenefit4', 'Cross-asset correlation analysis'),
+        t('services.signalBenefit5', 'Historical accuracy tracking & audit logs'),
+      ],
     },
     {
       ...SERVICES[1],
       title: t('services.service2Title', 'Fund Management'),
       subtitle: t('services.service2Subtitle', 'Passive Institutional Exposure'),
       description: t('services.service2Desc', SERVICES[1].description),
+      benefits: [
+        t('services.fundBenefit1', 'Institutional execution strategies'),
+        t('services.fundBenefit2', 'Bi-weekly performance audit reports'),
+        t('services.fundBenefit3', 'Direct account management access'),
+        t('services.fundBenefit4', 'Zero hidden fee structures'),
+        t('services.fundBenefit5', 'Risk-adjusted, drawdown-protected growth'),
+      ],
     },
     {
       ...SERVICES[2],
       title: t('services.service3Title', 'Portfolio Optimization'),
       subtitle: t('services.service3Subtitle', 'Advanced Capital Allocation'),
       description: t('services.service3Desc', SERVICES[2].description),
+      benefits: [
+        t('services.portfolioBenefit1', 'Multi-broker portfolio synchronization'),
+        t('services.portfolioBenefit2', 'Volatility surface modeling & stress testing'),
+        t('services.portfolioBenefit3', 'Automated rebalancing alerts'),
+        t('services.portfolioBenefit4', 'Custom risk-limit dashboards'),
+        t('services.portfolioBenefit5', 'Correlation heatmaps & drawdown analysis'),
+      ],
     },
     {
       ...SERVICES[3],
       title: t('services.service4Title', 'Trading Education'),
       subtitle: t('services.service4Subtitle', 'From Beginner to Institutional'),
       description: t('services.service4Desc', SERVICES[3].description),
+      benefits: [
+        t('services.educationBenefit1', 'Beginner-to-advanced structured curriculum'),
+        t('services.educationBenefit2', 'Live weekly market analysis sessions'),
+        t('services.educationBenefit3', 'Private mentorship programs'),
+        t('services.educationBenefit4', 'Pattern recognition & psychology training'),
+        t('services.educationBenefit5', 'Backtesting workshops with real data'),
+      ],
+    },
+  ];
+
+  const TIERS = [
+    {
+      name: t('services.tier1Name', 'Standard'),
+      price: t('services.tier1Price', 'Free'),
+      period: '',
+      desc: t('services.tier1Desc', 'Essential tools for the retail trader starting their journey.'),
+      services: [
+        t('services.tier1Feature1', 'Basic Signals (Limited)'),
+        t('services.tier1Feature2', 'Daily Market Briefing'),
+        t('services.tier1Feature3', 'Educational Hub Access'),
+        t('services.tier1Feature4', 'Community Forum'),
+        t('services.tier1Feature5', '24/7 Customer Support'),
+        t('services.tier1Feature6', 'Backtesting Workshops with real data'),
+      ],
+      cta: t('services.tier1Cta', 'Get Started Free'),
+      href: '/register',
+      featured: false,
+    },
+    {
+      name: t('services.tier2Name', 'Professional'),
+      price: '$99',
+      period: t('services.tier2Period', '/mo'),
+      desc: t('services.tier2Desc', 'Full institutional desk access for serious retail traders.'),
+      services: [
+        t('services.tier2Feature1', 'Unlimited Premium Signals'),
+        t('services.tier2Feature2', 'Portfolio Tracker & Analytics'),
+        t('services.tier2Feature3', 'Risk Calculator & Manager'),
+        t('services.tier2Feature4', 'Priority Real-Time Alerts'),
+        t('services.tier2Feature5', 'Telegram Signal Channel'),
+        t('services.tier2Feature6', '1-on-1 Onboarding Call'),
+      ],
+      cta: t('services.tier2Cta', 'Start Professional'),
+      href: '/register',
+      featured: true,
+    },
+    {
+      name: t('services.tier3Name', 'Enterprise'),
+      price: t('services.tier3Price', 'Custom'),
+      period: '',
+      desc: t('services.tier3Desc', 'Bespoke solutions for large capital and institutional clients.'),
+      services: [
+        t('services.tier3Feature1', 'Full Fund Management'),
+        t('services.tier3Feature2', 'Dedicated Account Manager'),
+        t('services.tier3Feature3', 'API Execution Access'),
+        t('services.tier3Feature4', 'White-label Solutions'),
+        t('services.tier3Feature5', 'Custom Risk Profiles'),
+        t('services.tier3Feature6', '24/7 Priority Support'),
+      ],
+      cta: t('services.tier3Cta', 'Contact Our Desk'),
+      href: '/contact',
+      featured: false,
     },
   ];
 
@@ -455,7 +501,7 @@ export default function ServicesPage() {
                     href="/about"
                     className="inline-flex items-center gap-2 px-8 py-4 rounded-full border border-white/20 hover:border-fiery-orange/40 text-white font-semibold text-sm transition-all"
                   >
-                    About Us <ArrowRight className="w-4 h-4" />
+                    {t('nav.about', 'About Us')} <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>
               </div>

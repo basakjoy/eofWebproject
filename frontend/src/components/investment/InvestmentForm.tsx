@@ -5,8 +5,10 @@ import { Wallet, ArrowRight, DollarSign, TrendingUp, Info } from "lucide-react";
 import { Input } from "@/components/dashboard/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/dashboard/ui/select";
 import { toast } from "sonner";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function InvestmentForm() {
+  const { t } = useLanguage();
   const [amount, setAmount] = useState<string>("");
   const [duration, setDuration] = useState<string>("");
 
@@ -35,11 +37,11 @@ export default function InvestmentForm() {
 
   const handleInvest = () => {
     if (!amount || !duration) {
-      toast.error("Please fill in all fields");
+      toast.error(t('common.error', 'Please fill in all fields'));
       return;
     }
 
-    toast.success("Investment request submitted successfully!");
+    toast.success(t('investments.submitSuccess', 'Investment request submitted successfully!'));
     setAmount("");
     setDuration("");
   };
@@ -53,7 +55,7 @@ export default function InvestmentForm() {
         </div>
         <div>
           <h3 className="font-display font-semibold" style={{ color: "#1e293b" }}>
-            Quick Investment
+            {t('investments.newDeposit', 'Quick Investment')}
           </h3>
           <p className="text-sm" style={{ color: "#64748b" }}>
             50% Profit Sharing Model
@@ -66,14 +68,14 @@ export default function InvestmentForm() {
         {/* Amount */}
         <div>
           <label className="text-sm mb-2 block" style={{ color: "#64748b" }}>
-            Investment Amount
+            {t('investments.investedAmount', 'Investment Amount')}
           </label>
           <div className="relative">
             <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#64748b" }} />
             <Input
               type="number"
               min="100"
-              placeholder="Enter amount"
+              placeholder={t('common.search', 'Enter amount')}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               className="pl-10"
@@ -85,11 +87,11 @@ export default function InvestmentForm() {
         {/* Duration */}
         <div>
           <label className="text-sm mb-2 block" style={{ color: "#64748b" }}>
-            Investment Duration
+            {t('investments.planDuration', 'Investment Duration')}
           </label>
           <Select value={duration} onValueChange={setDuration}>
             <SelectTrigger style={{ borderColor: "#e2e8f0" }}>
-              <SelectValue placeholder="Select duration" />
+              <SelectValue placeholder={t('common.select', 'Select duration')} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="3m">3 Months – 50% Profit Sharing</SelectItem>
@@ -104,7 +106,7 @@ export default function InvestmentForm() {
           <div className="flex items-center gap-2 mb-2" style={{ color: "#0D73ED" }}>
             <TrendingUp className="w-4 h-4" />
             <span className="text-sm font-medium">
-              Estimated Total Returns
+              {t('investments.profitEarned', 'Estimated Total Returns')}
             </span>
           </div>
 
@@ -127,7 +129,7 @@ export default function InvestmentForm() {
           className="w-full text-white font-semibold py-2 rounded-lg flex items-center justify-center gap-2"
           style={{ backgroundColor: "#0D73ED" }}
         >
-          Invest Now
+          {t('investments.newDeposit', 'Invest Now')}
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>

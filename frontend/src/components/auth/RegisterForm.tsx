@@ -3,18 +3,19 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Input from '@/components/common/Input';
 import Button from '@/components/common/Button';
 import Alert from '@/components/common/Alert';
 import { useAuthStore } from '@/store/authStore';
 import { authApi } from '@/lib/authApi';
 import { normalizeAuthUser } from '@/lib/authUtils';
+import { useLanguage, getLocalizedPath } from '@/context/LanguageContext';
 
 const COUNTRY_CODES = [
   { code: '+880', country: '🇧🇩 Bangladesh' },
   { code: '+1', country: '🇺🇸 USA' },
   { code: '+44', country: '🇬🇧 UK' },
   { code: '+91', country: '🇮🇳 India' },
+  { code: '+92', country: '🇵🇰 Pakistan' },
   { code: '+86', country: '🇨🇳 China' },
   { code: '+81', country: '🇯🇵 Japan' },
   { code: '+33', country: '🇫🇷 France' },
@@ -24,11 +25,14 @@ const COUNTRY_CODES = [
   { code: '+61', country: '🇦🇺 Australia' },
   { code: '+55', country: '🇧🇷 Brazil' },
   { code: '+27', country: '🇿🇦 South Africa' },
+  { code: '+971', country: '🇦🇪 UAE' },
+  { code: '+966', country: '🇸🇦 Saudi Arabia' },
 ];
 
 export default function RegisterForm() {
   const router = useRouter();
   const { setSession } = useAuthStore();
+  const { t, locale } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [userType, setUserType] = useState<'user' | 'investor'>('user');
@@ -84,9 +88,8 @@ export default function RegisterForm() {
       authApi.saveSession(token, userData);
       setSession(token, user);
 
-      // Redirect based on user type
       if (userType === 'investor') {
-        router.push('/dashboard/user');
+        router.push('/dashboard/investments');
       } else {
         router.push('/dashboard/user');
       }
@@ -97,8 +100,7 @@ export default function RegisterForm() {
     }
   };
 
-  const handleOAuthSignUp = (provider: 'google' | 'apple') => {
-    // TODO: Implement OAuth sign-up
+  const handleOAuthSignUp = (provider: 'google') => {
     console.log(`Sign up with ${provider}`);
   };
 
@@ -107,9 +109,38 @@ export default function RegisterForm() {
       {error && <div className="mb-6"><Alert type="error" message={error} onDismiss={() => setError('')} /></div>}
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* User Type Selection */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">{t('auth.accountType', 'Account Type')}</label>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setUserType('user')}
+              className={`py-2 px-3 rounded-xl text-xs font-bold transition-all ${
+                userType === 'user'
+                  ? 'bg-[#0a2a2a] text-white shadow-md'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {t('auth.traderUser', 'Trader / User')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setUserType('investor')}
+              className={`py-2 px-3 rounded-xl text-xs font-bold transition-all ${
+                userType === 'investor'
+                  ? 'bg-[#0a2a2a] text-white shadow-md'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {t('auth.investor', 'Investor')}
+            </button>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label className="text-sm font-bold text-gray-700">First Name</label>
+            <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">{t('auth.firstName', 'First Name')}</label>
             <input
               type="text"
               name="firstName"
@@ -121,7 +152,7 @@ export default function RegisterForm() {
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-bold text-gray-700">Last Name</label>
+            <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">{t('auth.lastName', 'Last Name')}</label>
             <input
               type="text"
               name="lastName"
@@ -135,7 +166,7 @@ export default function RegisterForm() {
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-bold text-gray-700">Email Address</label>
+          <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">{t('auth.emailAddress', 'Email Address')}</label>
           <input
             type="email"
             name="email"
@@ -148,7 +179,7 @@ export default function RegisterForm() {
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-bold text-gray-700">Phone Number</label>
+          <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">{t('auth.phoneNumber', 'Phone Number')}</label>
           <div className="flex gap-2">
             <select
               value={countryCode}
@@ -157,7 +188,7 @@ export default function RegisterForm() {
             >
               {COUNTRY_CODES.map((item) => (
                 <option key={item.code} value={item.code}>
-                  {item.code}
+                  {item.country} {item.code}
                 </option>
               ))}
             </select>
@@ -175,7 +206,7 @@ export default function RegisterForm() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label className="text-sm font-bold text-gray-700">Password</label>
+            <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">{t('auth.password', 'Password')}</label>
             <input
               type="password"
               name="password"
@@ -187,7 +218,7 @@ export default function RegisterForm() {
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-bold text-gray-700">Confirm</label>
+            <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">{t('auth.confirmPassword', 'Confirm Password')}</label>
             <input
               type="password"
               name="confirmPassword"
@@ -201,30 +232,35 @@ export default function RegisterForm() {
         </div>
 
         <div className="flex items-center gap-2 py-2">
-            <input type="checkbox" required id="terms" className="w-4 h-4 rounded border-gray-300 text-[#0c243c] focus:ring-[#0c243c]" />
-            <label htmlFor="terms" className="text-[10px] text-gray-500 font-medium font-bold">
-               I accept the <Link href="/terms" className="text-[#0c243c] font-black underline decoration-2">Terms and Conditions</Link>
+            <input type="checkbox" required id="terms" className="w-4 h-4 rounded border-gray-300 text-[#0c243c] focus:ring-[#0c243c] cursor-pointer" />
+            <label htmlFor="terms" className="text-xs text-gray-500 font-medium cursor-pointer">
+               {t('auth.termsAgreement', 'I accept the Terms and Conditions')}{' '}
+               <Link href={getLocalizedPath('/terms-of-service', locale)} className="text-[#0c243c] font-black underline decoration-2 ml-1">
+                 {t('footer.termsOfService', 'Terms of Service')}
+               </Link>
             </label>
         </div>
 
         <Button 
           type="submit" 
           loading={loading} 
-          className="w-full py-3.5 bg-[#0a2a2a] hover:bg-[#082222] text-white rounded-full font-bold text-md transition-all shadow-lg shadow-[#0a2a2a]/10"
+          className="w-full py-3.5 bg-[#0a2a2a] hover:bg-[#082222] text-white rounded-xl font-bold text-base transition-all shadow-lg shadow-[#0a2a2a]/10 cursor-pointer"
         >
-          Create Free Account
+          {t('auth.createFreeAccount', 'Create Free Account')}
         </Button>
 
         <div className="relative py-4 flex items-center justify-center">
-            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-50"></div></div>
-            <span className="relative px-3 bg-white text-[9px] text-gray-400 font-medium">or Sign Up with:</span>
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100"></div></div>
+            <span className="relative px-3 bg-white text-[10px] text-gray-400 font-medium uppercase tracking-wider">
+              {t('auth.orSignUpWith', 'or Sign Up with')}
+            </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div>
           <button
             type="button"
             onClick={() => handleOAuthSignUp('google')}
-            className="flex items-center justify-center gap-2 py-2.5 px-4 bg-white border border-gray-200 rounded-full hover:bg-gray-50 transition-all font-bold text-gray-600 text-xs shadow-sm"
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all font-bold text-gray-700 text-xs shadow-sm cursor-pointer"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -233,15 +269,6 @@ export default function RegisterForm() {
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
             </svg>
             Google
-          </button>
-          <button
-            type="button"
-            className="flex items-center justify-center gap-2 py-2.5 px-4 bg-white border border-gray-200 rounded-full hover:bg-gray-50 transition-all font-bold text-gray-600 text-xs shadow-sm"
-          >
-            <svg className="w-4 h-4 text-[#1877F2]" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.248h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-            </svg>
-            Facebook
           </button>
         </div>
       </form>

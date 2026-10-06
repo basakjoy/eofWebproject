@@ -36,6 +36,9 @@ const baseSignalSchema = z.object({
   takeProfit1: z.coerce.number().positive().optional(),
   takeProfit2: z.coerce.number().positive().optional(),
   takeProfit3: z.coerce.number().positive().optional(),
+  takeProfit1Hit: z.boolean().optional(),
+  takeProfit2Hit: z.boolean().optional(),
+  takeProfit3Hit: z.boolean().optional(),
   takeProfits: z.array(z.coerce.number().positive()).max(3).optional(),
   accuracy: z.coerce.number().min(0).max(100).optional(),
   reliability: z.coerce.number().min(0).max(1).optional(),
@@ -220,6 +223,9 @@ const sanitizeSignal = (signal: any) => {
     takeProfit1: numberOrNull(signal.takeProfit1 ?? signal.takeProfit),
     takeProfit2: numberOrNull(signal.takeProfit2),
     takeProfit3: numberOrNull(signal.takeProfit3),
+    takeProfit1Hit: signal?.takeProfit1Hit ?? false,
+    takeProfit2Hit: signal?.takeProfit2Hit ?? false,
+    takeProfit3Hit: signal?.takeProfit3Hit ?? false,
     takeProfits: takeProfitValues,
     accuracy: numberOrNull(signal.accuracy),
     reliability: numberOrNull(signal.reliability),
@@ -311,6 +317,9 @@ router.get('/', validateQuery(querySchema), async (req: Request, res: Response) 
           takeProfit1: true,
           takeProfit2: true,
           takeProfit3: true,
+          takeProfit1Hit: true,
+          takeProfit2Hit: true,
+          takeProfit3Hit: true,
           accuracy: true,
           reliability: true,
           timeframe: true,
@@ -368,6 +377,9 @@ router.get('/:id', async (req: Request, res: Response) => {
         takeProfit1: true,
         takeProfit2: true,
         takeProfit3: true,
+        takeProfit1Hit: true,
+        takeProfit2Hit: true,
+        takeProfit3Hit: true,
         accuracy: true,
         reliability: true,
         timeframe: true,
@@ -494,6 +506,9 @@ router.post(
           takeProfit1: true,
           takeProfit2: true,
           takeProfit3: true,
+          takeProfit1Hit: true,
+          takeProfit2Hit: true,
+          takeProfit3Hit: true,
           accuracy: true,
           reliability: true,
           timeframe: true,
@@ -561,6 +576,9 @@ router.put(
         takeProfit2,
         takeProfit3,
         takeProfits,
+        takeProfit1Hit,
+        takeProfit2Hit,
+        takeProfit3Hit,
         timeframe,
       } = body;
 
@@ -609,8 +627,11 @@ router.put(
         } as ErrorResponse);
       }
 
-      const updateData: Record<string, string | null> = {};
+      const updateData: Record<string, string | null | boolean> = {};
       if (normalizedStatus !== undefined) updateData.status = normalizedStatus;
+      if (takeProfit1Hit !== undefined) updateData.takeProfit1Hit = Boolean(takeProfit1Hit);
+      if (takeProfit2Hit !== undefined) updateData.takeProfit2Hit = Boolean(takeProfit2Hit);
+      if (takeProfit3Hit !== undefined) updateData.takeProfit3Hit = Boolean(takeProfit3Hit);
       if (reliability !== undefined) updateData.reliability = String(reliability);
       if (accuracy !== undefined) updateData.accuracy = String(accuracy);
       if (normalizedPair !== undefined) updateData.pair = normalizedPair;
@@ -657,6 +678,9 @@ router.put(
           takeProfit1: true,
           takeProfit2: true,
           takeProfit3: true,
+          takeProfit1Hit: true,
+          takeProfit2Hit: true,
+          takeProfit3Hit: true,
           accuracy: true,
           reliability: true,
           timeframe: true,

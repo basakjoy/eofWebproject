@@ -4,31 +4,43 @@ import LoginForm from '@/components/auth/LoginForm';
 import Link from 'next/link';
 import { LogoIcon } from '@/components/common/LogoIcon';
 import { motion } from 'framer-motion';
+import { useLanguage, getLocalizedPath } from '@/context/LanguageContext';
+import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 
 export default function LoginPage() {
+  const { t, locale } = useLanguage();
+
   return (
     <div className="min-h-screen flex bg-white font-sans">
       {/* Left Column: Form Section */}
-      <div className="w-full lg:w-[420px] flex-shrink-0 flex flex-col p-8 sm:p-12">
-        <div className="mb-12">
-          <div className="flex items-center gap-2 mb-10">
-            <LogoIcon size={32} />
-            <span className="text-xl font-black text-[#0c243c] tracking-tight uppercase">Empire of Forex</span>
+      <div className="w-full lg:w-[440px] flex-shrink-0 flex flex-col p-8 sm:p-12 justify-between">
+        <div>
+          <div className="flex items-center justify-between gap-2 mb-10">
+            <Link href={getLocalizedPath('/home', locale)} className="flex items-center gap-2">
+              <LogoIcon size={32} />
+              <span className="text-xl font-black text-[#0c243c] tracking-tight uppercase">Empire of Forex</span>
+            </Link>
+            <LanguageSwitcher />
           </div>
           
-          <h1 className="text-2xl font-bold text-gray-900 mb-2 tracking-tight">Sign In</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2 tracking-tight">
+            {t('auth.signIn', 'Sign In')}
+          </h1>
           <p className="text-sm text-gray-500 font-medium">
-            Need an Empire of Forex account? <Link href="/register" className="text-gray-900 border-b-2 border-gray-900 font-bold ml-1">Create an Account</Link>
+            {t('auth.needAccount', 'Need an Empire of Forex account?')}{' '}
+            <Link href={getLocalizedPath('/register', locale)} className="text-gray-900 border-b-2 border-gray-900 font-bold ml-1">
+              {t('auth.createAccount', 'Create an Account')}
+            </Link>
           </p>
         </div>
 
-        <div className="flex-1">
+        <div className="my-6">
           <LoginForm />
         </div>
 
         <div className="mt-8 text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-relaxed">
-          Copyright © 2025 Empire of Forex <br />
-          International. All rights reserved.
+          Copyright © 2026 Empire of Forex <br />
+          International. {t('footer.rightsReserved', 'All rights reserved.')}
         </div>
       </div>
 
@@ -39,7 +51,7 @@ export default function LoginPage() {
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: 'url("/images/auth-hero.png")' }}
         />
-        <div className="absolute inset-0 bg-black/10" />
+        <div className="absolute inset-0 bg-black/30" />
 
         <div className="relative z-10 p-20 h-full flex flex-col justify-start">
           <motion.div
@@ -49,18 +61,16 @@ export default function LoginPage() {
             className="max-w-md text-white drop-shadow-2xl"
           >
             <h2 className="text-4xl font-extrabold leading-tight mb-6">
-              The Global Account that <br />
-              connects you to the markets.
+              {t('auth.heroTitle', 'The Global Account that connects you to the markets.')}
             </h2>
             <p className="text-xl font-medium opacity-90 mb-8 leading-normal">
-              Manage your Forex trades with Empire <br />
-              in a simple, fast, and secure way.
+              {t('auth.heroSubtitle', 'Manage your Forex trades with Empire in a simple, fast, and secure way.')}
             </p>
             <Link 
-              href="/register" 
+              href={getLocalizedPath('/register', locale)} 
               className="inline-flex items-center gap-3 text-xl font-bold border-b-4 border-white pb-1 hover:gap-6 transition-all"
             >
-              Get Started Now <span>&gt;</span>
+              {t('auth.getStartedNow', 'Get Started Now')} <span>&gt;</span>
             </Link>
           </motion.div>
 
@@ -87,7 +97,7 @@ export default function LoginPage() {
             >
               <div className="space-y-4">
                 <div>
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1.5">Starting Currency</label>
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1.5">{t('auth.startingCurrency', 'Starting Currency')}</label>
                   <div className="flex items-center justify-between px-3 py-2.5 bg-gray-50 border border-gray-100 rounded-lg">
                     <div className="flex items-center gap-2">
                        <span className="text-lg">🇬🇧</span>
@@ -97,7 +107,7 @@ export default function LoginPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1.5">Destination Country</label>
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1.5">{t('auth.destinationCountry', 'Destination Country')}</label>
                   <div className="flex items-center justify-between px-3 py-2.5 bg-gray-50 border border-gray-100 rounded-lg">
                     <div className="flex items-center gap-2">
                        <span className="text-lg">🇺🇸</span>

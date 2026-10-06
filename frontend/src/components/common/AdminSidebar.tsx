@@ -16,27 +16,18 @@ import {
   Grid3x3,
   Newspaper,
   BarChart3,
+  ShieldCheck,
+  Headphones,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/lib/themeColors';
 import { useAuthStore } from '@/store/authStore';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface AdminSidebarProps {
   collapsed: boolean;
   onToggle: () => void;
 }
-
-const menuItems = [
-  { id: 'overview', icon: LayoutDashboard, label: 'Dashboard', path: '/admin?tab=overview' },
-  { id: 'users', icon: Users, label: 'User Management', path: '/admin?tab=users' },
-  { id: 'articles', icon: Newspaper, label: 'Articles', path: '/admin?tab=articles' },
-  { id: 'blog', icon: FileText, label: 'Blog', path: '/admin?tab=blog' },
-  { id: 'education', icon: BookOpen, label: 'Education', path: '/admin?tab=education' },
-  { id: 'signals', icon: TrendingUp, label: 'Trading Signals', path: '/admin?tab=signals' },
-  { id: 'transactions', icon: DollarSign, label: 'Transactions', path: '/admin?tab=transactions' },
-  { id: 'notifications', icon: Bell, label: 'Notifications', path: '/admin?tab=notifications' },
-  { id: 'settings', icon: Settings, label: 'Settings', path: '/admin?tab=settings' },
-];
 
 export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
   const searchParams = useSearchParams();
@@ -44,6 +35,20 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
   const colors = useThemeColors();
   const router = useRouter();
   const { logout } = useAuthStore();
+  const { t } = useLanguage();
+
+  const menuItems = [
+    { id: 'overview', icon: LayoutDashboard, label: t('admin.overview', 'Overview'), path: '/admin?tab=overview' },
+    { id: 'users', icon: Users, label: t('admin.users', 'User Management'), path: '/admin?tab=users' },
+    { id: 'signals', icon: TrendingUp, label: t('admin.signals', 'Signal Manager'), path: '/admin?tab=signals' },
+    { id: 'deposits', icon: DollarSign, label: t('admin.deposits', 'Deposit Approvals'), path: '/admin?tab=deposits' },
+    { id: 'articles', icon: Newspaper, label: t('admin.articles', 'Articles'), path: '/admin?tab=articles' },
+    { id: 'brokers', icon: ShieldCheck, label: t('admin.brokers', 'Brokers Management'), path: '/admin?tab=brokers' },
+    { id: 'analytics', icon: BarChart3, label: t('admin.analytics', 'Analytics'), path: '/admin?tab=analytics' },
+    { id: 'support', icon: Headphones, label: t('admin.support', 'Client Support'), path: '/admin?tab=support' },
+    { id: 'logs', icon: FileText, label: t('admin.logs', 'System Logs'), path: '/admin?tab=logs' },
+    { id: 'settings', icon: Settings, label: t('nav.settings', 'Settings'), path: '/admin?tab=settings' },
+  ];
 
   const handleLogout = () => {
     logout();
@@ -70,7 +75,7 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
                 Empire Of
               </p>
               <p className="font-bold text-xs sm:text-sm bg-gradient-to-r from-red-600 to-red-400 bg-clip-text text-transparent">
-                Admin
+                {t('nav.admin', 'Admin')}
               </p>
             </div>
           )}
@@ -78,7 +83,7 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
 
         <button
           onClick={onToggle}
-          className="p-1.5 sm:p-2 rounded-lg transition-colors flex-shrink-0"
+          className="p-1.5 sm:p-2 rounded-lg transition-colors flex-shrink-0 cursor-pointer"
           style={{ color: colors.text.secondary }}
           aria-label="Toggle sidebar"
         >
@@ -101,9 +106,9 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
                 router.push(url);
               }}
               className={cn(
-                'w-full flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-all text-sm sm:text-base',
+                'w-full flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-all text-xs sm:text-sm cursor-pointer',
                 isActive(item.id)
-                  ? 'font-medium'
+                  ? 'font-bold'
                   : '',
                 collapsed && 'justify-center px-2 sm:px-3 gap-0'
               )}
@@ -123,11 +128,11 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
         <div className="px-2 sm:px-3 border-t space-y-2 sm:space-y-3 pt-3 sm:pt-4" style={{ borderColor: colors.border }}>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-all text-sm"
+            className="w-full flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-all text-xs sm:text-sm cursor-pointer"
             style={{ color: colors.text.secondary }}
           >
             <LogOut className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-            {!collapsed && <span>Logout</span>}
+            {!collapsed && <span>{t('nav.logout', 'Logout')}</span>}
           </button>
         </div>
       </nav>

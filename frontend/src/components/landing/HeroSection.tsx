@@ -4,8 +4,11 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { useEffect } from 'react';
 import gsap from 'gsap';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function HeroSection() {
+  const { t } = useLanguage();
+
   useEffect(() => {
     const tl = gsap.timeline();
 
@@ -52,56 +55,52 @@ export default function HeroSection() {
           <div className="space-y-4 sm:space-y-6">
 
             <p className="hero-subtitle text-blue-400 font-medium text-xs sm:text-sm tracking-widest uppercase">
-              Welcome to Empire of Forex
+              {t('hero.badge', 'Welcome to Empire of Forex')}
             </p>
 
-            {/*Fixed: text scales from mobile → desktop, no overflow */}
             <h1 className="hero-title text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-black text-white leading-[1.05] max-w-5xl">
-              Financial Mastery
+              {t('hero.title', 'Financial Mastery')}
               <br />
               <span className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
-                Redefined
+                {t('hero.titleHighlight', 'Redefined')}
               </span>
             </h1>
           </div>
 
           <p className="hero-description text-base sm:text-lg text-gray-300 max-w-2xl leading-relaxed font-light">
-            Join thousands of professional traders and investors accessing world-class trading signals,
-            real-time market analysis, and comprehensive portfolio management in one unified platform.
+            {t('hero.description', 'Join thousands of professional traders and investors accessing world-class trading signals, real-time market analysis, and comprehensive portfolio management in one unified platform.')}
           </p>
 
-          {/* Fixed: buttons stack on mobile, side-by-side on sm+, full-width on mobile */}
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 pt-4 sm:pt-8 hero-buttons">
             <Link
               href="/register"
               className="inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-blue-600/50 w-full sm:w-auto"
             >
-              Start Trading
+              {t('hero.getStarted', 'Start Trading')}
               <ArrowRight className="w-5 h-5" />
             </Link>
             <Link
               href="/about"
               className="inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-4 border-2 border-gray-600 hover:border-blue-400 text-white font-semibold rounded-lg transition-all duration-300 hover:scale-105 w-full sm:w-auto"
             >
-              Explore Platform
+              {t('hero.exploreSignals', 'Explore Platform')}
             </Link>
           </div>
         </div>
 
         {/* Stats Row */}
-        {/* ✅ Fixed: 1 col on mobile → 3 col on md, smaller text on mobile */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12 border-t border-gray-800 pt-12 sm:pt-20">
           <div className="space-y-2 hero-stats text-center sm:text-left">
             <p className="text-3xl sm:text-4xl font-black text-white">$500M+</p>
-            <p className="text-gray-400 text-sm font-light">Assets Under Management</p>
+            <p className="text-gray-400 text-sm font-light">{t('metrics.trustedBy', 'Assets Under Management')}</p>
           </div>
           <div className="space-y-2 hero-stats text-center sm:text-left">
             <p className="text-3xl sm:text-4xl font-black text-white">50K+</p>
-            <p className="text-gray-400 text-sm font-light">Active Traders</p>
+            <p className="text-gray-400 text-sm font-light">{t('metrics.traders', 'Active Traders')}</p>
           </div>
           <div className="space-y-2 hero-stats text-center sm:text-left">
             <p className="text-3xl sm:text-4xl font-black text-white">99.9%</p>
-            <p className="text-gray-400 text-sm font-light">Uptime Guarantee</p>
+            <p className="text-gray-400 text-sm font-light">{t('metrics.analysis', 'Uptime Guarantee')}</p>
           </div>
         </div>
 

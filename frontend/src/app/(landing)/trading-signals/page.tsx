@@ -123,6 +123,7 @@ function SignalCard({
   onDetail: () => void;
   onCalc: () => void;
 }) {
+  const { t, locale } = useLanguage();
   const isBuy = signal.type?.toUpperCase() === 'BUY';
   const [copied, setCopied] = useState(false);
 
@@ -131,6 +132,10 @@ function SignalCard({
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };
+
+  const createdLabel = signal.createdAt
+    ? new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(signal.createdAt))
+    : t('tradingSignals.today', 'Today');
 
   return (
     <motion.div
@@ -168,11 +173,11 @@ function SignalCard({
         </div>
         <div className="flex flex-col items-end gap-1">
           <span className="text-[10px] font-bold text-zinc-500 bg-white/5 border border-white/10 px-2 py-0.5 rounded">
-            {signal.status || 'ACTIVE'}
+            {signal.status || t('tradingSignals.active', 'ACTIVE')}
           </span>
           <span className="text-[9px] text-zinc-600 font-medium flex items-center gap-1">
             <Clock className="w-2.5 h-2.5" />
-            {signal.createdAt ? new Date(signal.createdAt).toLocaleDateString() : 'Today'}
+            {createdLabel}
           </span>
         </div>
       </div>
@@ -184,7 +189,7 @@ function SignalCard({
           onClick={copyEntry}
         >
           <div className="flex items-center justify-between mb-1">
-            <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">Entry</span>
+            <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">{t('tradingSignals.entry', 'Entry')}</span>
             {copied ? (
               <Check className="w-3 h-3 text-emerald-400" />
             ) : (
@@ -194,16 +199,16 @@ function SignalCard({
           <span className="text-sm font-mono font-bold text-white">{signal.entryPrice}</span>
         </div>
         <div className="bg-rose-500/[0.05] border border-rose-500/20 rounded-xl p-3">
-          <span className="text-[9px] font-bold text-rose-400 uppercase tracking-wider block mb-1">Stop Loss</span>
+          <span className="text-[9px] font-bold text-rose-400 uppercase tracking-wider block mb-1">{t('tradingSignals.stopLoss', 'Stop Loss')}</span>
           <span className="text-sm font-mono font-bold text-rose-400">{signal.stopLoss}</span>
         </div>
         <div className="bg-emerald-500/[0.05] border border-emerald-500/20 rounded-xl p-3">
-          <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider block mb-1">TP 1</span>
+          <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider block mb-1">{t('tradingSignals.tp1', 'TP 1')}</span>
           <span className="text-sm font-mono font-bold text-emerald-400">{signal.takeProfit1 || signal.takeProfit}</span>
         </div>
         {signal.takeProfit2 && (
           <div className="bg-emerald-500/[0.03] border border-emerald-500/10 rounded-xl p-3">
-            <span className="text-[9px] font-bold text-emerald-400/60 uppercase tracking-wider block mb-1">TP 2</span>
+            <span className="text-[9px] font-bold text-emerald-400/60 uppercase tracking-wider block mb-1">{t('tradingSignals.tp2', 'TP 2')}</span>
             <span className="text-sm font-mono font-bold text-emerald-300">{signal.takeProfit2}</span>
           </div>
         )}
@@ -214,18 +219,18 @@ function SignalCard({
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1 text-xs text-zinc-400 font-medium">
             <Target className="w-3.5 h-3.5 text-fiery-orange" />
-            {signal.accuracy || 88}% acc
+            {signal.accuracy || 88}% {t('tradingSignals.acc', 'acc')}
           </span>
           <span className="text-zinc-700">·</span>
           <span className="text-xs text-zinc-400 font-medium">
-            R:R {signal.riskReward || '1:2'}
+            {t('tradingSignals.rr', 'R:R')} {signal.riskReward || '1:2'}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
           <button
             onClick={(e) => { e.stopPropagation(); onCalc(); }}
             className="p-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 transition-colors"
-            title="Risk Calculator"
+            title={t('tradingSignals.riskCalculator', 'Risk Calculator')}
           >
             <Calculator className="w-3.5 h-3.5 text-fiery-amber" />
           </button>
@@ -234,28 +239,13 @@ function SignalCard({
             className="flex items-center gap-1 px-3 py-1.5 rounded-sm bg-fiery-orange/10 hover:bg-fiery-orange/20 border border-fiery-orange/20 text-fiery-orange text-xs font-bold transition-colors"
           >
             <Eye className="w-3.5 h-3.5" />
-            View
+            {t('tradingSignals.view', 'View')}
           </button>
         </div>
       </div>
     </motion.div>
   );
 }
-
-/* ── STAT METRIC CARDS DATA ── */
-const METRICS = [
-  { label: 'Win Rate', value: '87%', icon: Target, color: 'text-fiery-orange', bg: 'bg-fiery-orange/10', border: 'border-fiery-orange/20' },
-  { label: 'Total Signals', value: '2,400+', icon: Activity, color: 'text-zinc-100', bg: 'bg-white/5', border: 'border-white/10' },
-  { label: 'Avg R:R Ratio', value: '1:2.8', icon: BarChart3, color: 'text-fiery-amber', bg: 'bg-fiery-amber/10', border: 'border-fiery-amber/20' },
-  { label: 'Assets Covered', value: '30+', icon: TrendingUp, color: 'text-zinc-100', bg: 'bg-white/5', border: 'border-white/10' },
-];
-
-const FEATURES = [
-  { icon: Zap, title: 'Real-Time Alerts', desc: 'Signals delivered instantly via our portal, Telegram, and email. Never miss a setup.' },
-  { icon: ShieldCheck, title: 'Risk Management', desc: 'Every signal comes with defined entry, stop-loss, and multiple take-profit levels.' },
-  { icon: LineChart, title: 'Technical Analysis', desc: 'Powered by institutional-grade charting, AI confluence, and multi-timeframe analysis.' },
-  { icon: Bell, title: 'Smart Notifications', desc: 'Customizable alerts by pair, timeframe, or signal type. Full control in your hands.' },
-];
 
 /* ── MAIN PAGE ── */
 export default function TradingSignalsPage() {
@@ -265,6 +255,20 @@ export default function TradingSignalsPage() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'ALL' | 'BUY' | 'SELL'>('ALL');
   const [view, setView] = useState<'grid' | 'list'>('grid');
+
+  const METRICS = [
+    { label: t('tradingSignals.winRate', 'Win Rate'), value: '87%', icon: Target, color: 'text-fiery-orange', bg: 'bg-fiery-orange/10', border: 'border-fiery-orange/20' },
+    { label: t('tradingSignals.totalSignals', 'Total Signals'), value: '2,400+', icon: Activity, color: 'text-zinc-100', bg: 'bg-white/5', border: 'border-white/10' },
+    { label: t('tradingSignals.avgRR', 'Avg R:R Ratio'), value: '1:2.8', icon: BarChart3, color: 'text-fiery-amber', bg: 'bg-fiery-amber/10', border: 'border-fiery-amber/20' },
+    { label: t('tradingSignals.assetsCovered', 'Assets Covered'), value: '30+', icon: TrendingUp, color: 'text-zinc-100', bg: 'bg-white/5', border: 'border-white/10' },
+  ];
+
+  const FEATURES = [
+    { icon: Zap, title: t('tradingSignals.feature1Title', 'Real-Time Alerts'), desc: t('tradingSignals.feature1Desc', 'Signals delivered instantly via our portal, Telegram, and email. Never miss a setup.') },
+    { icon: ShieldCheck, title: t('tradingSignals.feature2Title', 'Risk Management'), desc: t('tradingSignals.feature2Desc', 'Every signal comes with defined entry, stop-loss, and multiple take-profit levels.') },
+    { icon: LineChart, title: t('tradingSignals.feature3Title', 'Technical Analysis'), desc: t('tradingSignals.feature3Desc', 'Powered by institutional-grade charting, AI confluence, and multi-timeframe analysis.') },
+    { icon: Bell, title: t('tradingSignals.feature4Title', 'Smart Notifications'), desc: t('tradingSignals.feature4Desc', 'Customizable alerts by pair, timeframe, or signal type. Full control in your hands.') },
+  ];
 
   const [selectedDetail, setSelectedDetail] = useState<SignalRecord | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -367,7 +371,7 @@ export default function TradingSignalsPage() {
                 transition={{ duration: 0.5 }}
                 className="text-sm font-bold text-fiery-orange uppercase tracking-[0.2em] mb-5 font-mono"
               >
-                {t('liveSignals.title', 'Institutional-Grade Signal Desk')}
+                {t('tradingSignals.heroBadge', 'Institutional Signal Desk')}
               </motion.p>
 
               <motion.h1
@@ -376,10 +380,7 @@ export default function TradingSignalsPage() {
                 transition={{ duration: 0.7, delay: 0.1 }}
                 className="text-5xl sm:text-6xl lg:text-10xl text-white leading-[1.05] tracking-tight [text-shadow:0_2px_24px_rgba(0,0,0,0.35)]"
               >
-                {t('nav.signals', 'Institutional')}{' '}
-                <span className="text-fiery-orange pb-2 inline-block">
-                  {t('nav.signals', 'Trading Signals')}
-                </span>
+                <span className="text-fiery-orange pb-2 inline-block">{t('tradingSignals.heroTitle', 'Trading Signals')}</span>
               </motion.h1>
 
               <motion.p
@@ -388,8 +389,7 @@ export default function TradingSignalsPage() {
                 transition={{ duration: 0.9, delay: 0.2 }}
                 className="text-base text-zinc-400 leading-relaxed max-w-2xl mx-auto mb-10 font-normal pt-4"
               >
-                High-probability Forex, Crypto & Commodity setups — complete with entry,
-                stop-loss, and take-profit levels. Backed by multi-timeframe confluence.
+                {t('tradingSignals.heroDesc', 'High-probability Forex, Crypto & Commodity setups — complete with entry, stop-loss, and take-profit levels. Backed by multi-timeframe confluence.')}
               </motion.p>
 
               <motion.div
@@ -403,13 +403,13 @@ export default function TradingSignalsPage() {
                  className="inline-flex items-center gap-2 px-8 py-3 rounded-sm bg-transparent hover:bg-white/5 border border-white/20  text-white font-bold text-sm tracking-wide transition-all"
                 >
                   <Zap className="w-4 h-4 fill-black text-white" />
-                  Access Full Signals
+                  {t('tradingSignals.accessFullSignals', 'Access Full Signals')}
                 </Link>
                 <Link
                   href="/investment-plans"
                   className="inline-flex items-center gap-2 px-8 py-3 rounded-sm bg-transparent hover:bg-white/5 border border-white/20 text-white font-bold text-sm tracking-wide transition-all"
                 >
-                  View Plans <ChevronRight className="w-4 h-4" />
+                  {t('tradingSignals.viewPlans', 'View Plans')} <ChevronRight className="w-4 h-4" />
                 </Link>
               </motion.div>
             </div>
@@ -455,7 +455,7 @@ export default function TradingSignalsPage() {
               <div>
                 <h2 className="text-4xl sm:text-4xl text-white tracking-tight">{t('liveSignals.title', 'Live Signals Feed')}</h2>
                 <p className="text-sm text-zinc-400 mt-0.5">
-                  {filtered.length} active setups · refreshed continuously
+                  {t('tradingSignals.activeSetups', '{count} active setups · refreshed continuously', { count: filtered.length })}
                 </p>
               </div>
               <div className="flex items-center gap-3">
@@ -498,7 +498,7 @@ export default function TradingSignalsPage() {
                           : 'bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-zinc-400'
                     }`}
                   >
-                    {f}
+                    {f === 'ALL' ? t('tradingSignals.filterAll', 'All Signals') : f === 'BUY' ? t('tradingSignals.filterBuy', 'Buy Only') : t('tradingSignals.filterSell', 'Sell Only')}
                   </button>
                 ))}
               </div>
@@ -513,7 +513,7 @@ export default function TradingSignalsPage() {
             ) : filtered.length === 0 ? (
               <div className="py-24 text-center rounded-lg border border-white/5 liquid-panel">
                 <Zap className="w-10 h-10 text-zinc-600 mx-auto mb-3" />
-                <p className="text-sm text-zinc-500">No active signals match your filters.</p>
+                <p className="text-sm text-zinc-500">{t('tradingSignals.noActiveSignals', 'No active signals match your filters.')}</p>
               </div>
             ) : (
               <div className={`grid gap-5 ${view === 'grid' ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1 max-w-2xl'}`}>
@@ -536,10 +536,10 @@ export default function TradingSignalsPage() {
             <div className="text-center mb-14">
               <p className="text-xs font-bold text-fiery-orange uppercase tracking-[0.2em] mb-3 font-mono">{t('tradingSignals.howItWorks', 'How It Works')}</p>
               <h2 className="text-3xl sm:text-5xl  text-white mb-4 tracking-tight">
-                Every Signal, Perfectly Structured
+                {t('tradingSignals.guideTitle', 'Every Signal, Perfectly Structured')}
               </h2>
               <p className="text-zinc-400 max-w-xl mx-auto text-base leading-relaxed">
-                From market screening to alert delivery our system handles everything with zero noise.
+                {t('tradingSignals.guideDesc', 'From market screening to alert delivery our system handles everything with zero noise.')}
               </p>
             </div>
 
@@ -578,27 +578,26 @@ export default function TradingSignalsPage() {
               <div className="relative z-10">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-sm bg-amber-300/10 border border-amber-300/20 text-xs font-bold text-amber-300 uppercase tracking-[0.2em] mb-6">
                   <Star className="w-3.5 h-3.5 fill-amber-300" />
-                  Premium Membership
+                  {t('tradingSignals.premiumBadge', 'Premium Membership')}
                 </div>
                 <h2 className="text-4xl sm:text-5xl  text-white mb-4 leading-tight tracking-tight">
-                  Unlock the Full Signal Suite
+                  {t('tradingSignals.premiumTitle', 'Unlock the Full Signal Suite')}
                 </h2>
                 <p className="text-zinc-300 text-base max-w-lg mx-auto mb-8 font-normal leading-relaxed">
-                  Get unlimited access to all signals, advanced analytics, risk calculator,
-                  and priority alerts. Join 12,000+ empire traders.
+                  {t('tradingSignals.premiumDescription', 'Get unlimited access to all signals, advanced analytics, risk calculator, and priority alerts. Join 12,000+ empire traders.')}
                 </p>
                 <div className="flex flex-wrap items-center justify-center gap-4">
                   <Link
                     href="/register"
                     className="inline-flex items-center gap-2 px-10 py-3 rounded-sm bg-fiery-orange text-white  text-sm shadow-[0_0_20px_rgba(255,107,0,0.2)] hover:brightness-110 transition-transform"
                   >
-                    <Lock className="w-4 h-4" /> Get Premium Access
+                    <Lock className="w-4 h-4" /> {t('tradingSignals.premiumCta', 'Get Premium Access')}
                   </Link>
                   <Link
                     href="/investment-plans"
                     className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-white font-semibold text-sm transition-all"
                   >
-                    Compare Plans <ArrowRight className="w-4 h-4" />
+                    {t('tradingSignals.comparePlans', 'Compare Plans')} <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>
               </div>

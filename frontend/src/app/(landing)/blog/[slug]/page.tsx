@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import blogApi, { BlogArticle } from '@/lib/blogApi';
 import Navbar from '@/components/common/Navbar';
+import { useLanguage, getLocalizedPath } from '@/context/LanguageContext';
 
 /* ─── Content Helpers ──────────────────────────────────────── */
 
@@ -111,6 +112,7 @@ export default function ArticleDetailPage() {
   const params = useParams();
   const router = useRouter();
   const slug = params?.slug as string;
+  const { t, locale } = useLanguage();
 
   const [article, setArticle] = useState<BlogArticle | null>(null);
   const [related, setRelated] = useState<BlogArticle[]>([]);
@@ -129,13 +131,13 @@ export default function ArticleDetailPage() {
         const relRes = await blogApi.getArticles({ category: res.data.category, limit: 3 });
         setRelated(relRes.data.filter((a) => a.id !== res.data.id).slice(0, 2));
       } catch {
-        router.push('/blog');
+        router.push(getLocalizedPath('/blog', locale));
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, [slug]);
+  }, [slug, locale, router]);
 
   const handleFeedback = async (helpful: boolean) => {
     if (feedbackSent || !article) return;
@@ -169,7 +171,15 @@ export default function ArticleDetailPage() {
   const readTime = Math.max(1, Math.ceil(article.content.split(/\s+/).length / 200));
   const headings = extractHeadings(article.content);
   const tags = article.keywords ? article.keywords.split(',').map((k) => k.trim()).filter(Boolean) : [];
-  const publishedDate = new Date(article.createdAt).toLocaleDateString('en-US', {
+  
+  const dateLocaleMap: Record<string, string> = {
+    en: 'en-US',
+    bn: 'bn-BD',
+    hi: 'hi-IN',
+    ur: 'ur-PK',
+  };
+
+  const publishedDate = new Date(article.createdAt).toLocaleDateString(dateLocaleMap[locale] ?? 'en-US', {
     month: 'long',
     day: 'numeric',
     year: 'numeric',
@@ -197,9 +207,9 @@ export default function ArticleDetailPage() {
         <section className="pt-36 pb-12 px-4 sm:px-6">
           <div className="max-w-4xl mx-auto text-center">
             <nav className="mb-6 flex items-center justify-center gap-2 text-xs font-medium text-zinc-400">
-              <Link href="/" className="hover:text-white transition-colors">Home</Link>
+              <Link href={getLocalizedPath('/home', locale)} className="hover:text-white transition-colors">{t('blogDetail.home', 'Home')}</Link>
               <ChevronRight size={12} className="text-zinc-600" />
-              <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
+              <Link href={getLocalizedPath('/blog', locale)} className="hover:text-white transition-colors">{t('blogDetail.blog', 'Blog')}</Link>
               <ChevronRight size={12} className="text-zinc-600" />
               <span className="text-fiery-orange font-bold">{article.category}</span>
             </nav>
@@ -209,7 +219,7 @@ export default function ArticleDetailPage() {
               {article.category}
             </span>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl text-white leading-tight tracking-tight mb-6">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl text-white leading-tight tracking-tight mb-6 font-black">
               {article.title}
             </h1>
 
@@ -225,10 +235,10 @@ export default function ArticleDetailPage() {
                 <Calendar className="w-4 h-4 text-fiery-orange" /> {publishedDate}
               </span>
               <span className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-fiery-orange" /> {readTime} min read
+                <Clock className="w-4 h-4 text-fiery-orange" /> {readTime} {t('blogDetail.minRead', 'min read')}
               </span>
               <span className="flex items-center gap-2">
-                <Eye className="w-4 h-4 text-fiery-orange" /> {article.viewCount.toLocaleString()} views
+                <Eye className="w-4 h-4 text-fiery-orange" /> {article.viewCount.toLocaleString()} {t('blogDetail.views', 'views')}
               </span>
             </div>
           </div>
@@ -261,7 +271,7 @@ export default function ArticleDetailPage() {
               {/* Keywords / Tags */}
               {tags.length > 0 && (
                 <div className="mt-12 pt-8 border-t border-white/10 flex flex-wrap gap-2 items-center">
-                  <span className="text-xs font-bold text-zinc-400 mr-2 uppercase tracking-wider">Tags:</span>
+                  <span className="text-xs font-bold text-zinc-400 mr-2 uppercase tracking-wider">{t('blogDetail.tags', 'Tags')}:</span>
                   {tags.map((tag) => (
                     <span
                       key={tag}
@@ -275,7 +285,7 @@ export default function ArticleDetailPage() {
 
               {/* Feedback Widget */}
               <div className="mt-10 pt-8 border-t border-white/10 p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
-                <p className="text-sm font-bold text-white mb-4">Was this article helpful?</p>
+                <p className="text-sm font-bold text-white mb-4">{t('blogDetail.wasHelpful', 'Was this article helpful?')}</p>
                 <div className="flex flex-wrap items-center gap-3">
                   <button
                     onClick={() => handleFeedback(true)}
@@ -287,7 +297,7 @@ export default function ArticleDetailPage() {
                     } disabled:opacity-50`}
                   >
                     <ThumbsUp size={14} />
-                    Yes, helpful ({article.helpfulCount + (feedback === 'helpful' ? 1 : 0)})
+                    {t('blogDetail.yesHelpful', 'Yes, helpful')} ({article.helpfulCount + (feedback === 'helpful' ? 1 : 0)})
                   </button>
                   <button
                     onClick={() => handleFeedback(false)}
@@ -299,11 +309,11 @@ export default function ArticleDetailPage() {
                     } disabled:opacity-50`}
                   >
                     <ThumbsDown size={14} />
-                    Not helpful
+                    {t('blogDetail.notHelpful', 'Not helpful')}
                   </button>
                   {feedbackSent && (
                     <span className="text-xs text-fiery-orange font-semibold">
-                      Thank you for your feedback!
+                      {t('blogDetail.thankFeedback', 'Thank you for your feedback!')}
                     </span>
                   )}
                 </div>
@@ -312,18 +322,18 @@ export default function ArticleDetailPage() {
               {/* Actions Footer */}
               <div className="mt-10 pt-8 border-t border-white/10 flex items-center justify-between">
                 <Link
-                  href="/blog"
+                  href={getLocalizedPath('/blog', locale)}
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/10 bg-white/[0.04] hover:border-fiery-orange/40 text-xs font-bold text-white transition-all"
                 >
                   <ArrowLeft size={14} />
-                  Back to Blog
+                  {t('blogDetail.backToBlog', 'Back to Blog')}
                 </Link>
                 <button
                   onClick={handleShare}
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/10 bg-white/[0.04] hover:border-fiery-orange/40 text-xs font-bold text-white transition-all cursor-pointer"
                 >
                   <Share2 size={14} />
-                  Share Article
+                  {t('blogDetail.shareArticle', 'Share Article')}
                 </button>
               </div>
             </div>
@@ -334,7 +344,7 @@ export default function ArticleDetailPage() {
               {headings.length > 0 && (
                 <div className="p-6 rounded-3xl border border-white/10 bg-[#0C0C10]/40 backdrop-blur-2xl shadow-xl">
                   <h3 className="text-xs font-bold uppercase tracking-widest text-fiery-orange mb-4 flex items-center gap-2">
-                    <BookOpen className="w-4 h-4" /> Table of Contents
+                    <BookOpen className="w-4 h-4" /> {t('blogDetail.tableOfContents', 'Table of Contents')}
                   </h3>
                   <ul className="space-y-2.5 border-l border-white/10 pl-4">
                     {headings.map((h) => (
@@ -354,7 +364,7 @@ export default function ArticleDetailPage() {
               {/* Author & Info Card */}
               <div className="p-6 rounded-3xl border border-white/10 bg-[#0C0C10]/40 backdrop-blur-2xl shadow-xl space-y-4">
                 <h3 className="text-xs font-bold uppercase tracking-widest text-fiery-orange border-b border-white/10 pb-3">
-                  Article Info
+                  {t('blogDetail.articleInfo', 'Article Info')}
                 </h3>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-fiery-orange/10 border border-fiery-orange/30 flex items-center justify-center text-fiery-orange font-bold">
@@ -367,15 +377,15 @@ export default function ArticleDetailPage() {
                 </div>
                 <div className="pt-2 text-xs text-zinc-400 space-y-2 border-t border-white/[0.06]">
                   <div className="flex justify-between">
-                    <span>Category:</span>
+                    <span>{t('blogDetail.category', 'Category')}:</span>
                     <span className="text-white font-semibold">{article.category}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Reading Time:</span>
-                    <span className="text-white font-semibold">{readTime} min</span>
+                    <span>{t('blogDetail.readingTime', 'Reading Time')}:</span>
+                    <span className="text-white font-semibold">{readTime} {t('blogDetail.minRead', 'min read')}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Views:</span>
+                    <span>{t('blogDetail.views', 'Views')}:</span>
                     <span className="text-white font-semibold">{article.viewCount.toLocaleString()}</span>
                   </div>
                 </div>
@@ -383,17 +393,17 @@ export default function ArticleDetailPage() {
 
               {/* Newsletter Callout */}
               <div className="p-6 rounded-3xl border border-fiery-orange/30 bg-gradient-to-br from-[#0C0C10]/80 via-[#0C0C10]/50 to-[#111116]/80 backdrop-blur-2xl shadow-2xl">
-                <h4 className="text-base font-bold text-white mb-2">Subscribe to Research Desk</h4>
-                <p className="text-xs text-zinc-400 mb-4  leading-relaxed">
-                  Get our weekly market analysis and trade breakdowns delivered to your inbox.
+                <h4 className="text-base font-bold text-white mb-2">{t('blogDetail.subscribeTitle', 'Subscribe to Research Desk')}</h4>
+                <p className="text-xs text-zinc-400 mb-4 leading-relaxed">
+                  {t('blogDetail.subscribeDesc', 'Get our weekly market analysis and trade breakdowns delivered to your inbox.')}
                 </p>
                 <input
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder={t('blogDetail.subscribePlaceholder', 'Enter your email')}
                   className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-zinc-500 mb-3 focus:outline-none focus:border-fiery-orange/50"
                 />
                 <button className="w-full py-2.5 rounded-xl bg-gradient-to-r from-fiery-orange to-fiery-amber text-white font-bold text-xs shadow-fiery">
-                  Subscribe
+                  {t('blogDetail.subscribeBtn', 'Subscribe')}
                 </button>
               </div>
             </aside>
@@ -407,14 +417,14 @@ export default function ArticleDetailPage() {
             <div className="max-w-7xl mx-auto">
               <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-6 mb-12">
                 <div>
-                  <p className="text-xs font-bold text-fiery-orange uppercase tracking-widest mb-2">More Research</p>
-                  <h2 className="text-3xl sm:text-4xl font-black text-white">From the Blog</h2>
+                  <p className="text-xs font-bold text-fiery-orange uppercase tracking-widest mb-2">{t('blogDetail.moreResearch', 'More Research')}</p>
+                  <h2 className="text-3xl sm:text-4xl font-black text-white">{t('blogDetail.fromTheBlog', 'From the Blog')}</h2>
                 </div>
                 <Link
-                  href="/blog"
+                  href={getLocalizedPath('/blog', locale)}
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-white/20 hover:border-fiery-orange/40 text-xs font-bold text-white transition-all"
                 >
-                  View All Articles <ArrowUpRight className="w-4 h-4 text-fiery-orange" />
+                  {t('blogDetail.viewAllArticles', 'View All Articles')} <ArrowUpRight className="w-4 h-4 text-fiery-orange" />
                 </Link>
               </div>
 
@@ -422,7 +432,7 @@ export default function ArticleDetailPage() {
                 {related.map((rel) => (
                   <Link
                     key={rel.id}
-                    href={`/blog/${rel.slug}`}
+                    href={getLocalizedPath(`/blog/${rel.slug}`, locale)}
                     className="group flex flex-col justify-between p-6 rounded-3xl border border-white/10 bg-[#0C0C10]/40 hover:border-fiery-orange/40 hover:bg-[#0C0C10]/70 backdrop-blur-2xl transition-all duration-300"
                   >
                     <div>

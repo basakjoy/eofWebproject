@@ -10,41 +10,62 @@ import {
   Shield,
   Trash2,
   CheckCircle,
-  AlertCircle,
   RefreshCw,
-  ChevronRight,
-  Mail,
-  Smartphone,
-  TrendingUp,
-  Zap,
   Moon,
   Sun,
   Monitor,
   LogOut,
   Sliders,
-  DollarSign,
   Key,
-  ShieldCheck,
-  UserCheck,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { toast } from 'sonner';
 import { useLanguage, type Locale } from '@/context/LanguageContext';
 
+const FOCUS_RING =
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fiery-orange/50';
+
+const INPUT_CLASS =
+  'w-full rounded-xl border border-white/10 bg-obsidian/70 px-4 py-2.5 text-xs text-white placeholder:text-zinc-500 ' +
+  '[color-scheme:dark] transition-colors hover:border-white/20 focus:border-fiery-orange/60 focus:outline-none focus:ring-2 focus:ring-fiery-orange/20';
+
+const SELECT_CLASS =
+  'cursor-pointer rounded-xl border border-white/10 bg-obsidian/70 px-4 py-2 text-xs font-bold text-white ' +
+  '[color-scheme:dark] transition-colors hover:border-white/20 focus:border-fiery-orange/60 focus:outline-none focus:ring-2 focus:ring-fiery-orange/20';
+
+// Selected / unselected styles that stay on the dark surface (no solid light fill)
+const PILL_ACTIVE = 'border-fiery-orange/40 bg-fiery-orange/15 text-fiery-amber';
+const PILL_INACTIVE =
+  'border-transparent bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white';
+const PILL_INACTIVE_BORDERED =
+  'border-white/10 bg-panel-dark text-zinc-400 hover:bg-white/5 hover:text-white';
+
 // ─── Toggle Switch ────────────────────────────────────────────────────────────
-function Toggle({ enabled, onChange }: { enabled: boolean; onChange: (v: boolean) => void }) {
+function Toggle({
+  enabled,
+  onChange,
+  label,
+}: {
+  enabled: boolean;
+  onChange: (v: boolean) => void;
+  label: string;
+}) {
   return (
     <button
       type="button"
+      role="switch"
+      aria-checked={enabled}
+      aria-label={label}
       onClick={() => onChange(!enabled)}
-      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 focus:outline-none ${
-        enabled ? 'bg-gradient-to-r from-fiery-orange to-fiery-amber shadow-fiery/20' : 'bg-zinc-800'
+      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-colors duration-200 ${FOCUS_RING} ${
+        enabled
+          ? 'border-fiery-orange/60 bg-gradient-to-r from-fiery-orange to-fiery-amber'
+          : 'border-white/10 bg-white/10 hover:bg-white/15'
       }`}
     >
       <span
-        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform duration-300 ${
-          enabled ? 'translate-x-6' : 'translate-x-1'
+        className={`inline-block h-4 w-4 transform rounded-full shadow-md transition-transform duration-200 ${
+          enabled ? 'translate-x-[1.375rem] bg-white' : 'translate-x-1 bg-zinc-300'
         }`}
       />
     </button>
@@ -62,15 +83,15 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-3xl bg-card-dark/80 border border-white/10 backdrop-blur-xl overflow-hidden space-y-1">
-      <div className="flex items-center gap-3 px-6 py-5 border-b border-white/10 bg-panel-dark/50">
-        <div className="w-8 h-8 rounded-xl flex items-center justify-center border border-fiery-orange/30 bg-fiery-orange/10 text-fiery-orange">
-          <Icon className="w-4 h-4" />
+    <section className="overflow-hidden rounded-3xl border border-white/10 bg-card-dark/80 backdrop-blur-xl">
+      <header className="flex items-center gap-3 border-b border-white/10 bg-panel-dark/80 px-6 py-5">
+        <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-fiery-orange/30 bg-fiery-orange/10 text-fiery-orange">
+          <Icon className="h-4 w-4" />
         </div>
-        <h2 className="font-extrabold text-white text-base tracking-tight">{title}</h2>
-      </div>
-      <div className="p-6 space-y-3">{children}</div>
-    </div>
+        <h2 className="text-base font-extrabold tracking-tight text-white">{title}</h2>
+      </header>
+      <div className="space-y-3 p-6">{children}</div>
+    </section>
   );
 }
 
@@ -85,10 +106,12 @@ function SettingRow({
   action: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-panel-dark/60 border border-white/5 hover:border-white/10 transition-all">
+    <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/[0.08] bg-panel-dark/80 p-4 transition-colors hover:border-white/15 hover:bg-panel-dark">
       <div className="min-w-0">
-        <p className="text-xs sm:text-sm font-bold text-white">{label}</p>
-        {description && <p className="text-[11px] text-zinc-400 mt-0.5 leading-relaxed font-light">{description}</p>}
+        <p className="text-xs font-bold text-white sm:text-sm">{label}</p>
+        {description && (
+          <p className="mt-0.5 text-[11px] font-light leading-relaxed text-zinc-400">{description}</p>
+        )}
       </div>
       <div className="shrink-0">{action}</div>
     </div>
@@ -105,20 +128,29 @@ interface NotifPrefs {
   weeklyReport: boolean;
 }
 
+type Theme = 'light' | 'dark' | 'system';
+type Tab = 'notifications' | 'appearance' | 'security' | 'account';
+
+const CURRENCIES = ['USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD'];
+
+const THEME_OPTIONS: { val: Theme; icon: React.ElementType; label: string }[] = [
+  { val: 'light', icon: Sun, label: 'Light' },
+  { val: 'dark', icon: Moon, label: 'Dark' },
+  { val: 'system', icon: Monitor, label: 'System' },
+];
+
 export default function RefinedSettingsPage() {
-  const router = useRouter();
   const { logout } = useAuthStore();
   const { locale, setLocale, options: langOptions, t } = useLanguage();
 
   const [loading, setLoading] = useState(true);
   const [savingNotifs, setSavingNotifs] = useState(false);
-  const [activeTab, setActiveTab] = useState<'notifications' | 'appearance' | 'security' | 'account'>('notifications');
-  const [profile, setProfile] = useState<{ id: string; name: string; email: string } | null>(null);
+  const [activeTab, setActiveTab] = useState<Tab>('notifications');
+  const [, setProfile] = useState<{ id: string; name: string; email: string } | null>(null);
 
-  // Theme & Preferences
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('dark');
+  // Appearance & preferences (persisted on change)
+  const [theme, setTheme] = useState<Theme>('dark');
   const [currency, setCurrency] = useState('USD');
-  const [profileVisibility, setProfileVisibility] = useState<'private' | 'public'>('private');
 
   // Password drawer state
   const [showPasswordChange, setShowPasswordChange] = useState(false);
@@ -144,28 +176,48 @@ export default function RefinedSettingsPage() {
       const res = await usersApi.getCurrentUserProfile();
       if (res?.data) setProfile(res.data);
     } catch {
-      const raw = localStorage.getItem('user');
-      if (raw) setProfile(JSON.parse(raw));
+      try {
+        const raw = localStorage.getItem('user');
+        if (raw) setProfile(JSON.parse(raw));
+      } catch {}
     }
   }, []);
 
   useEffect(() => {
     loadSettings().finally(() => setLoading(false));
 
-    const savedNotifs = localStorage.getItem('notifPrefs');
-    if (savedNotifs) {
-      try {
-        setNotifPrefs(JSON.parse(savedNotifs));
-      } catch {}
-    }
+    try {
+      const savedNotifs = localStorage.getItem('notifPrefs');
+      if (savedNotifs) setNotifPrefs((p) => ({ ...p, ...JSON.parse(savedNotifs) }));
+
+      const savedTheme = localStorage.getItem('settings.theme') as Theme | null;
+      if (savedTheme && THEME_OPTIONS.some((o) => o.val === savedTheme)) setTheme(savedTheme);
+
+      const savedCurrency = localStorage.getItem('settings.currency');
+      if (savedCurrency && CURRENCIES.includes(savedCurrency)) setCurrency(savedCurrency);
+    } catch {}
   }, [loadSettings]);
+
+  const handleThemeChange = (val: Theme) => {
+    setTheme(val);
+    try {
+      localStorage.setItem('settings.theme', val);
+    } catch {}
+  };
+
+  const handleCurrencyChange = (val: string) => {
+    setCurrency(val);
+    try {
+      localStorage.setItem('settings.currency', val);
+    } catch {}
+  };
 
   const handleSaveNotifs = async () => {
     setSavingNotifs(true);
     try {
       localStorage.setItem('notifPrefs', JSON.stringify(notifPrefs));
       await new Promise((r) => setTimeout(r, 600));
-      toast.success('Notification preferences saved successfully!');
+      toast.success('Notification preferences saved');
     } catch {
       toast.error('Failed to save preferences');
     } finally {
@@ -191,11 +243,11 @@ export default function RefinedSettingsPage() {
     setIsChangingPw(true);
     try {
       await usersApi.changePassword({ currentPassword: pwForm.current, newPassword: pwForm.next });
-      toast.success('Password updated successfully!');
+      toast.success('Password updated');
       setShowPasswordChange(false);
-      setPwForm({ current: '', next: '', confirm: '' });
+      setPwForm({ current: '', next:'', confirm: '' });
     } catch {
-      toast.error('Failed to update password. Verify current password.');
+      toast.error('Failed to update password. Check your current password.');
     } finally {
       setIsChangingPw(false);
     }
@@ -206,105 +258,116 @@ export default function RefinedSettingsPage() {
   };
 
   if (loading) {
+    // Transparent, sized to the content area — no full-screen colour patch.
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#030305]">
-        <RefreshCw className="w-8 h-8 text-fiery-orange animate-spin" />
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <RefreshCw className="h-8 w-8 animate-spin text-fiery-orange" />
       </div>
     );
   }
 
+  const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
+    { id: 'notifications', label: t('userDashboard.settings.notifications', 'Notifications & Alerts'), icon: Bell },
+    { id: 'appearance', label: t('userDashboard.settings.appearance', 'Appearance & Display'), icon: Palette },
+    { id: 'security', label: t('userDashboard.settings.security', 'Security & Auth'), icon: Shield },
+    { id: 'account', label: t('userDashboard.settings.accountActions', 'Account Actions'), icon: Lock },
+  ];
+
+  const notifRows: { key: keyof NotifPrefs; label: string; description: string }[] = [
+    { key: 'emailNotifications', label: 'Email Notifications', description: 'Receive daily briefings and emergency alerts via email' },
+    { key: 'signalAlerts', label: 'Live Signal Push Alerts', description: 'Get real-time push alerts when high-probability signals execute' },
+    { key: 'investmentUpdates', label: 'Investment Portfolio Updates', description: 'Notifications when capital allocation returns are posted' },
+    { key: 'withdrawalAlerts', label: 'Withdrawal Status Alerts', description: 'Instant notification when payout transfers update' },
+    { key: 'profitDistributions', label: 'Profit Share Distributions', description: 'Monthly distribution receipts sent to your registered channel' },
+    { key: 'weeklyReport', label: 'Weekly Performance Report', description: 'Automated weekly PnL and trade confluence summary' },
+  ];
+
   return (
-    <div className="space-y-8 p-2 sm:p-4 text-white font-poppins selection:bg-fiery-orange selection:text-white">
-      
+    <div className="space-y-8 p-2 font-poppins text-white selection:bg-fiery-orange selection:text-black sm:p-4 [color-scheme:dark]">
       {/* ══ HEADER ══ */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-white/10">
+      <div className="flex flex-col justify-between gap-4 border-b border-white/10 pb-6 md:flex-row md:items-center">
         <div>
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-fiery-orange/10 border border-fiery-orange/20 text-xs font-bold text-fiery-amber mb-2">
-            <Sliders className="w-3.5 h-3.5 text-fiery-orange" />
+          <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-fiery-orange/20 bg-fiery-orange/10 px-3.5 py-1 text-xs font-bold text-fiery-amber">
+            <Sliders className="h-3.5 w-3.5 text-fiery-orange" />
             {t('userDashboard.settings.badge', 'SYSTEM PREFERENCES & SECURITY')}
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-            {t('userDashboard.settings.title', 'Account')} <span className="text-transparent bg-clip-text bg-gradient-to-r from-fiery-orange to-fiery-amber">{t('userDashboard.settings.titleHighlight', 'Settings')}</span>
+          <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
+            {t('userDashboard.settings.title', 'Account')}{' '}
+            <span className="bg-gradient-to-r from-fiery-orange to-fiery-amber bg-clip-text text-transparent">
+              {t('userDashboard.settings.titleHighlight', 'Settings')}
+            </span>
           </h1>
-          <p className="text-xs sm:text-sm text-zinc-400 mt-1">
-            {t('userDashboard.settings.subtitle', 'Configure real-time alerts, appearance themes, security settings, and notifications.')}
+          <p className="mt-1 text-xs text-zinc-400 sm:text-sm">
+            {t(
+              'userDashboard.settings.subtitle',
+              'Configure real-time alerts, appearance themes, security settings, and notifications.'
+            )}
           </p>
         </div>
       </div>
 
       {/* ══ TAB NAVIGATION BAR ══ */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-white/5">
-        {[
-          { id: 'notifications', label: t('userDashboard.settings.notifications', 'Notifications & Alerts'), icon: Bell },
-          { id: 'appearance', label: t('userDashboard.settings.appearance', 'Appearance & Display'), icon: Palette },
-          { id: 'security', label: t('userDashboard.settings.security', 'Security & Auth'), icon: Shield },
-          { id: 'account', label: t('userDashboard.settings.accountActions', 'Account Actions'), icon: Lock },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all whitespace-nowrap border ${
-              activeTab === tab.id
-                ? 'bg-fiery-orange text-black border-fiery-orange shadow-fiery/20'
-                : 'bg-card-dark/60 text-zinc-400 border-white/10 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <tab.icon className="w-4 h-4" />
-            {tab.label}
-          </button>
-        ))}
+      <div
+        role="tablist"
+        aria-label="Settings sections"
+        className="flex items-center gap-1 overflow-x-auto border-b border-white/10 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {tabs.map((tab) => {
+          const active = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              role="tab"
+              aria-selected={active}
+              onClick={() => setActiveTab(tab.id)}
+              className={`relative flex items-center gap-2 whitespace-nowrap rounded-xl border px-4 py-2.5 text-xs font-bold transition-colors ${FOCUS_RING} ${
+                active ? PILL_ACTIVE : PILL_INACTIVE
+              }`}
+            >
+              <tab.icon className={`h-4 w-4 ${active ? 'text-fiery-orange' : ''}`} />
+              {tab.label}
+              {active && (
+                <span className="absolute inset-x-3 -bottom-[13px] h-0.5 rounded-full bg-fiery-orange" />
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* ══ TAB CONTENT ══ */}
 
-      {/* 1. NOTIFICATIONS TAB */}
+      {/* 1. NOTIFICATIONS */}
       {activeTab === 'notifications' && (
         <SectionCard title="Notification & Signal Alert Preferences" icon={Bell}>
-          <SettingRow
-            label="Email Notifications"
-            description="Receive daily briefings and emergency alerts via email"
-            action={<Toggle enabled={notifPrefs.emailNotifications} onChange={() => toggleNotif('emailNotifications')} />}
-          />
-          <SettingRow
-            label="Live Signal Push Alerts"
-            description="Get real-time push alerts when high-probability signals execute"
-            action={<Toggle enabled={notifPrefs.signalAlerts} onChange={() => toggleNotif('signalAlerts')} />}
-          />
-          <SettingRow
-            label="Investment Portfolio Updates"
-            description="Notifications when capital allocation returns are posted"
-            action={<Toggle enabled={notifPrefs.investmentUpdates} onChange={() => toggleNotif('investmentUpdates')} />}
-          />
-          <SettingRow
-            label="Withdrawal Status Alerts"
-            description="Instant notification when payout transfers update"
-            action={<Toggle enabled={notifPrefs.withdrawalAlerts} onChange={() => toggleNotif('withdrawalAlerts')} />}
-          />
-          <SettingRow
-            label="Profit Share Distributions"
-            description="Monthly distribution receipts sent to your registered channel"
-            action={<Toggle enabled={notifPrefs.profitDistributions} onChange={() => toggleNotif('profitDistributions')} />}
-          />
-          <SettingRow
-            label="Weekly Performance Report"
-            description="Automated weekly PnL and trade confluence summary"
-            action={<Toggle enabled={notifPrefs.weeklyReport} onChange={() => toggleNotif('weeklyReport')} />}
-          />
+          {notifRows.map((row) => (
+            <SettingRow
+              key={row.key}
+              label={row.label}
+              description={row.description}
+              action={
+                <Toggle
+                  label={row.label}
+                  enabled={notifPrefs[row.key]}
+                  onChange={() => toggleNotif(row.key)}
+                />
+              }
+            />
+          ))}
 
-          <div className="pt-4 flex justify-end">
+          <div className="flex justify-end pt-4">
             <button
               onClick={handleSaveNotifs}
               disabled={savingNotifs}
-              className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-fiery-orange to-fiery-amber text-black font-extrabold text-xs shadow-fiery hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+              className={`flex items-center gap-2 rounded-2xl bg-gradient-to-r from-fiery-orange to-fiery-amber px-6 py-3 text-xs font-extrabold text-black shadow-lg shadow-fiery-orange/20 transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100 ${FOCUS_RING}`}
             >
-              {savingNotifs ? <RefreshCw className="w-4 h-4 animate-spin text-black" /> : <CheckCircle className="w-4 h-4 text-black" />}
+              {savingNotifs ? <RefreshCw className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
               {savingNotifs ? 'Saving...' : 'Save Notification Preferences'}
             </button>
           </div>
         </SectionCard>
       )}
 
-      {/* 2. APPEARANCE TAB */}
+      {/* 2. APPEARANCE */}
       {activeTab === 'appearance' && (
         <div className="space-y-6">
           <SectionCard title="Display Theme & Interface Mode" icon={Palette}>
@@ -313,24 +376,22 @@ export default function RefinedSettingsPage() {
               description="Select display mode for dashboard charts and panels"
               action={
                 <div className="flex gap-2">
-                  {[
-                    { val: 'light', icon: Sun, label: 'Light' },
-                    { val: 'dark', icon: Moon, label: 'Dark' },
-                    { val: 'system', icon: Monitor, label: 'System' },
-                  ].map((t) => (
-                    <button
-                      key={t.val}
-                      onClick={() => setTheme(t.val as any)}
-                      className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all border ${
-                        theme === t.val
-                          ? 'bg-fiery-orange text-black border-fiery-orange'
-                          : 'bg-panel-dark text-zinc-400 border-white/10 hover:text-white'
-                      }`}
-                    >
-                      <t.icon className="w-3.5 h-3.5" />
-                      {t.label}
-                    </button>
-                  ))}
+                  {THEME_OPTIONS.map((opt) => {
+                    const active = theme === opt.val;
+                    return (
+                      <button
+                        key={opt.val}
+                        onClick={() => handleThemeChange(opt.val)}
+                        aria-pressed={active}
+                        className={`flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-xs font-bold transition-colors ${FOCUS_RING} ${
+                          active ? PILL_ACTIVE : PILL_INACTIVE_BORDERED
+                        }`}
+                      >
+                        <opt.icon className={`h-3.5 w-3.5 ${active ? 'text-fiery-orange' : ''}`} />
+                        {opt.label}
+                      </button>
+                    );
+                  })}
                 </div>
               }
             />
@@ -340,11 +401,14 @@ export default function RefinedSettingsPage() {
               action={
                 <select
                   value={currency}
-                  onChange={(e) => setCurrency(e.target.value)}
-                  className="px-4 py-2 bg-panel-dark border border-white/10 rounded-xl text-xs text-white font-bold focus:outline-none focus:border-fiery-orange transition-colors"
+                  onChange={(e) => handleCurrencyChange(e.target.value)}
+                  className={SELECT_CLASS}
+                  aria-label="Base currency"
                 >
-                  {['USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD'].map((c) => (
-                    <option key={c} value={c}>{c}</option>
+                  {CURRENCIES.map((c) => (
+                    <option key={c} value={c} className="bg-zinc-900 text-white">
+                      {c}
+                    </option>
                   ))}
                 </select>
               }
@@ -364,10 +428,11 @@ export default function RefinedSettingsPage() {
                     const opt = langOptions.find((o) => o.value === newLoc);
                     toast.success(`Language updated to ${opt?.label || newLoc}`);
                   }}
-                  className="px-4 py-2 bg-panel-dark border border-white/10 rounded-xl text-xs text-white font-bold focus:outline-none focus:border-fiery-orange transition-colors cursor-pointer"
+                  className={SELECT_CLASS}
+                  aria-label="Interface language"
                 >
                   {langOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value} className="bg-[#111116] text-white">
+                    <option key={opt.value} value={opt.value} className="bg-zinc-900 text-white">
                       {opt.flag} {opt.nativeLabel} ({opt.label})
                     </option>
                   ))}
@@ -378,7 +443,7 @@ export default function RefinedSettingsPage() {
         </div>
       )}
 
-      {/* 3. SECURITY TAB */}
+      {/* 3. SECURITY */}
       {activeTab === 'security' && (
         <div className="space-y-6">
           <SectionCard title="Authentication & Password Security" icon={Shield}>
@@ -388,42 +453,57 @@ export default function RefinedSettingsPage() {
               action={
                 <button
                   onClick={() => setShowPasswordChange(!showPasswordChange)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-fiery-orange/10 border border-fiery-orange/30 text-fiery-amber hover:bg-fiery-orange/20 text-xs font-bold transition-all"
+                  className={`flex items-center gap-2 rounded-xl border border-fiery-orange/30 bg-fiery-orange/10 px-4 py-2 text-xs font-bold text-fiery-amber transition-colors hover:bg-fiery-orange/20 ${FOCUS_RING}`}
                 >
-                  <Key className="w-3.5 h-3.5" />
+                  <Key className="h-3.5 w-3.5" />
                   {showPasswordChange ? 'Cancel' : 'Change Password'}
                 </button>
               }
             />
 
             {showPasswordChange && (
-              <form onSubmit={handlePasswordSubmit} className="p-5 rounded-2xl bg-panel-dark border border-white/10 space-y-4">
+              <form
+                onSubmit={handlePasswordSubmit}
+                className="space-y-4 rounded-2xl border border-white/10 bg-panel-dark/80 p-5"
+              >
                 <div>
-                  <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1.5">Current Password</label>
+                  <label htmlFor="pw-current" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-zinc-400">
+                    Current Password
+                  </label>
                   <input
+                    id="pw-current"
                     type="password"
+                    autoComplete="current-password"
                     value={pwForm.current}
                     onChange={(e) => setPwForm((f) => ({ ...f, current: e.target.value }))}
-                    className="w-full bg-[#050508] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-fiery-orange"
+                    className={INPUT_CLASS}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1.5">New Password</label>
+                  <label htmlFor="pw-new" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-zinc-400">
+                    New Password
+                  </label>
                   <input
+                    id="pw-new"
                     type="password"
+                    autoComplete="new-password"
                     value={pwForm.next}
                     onChange={(e) => setPwForm((f) => ({ ...f, next: e.target.value }))}
                     placeholder="Min. 6 characters"
-                    className="w-full bg-[#050508] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-fiery-orange"
+                    className={INPUT_CLASS}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1.5">Confirm New Password</label>
+                  <label htmlFor="pw-confirm" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-zinc-400">
+                    Confirm New Password
+                  </label>
                   <input
+                    id="pw-confirm"
                     type="password"
+                    autoComplete="new-password"
                     value={pwForm.confirm}
                     onChange={(e) => setPwForm((f) => ({ ...f, confirm: e.target.value }))}
-                    className="w-full bg-[#050508] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-fiery-orange"
+                    className={INPUT_CLASS}
                   />
                 </div>
 
@@ -431,7 +511,7 @@ export default function RefinedSettingsPage() {
                   <button
                     type="submit"
                     disabled={isChangingPw}
-                    className="px-5 py-2.5 rounded-xl bg-fiery-orange text-black font-extrabold text-xs shadow-fiery hover:scale-105 transition-all disabled:opacity-50"
+                    className={`rounded-xl bg-fiery-orange px-5 py-2.5 text-xs font-extrabold text-black shadow-lg shadow-fiery-orange/20 transition-transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 ${FOCUS_RING}`}
                   >
                     {isChangingPw ? 'Updating...' : 'Update Password'}
                   </button>
@@ -443,7 +523,7 @@ export default function RefinedSettingsPage() {
               label="Two-Factor Authentication (2FA)"
               description="Hardware key or Authenticator App protection"
               action={
-                <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-zinc-800 border border-white/10 text-zinc-400">
+                <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-[10px] font-extrabold text-zinc-400">
                   Coming Soon
                 </span>
               }
@@ -453,8 +533,8 @@ export default function RefinedSettingsPage() {
               label="Active Connected Sessions"
               description="1 active browser session connected"
               action={
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-400">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
                   Active Session
                 </span>
               }
@@ -463,7 +543,7 @@ export default function RefinedSettingsPage() {
         </div>
       )}
 
-      {/* 4. ACCOUNT ACTIONS TAB */}
+      {/* 4. ACCOUNT ACTIONS */}
       {activeTab === 'account' && (
         <SectionCard title="Account Management & Session Control" icon={Lock}>
           <SettingRow
@@ -472,9 +552,9 @@ export default function RefinedSettingsPage() {
             action={
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-panel-dark hover:bg-white/5 border border-white/10 text-xs font-bold text-white transition-all"
+                className={`flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-white/[0.08] ${FOCUS_RING}`}
               >
-                <LogOut className="w-4 h-4 text-rose-400" />
+                <LogOut className="h-4 w-4 text-rose-400" />
                 Sign Out
               </button>
             }
@@ -484,17 +564,16 @@ export default function RefinedSettingsPage() {
             description="Permanently erase account profile and personal data ledger"
             action={
               <button
-                onClick={() => toast.info('Please contact support desk to process account deletion')}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-xs font-bold text-rose-400 transition-all"
+                onClick={() => toast.info('Please contact the support desk to process account deletion')}
+                className={`flex items-center gap-2 rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-2 text-xs font-bold text-rose-400 transition-colors hover:bg-rose-500/20 ${FOCUS_RING}`}
               >
-                <Trash2 className="w-4 h-4 text-rose-400" />
+                <Trash2 className="h-4 w-4" />
                 Delete Account
               </button>
             }
           />
         </SectionCard>
       )}
-
     </div>
   );
 }

@@ -57,6 +57,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [isUpdatingTp1Id, setIsUpdatingTp1Id] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   
   // UI State
@@ -180,6 +181,21 @@ export default function App() {
       showToast("Failed to delete signal.", "error");
     } finally {
       setIsDeleting(null);
+    }
+  };
+
+  const handleToggleTargetHit = async (signal: SignalRecord, target: 1 | 2 | 3) => {
+    const hitField = `takeProfit${target}Hit` as const;
+    const isHit = signal[hitField];
+    setIsUpdatingTp1Id(signal.id);
+    try {
+      await signalsApi.updateSignal(signal.id, { [hitField]: !isHit });
+      showToast(isHit ? `TP${target} marked as not hit.` : `TP${target} marked as hit.`);
+      await fetchSignals();
+    } catch {
+      showToast(`Failed to update TP${target} hit status.`, "error");
+    } finally {
+      setIsUpdatingTp1Id(null);
     }
   };
 
@@ -668,6 +684,29 @@ export default function App() {
                             ) : (
                               <span className="text-sm font-medium text-slate-500">—</span>
                             )}
+                          </div>
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {(signal.takeProfits ?? []).slice(0, 3).map((_, index) => {
+                              const target = (index + 1) as 1 | 2 | 3;
+                              const hit = signal[`takeProfit${target}Hit` as const];
+                              return (
+                                <button
+                                  key={target}
+                                  type="button"
+                                  onClick={() => void handleToggleTargetHit(signal, target)}
+                                  disabled={isUpdatingTp1Id === signal.id}
+                                  className={cn(
+                                    "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-bold transition-colors disabled:opacity-60",
+                                    hit
+                                      ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/20"
+                                      : "border-white/10 bg-white/[0.04] text-slate-300 hover:bg-white/[0.08]"
+                                  )}
+                                >
+                                  {isUpdatingTp1Id === signal.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Target className="h-3.5 w-3.5" />}
+                                  {hit ? `TP${target} Hit (undo)` : `Mark TP${target} Hit`}
+                                </button>
+                              );
+                            })}
                           </div>
                         </div>
                       </div>

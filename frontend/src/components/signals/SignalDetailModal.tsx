@@ -19,6 +19,7 @@ import {
   Info
 } from 'lucide-react';
 import { SignalRecord } from '@/lib/signalsApi';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface SignalDetailModalProps {
   signal: SignalRecord | null;
@@ -33,6 +34,7 @@ export default function SignalDetailModal({
   onClose,
   onOpenCalculator
 }: SignalDetailModalProps) {
+  const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [userVote, setUserVote] = useState<'bullish' | 'bearish' | null>(null);
@@ -123,10 +125,10 @@ export default function SignalDetailModal({
                 </span>
               </div>
               <p className="text-xs text-zinc-400 flex items-center gap-2 mt-0.5">
-                <Clock className="w-3.5 h-3.5 text-fiery-orange" />
+                <Clock className="w-3.5 h-3.5 text-[#FF6B00]" />
                 <span>Timeframe: <strong className="text-white">{signal.timeframe || '4H'}</strong></span>
                 <span>•</span>
-                <span>Accuracy: <strong className="text-emerald-400">{signal.accuracy || 88}%</strong></span>
+                <span>{t('tradingSignals.reliability', 'Accuracy')}: <strong className="text-emerald-400">{signal.accuracy || 88}%</strong></span>
               </p>
             </div>
           </div>
@@ -144,27 +146,27 @@ export default function SignalDetailModal({
           {/* Key Metrics Banner */}
           <div className="grid grid-cols-3 gap-3 p-4 rounded-2xl bg-white/[0.03] border border-white/5 text-center">
             <div>
-              <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block mb-1">Status</span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-fiery-orange/15 text-fiery-amber text-xs font-bold border border-fiery-orange/30">
-                <span className="w-1.5 h-1.5 rounded-full bg-fiery-orange animate-pulse" />
-                {signal.status || 'Active'}
+              <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block mb-1">{t('common.status', 'Status')}</span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FF6B00]/15 text-[#FF8C33] text-xs font-bold border border-[#FF6B00]/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B00] animate-pulse" />
+                {signal.status || t('common.active', 'Active')}
               </span>
             </div>
             <div>
-              <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block mb-1">Risk : Reward</span>
-              <span className="text-sm font-black text-fiery-amber">1 : {rrRatio}</span>
+              <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block mb-1">{t('tradingSignals.riskRewardRatio', 'Risk : Reward')}</span>
+              <span className="text-sm font-black text-[#FF8C33]">1 : {rrRatio}</span>
             </div>
             <div>
-              <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block mb-1">Reliability</span>
+              <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block mb-1">{t('tradingSignals.reliability', 'Reliability')}</span>
               <span className="text-sm font-black text-emerald-400">{signal.accuracy || 88}%</span>
             </div>
           </div>
 
           {/* Interactive Price Ladder Visualizer */}
-          <div className="space-y-3 bg-card-dark/80 p-5 rounded-2xl border border-white/10">
+          <div className="space-y-3 bg-[#111116] p-5 rounded-2xl border border-white/10">
             <h3 className="text-xs font-extrabold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
-              <BarChart2 className="w-4 h-4 text-fiery-orange" />
-              Target Price Execution Ladder
+              <BarChart2 className="w-4 h-4 text-[#FF6B00]" />
+              {t('tradingSignals.targetLadder', 'Target Price Execution Ladder')}
             </h3>
 
             <div className="space-y-2.5 pt-2">
@@ -175,12 +177,15 @@ export default function SignalDetailModal({
                   <div className="flex items-center gap-2.5">
                     <Target className="w-4 h-4 text-emerald-400" />
                     <div>
-                      <span className="text-xs font-extrabold text-emerald-400">Take Profit 3 (Final Target)</span>
-                      <span className="text-[10px] text-emerald-500/80 block font-mono">Max Expansion Goal</span>
+                      <span className="text-xs font-extrabold text-emerald-400">{t('tradingSignals.takeProfit', 'Take Profit')} 3</span>
+                      <span className={`text-[10px] block font-mono ${signal.takeProfit3Hit ? 'text-emerald-300' : 'text-emerald-500/80'}`}>
+                        {signal.takeProfit3Hit ? 'Target hit' : 'Max Expansion Goal'}
+                      </span>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="font-mono font-bold text-sm text-emerald-400">{tp3.toFixed(4)}</span>
+                    {signal.takeProfit3Hit && <span className="rounded border border-emerald-400/30 bg-emerald-400/15 px-2 py-1 text-[10px] font-extrabold uppercase text-emerald-300">Hit</span>}
                     <button 
                       onClick={() => handleCopyField(tp3.toFixed(4), 'TP3')} 
                       className="p-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 transition-colors"
@@ -198,12 +203,15 @@ export default function SignalDetailModal({
                   <div className="flex items-center gap-2.5">
                     <Target className="w-4 h-4 text-emerald-400" />
                     <div>
-                      <span className="text-xs font-extrabold text-emerald-400">Take Profit 2</span>
-                      <span className="text-[10px] text-emerald-500/80 block font-mono">Secondary Objective</span>
+                      <span className="text-xs font-extrabold text-emerald-400">{t('tradingSignals.takeProfit', 'Take Profit')} 2</span>
+                      <span className={`text-[10px] block font-mono ${signal.takeProfit2Hit ? 'text-emerald-300' : 'text-emerald-500/80'}`}>
+                        {signal.takeProfit2Hit ? 'Target hit' : 'Secondary Objective'}
+                      </span>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="font-mono font-bold text-sm text-emerald-400">{tp2.toFixed(4)}</span>
+                    {signal.takeProfit2Hit && <span className="rounded border border-emerald-400/30 bg-emerald-400/15 px-2 py-1 text-[10px] font-extrabold uppercase text-emerald-300">Hit</span>}
                     <button 
                       onClick={() => handleCopyField(tp2.toFixed(4), 'TP2')} 
                       className="p-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 transition-colors"
@@ -220,12 +228,19 @@ export default function SignalDetailModal({
                 <div className="flex items-center gap-2.5">
                   <Target className="w-4 h-4 text-emerald-400" />
                   <div>
-                    <span className="text-xs font-extrabold text-emerald-400">Take Profit 1</span>
-                    <span className="text-[10px] text-emerald-500/80 block font-mono">Primary Target (1:1.5)</span>
+                    <span className="text-xs font-extrabold text-emerald-400">{t('tradingSignals.takeProfit', 'Take Profit')} 1</span>
+                    <span className={`text-[10px] block font-mono ${signal.takeProfit1Hit ? 'text-emerald-300' : 'text-emerald-500/80'}`}>
+                      {signal.takeProfit1Hit ? 'Target hit' : 'Primary Target (1:1.5)'}
+                    </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="font-mono font-bold text-sm text-emerald-400">{tp1 || '—'}</span>
+                  {signal.takeProfit1Hit && (
+                    <span className="rounded border border-emerald-400/30 bg-emerald-400/15 px-2 py-1 text-[10px] font-extrabold uppercase text-emerald-300">
+                      Hit
+                    </span>
+                  )}
                   <button 
                     onClick={() => handleCopyField(tp1, 'TP1')} 
                     className="p-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 transition-colors"
@@ -237,19 +252,19 @@ export default function SignalDetailModal({
               </div>
 
               {/* Entry Zone */}
-              <div className="flex items-center justify-between p-3 rounded-xl bg-fiery-orange/15 border border-fiery-orange/30 group hover:border-fiery-orange/50 transition-colors shadow-fiery/10">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-[#FF6B00]/15 border border-[#FF6B00]/30 group hover:border-[#FF6B00]/50 transition-colors">
                 <div className="flex items-center gap-2.5">
-                  <TrendingUp className="w-4 h-4 text-fiery-orange" />
+                  <TrendingUp className="w-4 h-4 text-[#FF6B00]" />
                   <div>
-                    <span className="text-xs font-extrabold text-white">Entry Price</span>
-                    <span className="text-[10px] text-fiery-amber block font-mono">Execution Trigger Level</span>
+                    <span className="text-xs font-extrabold text-white">{t('tradingSignals.entry', 'Entry Price')}</span>
+                    <span className="text-[10px] text-[#FF8C33] block font-mono">Execution Trigger Level</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="font-mono font-extrabold text-base text-fiery-amber">{entry || '—'}</span>
+                  <span className="font-mono font-extrabold text-base text-[#FF8C33]">{entry || '—'}</span>
                   <button 
                     onClick={() => handleCopyField(entry, 'Entry')} 
-                    className="p-1.5 rounded-lg bg-fiery-orange/20 hover:bg-fiery-orange/30 text-fiery-amber transition-colors"
+                    className="p-1.5 rounded-lg bg-[#FF6B00]/20 hover:bg-[#FF6B00]/30 text-[#FF8C33] transition-colors"
                     title="Copy Entry Price"
                   >
                     {copiedField === 'Entry' ? <Check className="w-3.5 h-3.5 text-white" /> : <Copy className="w-3.5 h-3.5" />}
@@ -262,7 +277,7 @@ export default function SignalDetailModal({
                 <div className="flex items-center gap-2.5">
                   <ShieldAlert className="w-4 h-4 text-rose-400" />
                   <div>
-                    <span className="text-xs font-extrabold text-rose-400">Stop Loss</span>
+                    <span className="text-xs font-extrabold text-rose-400">{t('tradingSignals.stopLoss', 'Stop Loss')}</span>
                     <span className="text-[10px] text-rose-400/80 block font-mono">Invalidation Level</span>
                   </div>
                 </div>
@@ -282,10 +297,10 @@ export default function SignalDetailModal({
           </div>
 
           {/* Technical Rationale / Smart Money Analysis */}
-          <div className="bg-panel-dark p-5 rounded-2xl border border-white/5 space-y-2">
+          <div className="bg-[#111116] p-5 rounded-2xl border border-white/5 space-y-2">
             <h4 className="text-xs font-extrabold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-fiery-amber" />
-              Institutional Setup Analysis
+              <Sparkles className="w-4 h-4 text-[#FF8C33]" />
+              {t('tradingSignals.analysisNotes', 'Institutional Setup Analysis')}
             </h4>
             <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed font-light">
               High-probability setup based on multi-timeframe order block rejection and liquidity sweep. Market structure shifted bullish on the 1H timeframe following key support test.
@@ -293,10 +308,10 @@ export default function SignalDetailModal({
           </div>
 
           {/* Social Sentiment Gauge */}
-          <div className="bg-card-dark/60 p-4 rounded-2xl border border-white/5 space-y-3">
+          <div className="bg-[#111116]/60 p-4 rounded-2xl border border-white/5 space-y-3">
             <div className="flex items-center justify-between text-xs font-bold">
               <span className="text-zinc-400 flex items-center gap-1.5">
-                <Info className="w-3.5 h-3.5 text-fiery-orange" />
+                <Info className="w-3.5 h-3.5 text-[#FF6B00]" />
                 Community Sentiment ({totalVotes} votes)
               </span>
               <span className="text-emerald-400">{bullPercent}% Bullish</span>
@@ -316,7 +331,7 @@ export default function SignalDetailModal({
                 }`}
               >
                 <ThumbsUp className="w-3.5 h-3.5" />
-                Bullish ({bullishVotes})
+                {t('marketAnalysis.bullish', 'Bullish')} ({bullishVotes})
               </button>
 
               <button 
@@ -328,7 +343,7 @@ export default function SignalDetailModal({
                 }`}
               >
                 <ThumbsDown className="w-3.5 h-3.5" />
-                Bearish ({bearishVotes})
+                {t('marketAnalysis.bearish', 'Bearish')} ({bearishVotes})
               </button>
             </div>
           </div>
@@ -345,24 +360,24 @@ export default function SignalDetailModal({
               }}
               className="w-full sm:w-auto px-5 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-white flex items-center justify-center gap-2 transition-all hover:scale-[1.02]"
             >
-              <Calculator className="w-4 h-4 text-fiery-amber" />
-              Calculate Lot Size
+              <Calculator className="w-4 h-4 text-[#FF8C33]" />
+              {t('tradingSignals.calculatorTitle', 'Calculate Lot Size')}
             </button>
           )}
 
           <button
             onClick={handleCopyAll}
-            className="w-full sm:flex-1 py-3 px-6 rounded-xl bg-gradient-to-r from-fiery-orange via-fiery-red to-fiery-amber text-black font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-fiery hover:scale-[1.02] active:scale-[0.98] transition-all"
+            className="w-full sm:flex-1 py-3 px-6 rounded-xl bg-gradient-to-r from-[#FF6B00] to-[#FF8C33] text-black font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all"
           >
             {copied ? (
               <>
                 <Check className="w-4 h-4 text-black" />
-                Signal Copied to Clipboard!
+                Signal Copied!
               </>
             ) : (
               <>
                 <Copy className="w-4 h-4 text-black" />
-                Copy MT4 / MT5 Signal
+                {t('tradingSignals.copySignal', 'Copy MT4 / MT5 Signal')}
               </>
             )}
           </button>

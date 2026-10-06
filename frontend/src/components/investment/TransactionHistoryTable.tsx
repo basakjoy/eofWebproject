@@ -8,7 +8,6 @@ import {
   Download,
   ChevronLeft,
   ChevronRight,
-  Filter,
   CheckCircle2,
   Clock,
   AlertCircle,
@@ -16,6 +15,7 @@ import {
   ExternalLink
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLanguage } from "@/context/LanguageContext";
 
 // --- Types & Mock Data ---
 
@@ -51,23 +51,29 @@ const ITEMS_PER_PAGE = 6;
 
 // --- Sub-components ---
 
-const StatusBadge = ({ status }: { status: "completed" | "pending" | "failed" }) => {
+const StatusBadge = ({ status, t }: { status: "completed" | "pending" | "failed"; t: (k: string, fb?: string) => string }) => {
   const configs = {
     completed: { icon: CheckCircle2, color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
     pending: { icon: Clock, color: "text-amber-600 bg-amber-50 border-amber-100" },
     failed: { icon: AlertCircle, color: "text-rose-600 bg-rose-50 border-rose-100" },
   };
   const { icon: Icon, color } = configs[status] || configs.pending;
+  const labels: Record<string, string> = {
+    completed: t('common.completed', 'Completed'),
+    pending: t('common.pending', 'Pending'),
+    failed: t('common.rejected', 'Failed'),
+  };
 
   return (
     <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${color}`}>
       <Icon size={14} />
-      {status.charAt(0).toUpperCase() + status.slice(1)}
+      {labels[status] || status}
     </span>
   );
 };
 
 export default function App() {
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -92,6 +98,13 @@ export default function App() {
     setCurrentPage(1);
   }, [searchQuery, selectedType]);
 
+  const typeLabels: Record<string, string> = {
+    all: t('transactions.filterAll', 'All'),
+    deposit: t('transactions.filterDeposits', 'Deposits'),
+    withdrawal: t('transactions.filterWithdrawals', 'Withdrawals'),
+    profit: t('transactions.filterProfits', 'Profits'),
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-900">
       <div className="mx-auto max-w-6xl">
@@ -99,8 +112,8 @@ export default function App() {
         {/* Top Header Card */}
         <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">Transactions</h1>
-            <p className="text-slate-500">View and manage your recent financial activity.</p>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t('transactions.title', 'Transactions')}</h1>
+            <p className="text-slate-500">{t('transactions.subtitle', 'View and manage your recent financial activity.')}</p>
           </div>
           <button className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-indigo-700 active:scale-95">
             <Download size={18} />
@@ -114,7 +127,7 @@ export default function App() {
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input
               type="text"
-              placeholder="Search by description, reference, or ID..."
+              placeholder={t('common.search', 'Search by description, reference, or ID...')}
               className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm outline-none transition-all focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 shadow-sm"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -131,7 +144,7 @@ export default function App() {
                     : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
                 }`}
               >
-                {type}
+                {typeLabels[type] || type}
               </button>
             ))}
           </div>
@@ -143,11 +156,11 @@ export default function App() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/50">
-                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Transaction</th>
-                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Reference</th>
-                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Status</th>
-                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Date</th>
-                  <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-500">Amount</th>
+                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">{t('transactions.type', 'Transaction')}</th>
+                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">{t('transactions.txId', 'Reference')}</th>
+                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">{t('transactions.status', 'Status')}</th>
+                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">{t('transactions.date', 'Date')}</th>
+                  <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-500">{t('transactions.amount', 'Amount')}</th>
                   <th className="px-6 py-4"></th>
                 </tr>
               </thead>
@@ -187,7 +200,7 @@ export default function App() {
                           </span>
                         </td>
                         <td className="px-6 py-5">
-                          <StatusBadge status={tx.status} />
+                          <StatusBadge status={tx.status} t={t} />
                         </td>
                         <td className="px-6 py-5">
                           <div className="text-sm">
@@ -216,12 +229,12 @@ export default function App() {
                           <div className="p-4 rounded-full bg-slate-50 text-slate-300">
                             <Search size={40} />
                           </div>
-                          <p className="text-slate-500 font-medium">No results found for your search.</p>
+                          <p className="text-slate-500 font-medium">{t('transactions.noTransactions', 'No results found.')}</p>
                           <button 
                             onClick={() => {setSearchQuery(""); setSelectedType("all")}}
                             className="text-sm text-indigo-600 font-semibold hover:underline"
                           >
-                            Clear all filters
+                            {t('common.filter', 'Clear all filters')}
                           </button>
                         </div>
                       </td>

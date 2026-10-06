@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { brokersApi } from '@/lib/brokersApi';
+import { useLanguage, getLocalizedPath } from '@/context/LanguageContext';
 
 /* ── Star rating display ── */
 function StarRow({ rating, max = 5 }: { rating: number; max?: number }) {
@@ -68,6 +69,7 @@ function StatPill({
 export default function BrokerDetailPage() {
   const params = useParams();
   const brokerId = params?.id as string;
+  const { t, locale } = useLanguage();
 
   const [broker, setBroker] = useState<any>(null);
   const [reviews, setReviews] = useState<any[]>([]);
@@ -105,9 +107,9 @@ export default function BrokerDetailPage() {
   const isRegulated = broker?.status === 'active' || broker?.status === 'regulated';
 
   const TABS = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'conditions', label: 'Trading Conditions' },
-    { id: 'reviews', label: `Reviews (${reviews.length})` },
+    { id: 'overview', label: t('brokerDetail.overviewTab', 'Overview') },
+    { id: 'conditions', label: t('brokerDetail.conditionsTab', 'Trading Conditions') },
+    { id: 'reviews', label: `${t('brokerDetail.reviewsTab', 'Reviews')} (${reviews.length})` },
   ];
 
   if (loading) {
@@ -119,7 +121,7 @@ export default function BrokerDetailPage() {
         </div>
         <div className="relative z-10 text-center">
           <Loader2 className="w-10 h-10 text-[#FF6B00] animate-spin mx-auto mb-4" />
-          <p className="text-zinc-400 text-sm animate-pulse">Loading broker profile…</p>
+          <p className="text-zinc-400 text-sm animate-pulse">{t('common.loading', 'Loading broker profile…')}</p>
         </div>
       </div>
     );
@@ -132,17 +134,17 @@ export default function BrokerDetailPage() {
         <h1 className="text-2xl font-bold text-white">Broker Not Found</h1>
         <p className="text-zinc-400 text-sm">This broker profile doesn&apos;t exist or was removed.</p>
         <Link
-          href="/brokers"
+          href={getLocalizedPath('/brokers', locale)}
           className="inline-flex items-center gap-2 mt-4 px-6 py-3 rounded-full border border-white/20 text-sm text-white hover:border-[#FF6B00]/40 transition-all"
         >
-          <ChevronLeft className="w-4 h-4" /> Back to Brokers
+          <ChevronLeft className="w-4 h-4" /> {t('brokerDetail.backToBrokers', 'Back to Brokers')}
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="w-full min-h-screen bg-[#030305] text-white overflow-x-hidden">
+    <div className="w-full min-h-screen bg-[#030305] text-white overflow-x-hidden font-poppins">
 
       {/* ── Ambient Background ── */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
@@ -161,10 +163,10 @@ export default function BrokerDetailPage() {
         {/* Back nav */}
         <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-8">
           <Link
-            href="/brokers"
+            href={getLocalizedPath('/brokers', locale)}
             className="inline-flex items-center gap-2 text-xs text-zinc-400 hover:text-white transition-colors"
           >
-            <ChevronLeft className="w-4 h-4" /> Back to All Brokers
+            <ChevronLeft className="w-4 h-4" /> {t('brokerDetail.backToBrokers', 'Back to All Brokers')}
           </Link>
         </div>
 
@@ -199,7 +201,7 @@ export default function BrokerDetailPage() {
                     <h1 className="text-3xl sm:text-4xl font-black text-white">{broker.name}</h1>
                     {isRegulated && (
                       <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-2.5 py-1 rounded-full">
-                        <BadgeCheck className="w-3 h-3" /> Regulated
+                        <BadgeCheck className="w-3 h-3" /> {t('brokerDetail.regulated', 'Regulated')}
                       </span>
                     )}
                   </div>
@@ -227,7 +229,7 @@ export default function BrokerDetailPage() {
                     <div className="flex items-center gap-2">
                       <StarRow rating={broker.rating ?? 0} />
                       <span className="text-2xl font-black text-white">{broker.rating ?? '—'}</span>
-                      <span className="text-xs text-zinc-500">/ 5 · {broker.reviewCount ?? 0} reviews</span>
+                      <span className="text-xs text-zinc-500">/ 5 · {broker.reviewCount ?? 0} {t('brokerDetail.reviewsTab', 'reviews')}</span>
                     </div>
                   </div>
                 </div>
@@ -240,7 +242,7 @@ export default function BrokerDetailPage() {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-gradient-to-r from-[#FF6B00] to-[#FFB800] text-white font-extrabold text-sm shadow-[0_0_25px_rgba(255,107,0,0.35)] hover:scale-105 transition-transform"
                   >
-                    Open Account <ExternalLink className="w-4 h-4" />
+                    {t('brokerDetail.openAccount', 'Open Account')} <ExternalLink className="w-4 h-4" />
                   </a>
                   {broker.website && (
                     <a
@@ -261,10 +263,10 @@ export default function BrokerDetailPage() {
         {/* ══ KEY STATS ROW ══ */}
         <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-10">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <StatPill icon={DollarSign} label="Min Deposit" value={broker.minimumDeposit ? `$${broker.minimumDeposit}` : '—'} color="text-[#FF6B00]" />
-            <StatPill icon={TrendingUp} label="Max Leverage" value={broker.leverage || '—'} color="text-emerald-400" />
-            <StatPill icon={BarChart2} label="Spreads From" value={broker.spreads || '—'} color="text-sky-400" />
-            <StatPill icon={Star} label="Overall Rating" value={broker.rating ? `${broker.rating}/5` : '—'} color="text-[#FFB800]" />
+            <StatPill icon={DollarSign} label={t('brokerDetail.minDeposit', 'Min Deposit')} value={broker.minimumDeposit ? `$${broker.minimumDeposit}` : '—'} color="text-[#FF6B00]" />
+            <StatPill icon={TrendingUp} label={t('brokerDetail.maxLeverage', 'Max Leverage')} value={broker.leverage || '—'} color="text-emerald-400" />
+            <StatPill icon={BarChart2} label={t('brokerDetail.spreadsFrom', 'Spreads From')} value={broker.spreads || '—'} color="text-sky-400" />
+            <StatPill icon={Star} label={t('brokerDetail.overallRating', 'Overall Rating')} value={broker.rating ? `${broker.rating}/5` : '—'} color="text-[#FFB800]" />
           </div>
         </div>
 
@@ -300,7 +302,7 @@ export default function BrokerDetailPage() {
                 {parsedFeatures.length > 0 && (
                   <div className="rounded-3xl border border-white/[0.07] bg-[#0C0C10]/40 backdrop-blur-xl p-8">
                     <h2 className="text-lg font-bold text-white mb-5 flex items-center gap-2">
-                      <Zap className="w-5 h-5 text-[#FF6B00]" /> Key Features
+                      <Zap className="w-5 h-5 text-[#FF6B00]" /> {t('brokerDetail.keyFeatures', 'Key Features')}
                     </h2>
                     <div className="grid sm:grid-cols-2 gap-3">
                       {parsedFeatures.map((feature: string, i: number) => (
@@ -316,7 +318,7 @@ export default function BrokerDetailPage() {
                 {/* About */}
                 <div className="rounded-3xl border border-white/[0.07] bg-[#0C0C10]/40 backdrop-blur-xl p-8">
                   <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                    <Layers className="w-5 h-5 text-[#FF6B00]" /> About {broker.name}
+                    <Layers className="w-5 h-5 text-[#FF6B00]" /> {t('brokerDetail.aboutBroker', 'About')} {broker.name}
                   </h2>
                   <p className="text-sm text-zinc-400 leading-relaxed">
                     {broker.description ||
@@ -332,7 +334,7 @@ export default function BrokerDetailPage() {
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 mt-4 text-xs text-[#FF6B00] hover:underline"
                     >
-                      Visit official website <ExternalLink className="w-3 h-3" />
+                      {t('brokerDetail.visitWebsite', 'Visit official website')} <ExternalLink className="w-3 h-3" />
                     </a>
                   )}
                 </div>
@@ -343,26 +345,26 @@ export default function BrokerDetailPage() {
                 {/* Regulation Card */}
                 <div className="rounded-3xl border border-white/[0.07] bg-[#0C0C10]/40 backdrop-blur-xl p-6">
                   <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 text-emerald-400" /> Regulation &amp; Safety
+                    <ShieldCheck className="w-4 h-4 text-emerald-400" /> {t('brokerDetail.regulationSafety', 'Regulation & Safety')}
                   </h3>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-zinc-400">Status</span>
+                      <span className="text-zinc-400">{t('brokerDetail.status', 'Status')}</span>
                       <span className={`font-bold ${isRegulated ? 'text-emerald-400' : 'text-yellow-400'}`}>
-                        {isRegulated ? 'Regulated' : broker.status || 'Unverified'}
+                        {isRegulated ? t('brokerDetail.regulated', 'Regulated') : broker.status || 'Unverified'}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-xs border-t border-white/[0.05] pt-3">
-                      <span className="text-zinc-400">Country</span>
+                      <span className="text-zinc-400">{t('brokerDetail.country', 'Country')}</span>
                       <span className="text-white font-medium">{broker.country || '—'}</span>
                     </div>
                     <div className="flex items-center justify-between text-xs border-t border-white/[0.05] pt-3">
-                      <span className="text-zinc-400">Broker Code</span>
+                      <span className="text-zinc-400">{t('brokerDetail.brokerCode', 'Broker Code')}</span>
                       <span className="text-zinc-300 font-mono text-[10px]">{broker.code || '—'}</span>
                     </div>
                     {broker.email && (
                       <div className="flex items-center justify-between text-xs border-t border-white/[0.05] pt-3">
-                        <span className="text-zinc-400">Support Email</span>
+                        <span className="text-zinc-400">{t('brokerDetail.supportEmail', 'Support Email')}</span>
                         <a href={`mailto:${broker.email}`} className="text-[#FF6B00] hover:underline text-[10px]">
                           {broker.email}
                         </a>
@@ -370,7 +372,7 @@ export default function BrokerDetailPage() {
                     )}
                     {broker.phone && (
                       <div className="flex items-center justify-between text-xs border-t border-white/[0.05] pt-3">
-                        <span className="text-zinc-400">Support Phone</span>
+                        <span className="text-zinc-400">{t('brokerDetail.supportPhone', 'Support Phone')}</span>
                         <span className="text-zinc-300 text-[10px]">{broker.phone}</span>
                       </div>
                     )}
@@ -380,7 +382,7 @@ export default function BrokerDetailPage() {
                 {/* Quick CTA */}
                 <div className="rounded-3xl border border-[#FF6B00]/30 bg-[#FF6B00]/5 backdrop-blur-xl p-6 text-center">
                   <Award className="w-8 h-8 text-[#FF6B00] mx-auto mb-3" />
-                  <h3 className="text-sm font-bold text-white mb-1">Ready to Trade?</h3>
+                  <h3 className="text-sm font-bold text-white mb-1">{t('brokerDetail.readyToTrade', 'Ready to Trade?')}</h3>
                   <p className="text-xs text-zinc-400 mb-4 leading-relaxed">
                     Open a live account with {broker.name} in minutes with as little as ${broker.minimumDeposit || 0}.
                   </p>
@@ -390,7 +392,7 @@ export default function BrokerDetailPage() {
                     rel="noopener noreferrer"
                     className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-[#FF6B00] to-[#FFB800] text-white text-sm font-bold shadow-[0_0_20px_rgba(255,107,0,0.3)] hover:scale-[1.02] transition-transform"
                   >
-                    Start Now <ExternalLink className="w-3.5 h-3.5" />
+                    {t('brokerDetail.startNow', 'Start Now')} <ExternalLink className="w-3.5 h-3.5" />
                   </a>
                 </div>
               </div>
@@ -406,18 +408,18 @@ export default function BrokerDetailPage() {
               className="rounded-3xl border border-white/[0.07] bg-[#0C0C10]/40 backdrop-blur-xl p-8"
             >
               <h2 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                <BarChart2 className="w-5 h-5 text-[#FF6B00]" /> Trading Conditions
+                <BarChart2 className="w-5 h-5 text-[#FF6B00]" /> {t('brokerDetail.conditionsTab', 'Trading Conditions')}
               </h2>
               <div className="grid sm:grid-cols-2 gap-4">
                 {[
-                  { icon: DollarSign, label: 'Minimum Deposit', value: broker.minimumDeposit ? `$${broker.minimumDeposit}` : '—', color: 'text-[#FF6B00]' },
-                  { icon: TrendingUp, label: 'Maximum Leverage', value: broker.leverage || '—', color: 'text-emerald-400' },
-                  { icon: BarChart2, label: 'Spreads From', value: broker.spreads || '—', color: 'text-sky-400' },
-                  { icon: Globe, label: 'Operating Country', value: broker.country || '—', color: 'text-purple-400' },
-                  { icon: Clock, label: 'Execution Speed', value: '< 10ms', color: 'text-amber-400' },
-                  { icon: Lock, label: 'Fund Protection', value: isRegulated ? 'Segregated' : 'Standard', color: isRegulated ? 'text-emerald-400' : 'text-zinc-400' },
-                  { icon: Layers, label: 'Account Types', value: 'Standard, Pro, ECN', color: 'text-zinc-300' },
-                  { icon: Zap, label: 'Trading Platforms', value: 'MT4, MT5, WebTrader', color: 'text-zinc-300' },
+                  { icon: DollarSign, label: t('brokerDetail.minDeposit', 'Minimum Deposit'), value: broker.minimumDeposit ? `$${broker.minimumDeposit}` : '—', color: 'text-[#FF6B00]' },
+                  { icon: TrendingUp, label: t('brokerDetail.maxLeverage', 'Maximum Leverage'), value: broker.leverage || '—', color: 'text-emerald-400' },
+                  { icon: BarChart2, label: t('brokerDetail.spreadsFrom', 'Spreads From'), value: broker.spreads || '—', color: 'text-sky-400' },
+                  { icon: Globe, label: t('brokerDetail.country', 'Operating Country'), value: broker.country || '—', color: 'text-purple-400' },
+                  { icon: Clock, label: t('brokerDetail.executionSpeed', 'Execution Speed'), value: '< 10ms', color: 'text-amber-400' },
+                  { icon: Lock, label: t('brokerDetail.fundProtection', 'Fund Protection'), value: isRegulated ? 'Segregated' : 'Standard', color: isRegulated ? 'text-emerald-400' : 'text-zinc-400' },
+                  { icon: Layers, label: t('brokerDetail.accountTypes', 'Account Types'), value: 'Standard, Pro, ECN', color: 'text-zinc-300' },
+                  { icon: Zap, label: t('brokerDetail.tradingPlatforms', 'Trading Platforms'), value: 'MT4, MT5, WebTrader', color: 'text-zinc-300' },
                 ].map((row) => (
                   <div key={row.label} className="flex items-center justify-between p-4 rounded-xl bg-white/[0.03] border border-white/[0.05]">
                     <div className="flex items-center gap-3">
@@ -471,8 +473,8 @@ export default function BrokerDetailPage() {
               {reviews.length === 0 ? (
                 <div className="rounded-3xl border border-white/[0.07] bg-[#0C0C10]/40 backdrop-blur-xl p-12 text-center">
                   <MessageSquare className="w-10 h-10 text-zinc-600 mx-auto mb-3" />
-                  <h3 className="text-lg font-bold text-white mb-1">No Reviews Yet</h3>
-                  <p className="text-sm text-zinc-400">Be the first to share your trading experience with {broker.name}.</p>
+                  <h3 className="text-lg font-bold text-white mb-1">{t('brokerDetail.noReviewsYet', 'No Reviews Yet')}</h3>
+                  <p className="text-sm text-zinc-400">{t('brokerDetail.beFirstReview', 'Be the first to share your trading experience with this broker.')}</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -498,7 +500,7 @@ export default function BrokerDetailPage() {
                         <div className="flex items-start justify-between mb-3">
                           <div>
                             <p className="text-sm font-bold text-white">
-                              {review.user?.name || review.author || 'Anonymous Trader'}
+                              {review.user?.name || review.author || t('brokerDetail.anonymousTrader', 'Anonymous Trader')}
                             </p>
                             {review.createdAt && (
                               <p className="text-[10px] text-zinc-500 mt-0.5">
@@ -518,7 +520,7 @@ export default function BrokerDetailPage() {
                             {pros.length > 0 && (
                               <div className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
                                 <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-1">
-                                  <ThumbsUp className="w-3 h-3" /> Pros
+                                  <ThumbsUp className="w-3 h-3" /> {t('brokerDetail.pros', 'Pros')}
                                 </p>
                                 <ul className="space-y-1">
                                   {pros.map((p: string, j: number) => (
@@ -532,7 +534,7 @@ export default function BrokerDetailPage() {
                             {cons.length > 0 && (
                               <div className="p-3 rounded-xl bg-red-500/5 border border-red-500/10">
                                 <p className="text-[10px] font-bold text-red-400 uppercase tracking-wider mb-2 flex items-center gap-1">
-                                  <ThumbsDown className="w-3 h-3" /> Cons
+                                  <ThumbsDown className="w-3 h-3" /> {t('brokerDetail.cons', 'Cons')}
                                 </p>
                                 <ul className="space-y-1">
                                   {cons.map((c: string, j: number) => (

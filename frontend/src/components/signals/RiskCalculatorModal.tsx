@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Calculator, ShieldCheck, DollarSign, Percent, AlertCircle, ArrowUpRight, TrendingUp } from 'lucide-react';
+import { X, Calculator, ShieldCheck, DollarSign, AlertCircle } from 'lucide-react';
 import { SignalRecord } from '@/lib/signalsApi';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface RiskCalculatorModalProps {
   signal: SignalRecord | null;
@@ -15,6 +16,7 @@ export default function RiskCalculatorModal({
   isOpen,
   onClose
 }: RiskCalculatorModalProps) {
+  const { t } = useLanguage();
   const [accountBalance, setAccountBalance] = useState<number>(10000);
   const [riskPercent, setRiskPercent] = useState<number>(1.5);
   const [entryPrice, setEntryPrice] = useState<number>(1.0850);
@@ -64,17 +66,17 @@ export default function RiskCalculatorModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Glow accent */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-32 bg-fiery-orange/15 blur-3xl pointer-events-none" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-32 bg-[#FF6B00]/15 blur-3xl pointer-events-none" />
 
         {/* Header */}
         <div className="relative z-10 flex items-center justify-between p-6 border-b border-white/10 bg-white/[0.02]">
           <div className="flex items-center gap-3">
-            <div className="p-3 rounded-2xl bg-fiery-orange/10 border border-fiery-orange/30 text-fiery-orange">
+            <div className="p-3 rounded-2xl bg-[#FF6B00]/10 border border-[#FF6B00]/30 text-[#FF6B00]">
               <Calculator className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-xl font-extrabold tracking-tight">Lot Size & Risk Calculator</h2>
-              <p className="text-xs text-zinc-400">Calculate exact position size & monetary risk for <strong className="text-white">{pair}</strong></p>
+              <h2 className="text-xl font-extrabold tracking-tight">{t('tradingSignals.calculatorTitle', 'Lot Size & Risk Calculator')}</h2>
+              <p className="text-xs text-zinc-400">{t('tradingSignals.calculatorSubtitle', 'Calculate exact position size & monetary risk for')} <strong className="text-white">{pair}</strong></p>
             </div>
           </div>
 
@@ -89,14 +91,14 @@ export default function RiskCalculatorModal({
         <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
           
           {/* Output Results Grid */}
-          <div className="grid grid-cols-2 gap-4 p-5 rounded-2xl bg-gradient-to-br from-panel-dark to-card-dark border border-white/10 shadow-glass-card">
+          <div className="grid grid-cols-2 gap-4 p-5 rounded-2xl bg-[#111116] border border-white/10">
             <div className="space-y-1">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-zinc-400 flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-fiery-orange" />
-                Recommended Position
+                <ShieldCheck className="w-3.5 h-3.5 text-[#FF6B00]" />
+                {t('tradingSignals.recommendedLots', 'Recommended Position')}
               </span>
               <p className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                {calculatedLots} <span className="text-sm font-semibold text-fiery-amber">Lots</span>
+                {calculatedLots} <span className="text-sm font-semibold text-[#FF8C33]">Lots</span>
               </p>
               <span className="text-[11px] text-zinc-500 block">Based on {riskPercent}% account risk</span>
             </div>
@@ -104,7 +106,7 @@ export default function RiskCalculatorModal({
             <div className="space-y-1 border-l border-white/10 pl-4">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-zinc-400 flex items-center gap-1">
                 <DollarSign className="w-3.5 h-3.5 text-rose-400" />
-                Max Risk Amount
+                {t('tradingSignals.maxRisk', 'Max Risk Amount')}
               </span>
               <p className="text-2xl sm:text-3xl font-black text-rose-400 tracking-tight">
                 ${riskAmount.toFixed(2)}
@@ -119,20 +121,20 @@ export default function RiskCalculatorModal({
             {/* Account Balance & Risk % */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-bold text-zinc-300 block mb-1.5">Account Balance ($)</label>
+                <label className="text-xs font-bold text-zinc-300 block mb-1.5">{t('tradingSignals.accountBalance', 'Account Balance ($)')}</label>
                 <div className="relative">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 font-bold text-sm">$</span>
                   <input
                     type="number"
                     value={accountBalance}
                     onChange={(e) => setAccountBalance(Math.max(0, Number(e.target.value)))}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pl-8 pr-4 text-sm font-bold text-white focus:outline-none focus:border-fiery-orange/60"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pl-8 pr-4 text-sm font-bold text-white focus:outline-none focus:border-[#FF6B00]/60"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-zinc-300 block mb-1.5">Risk Per Trade (%)</label>
+                <label className="text-xs font-bold text-zinc-300 block mb-1.5">{t('tradingSignals.riskPerTrade', 'Risk Per Trade (%)')}</label>
                 <div className="relative">
                   <input
                     type="number"
@@ -141,7 +143,7 @@ export default function RiskCalculatorModal({
                     max="10"
                     value={riskPercent}
                     onChange={(e) => setRiskPercent(Number(e.target.value))}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pl-4 pr-8 text-sm font-bold text-white focus:outline-none focus:border-fiery-orange/60"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pl-4 pr-8 text-sm font-bold text-white focus:outline-none focus:border-[#FF6B00]/60"
                   />
                   <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 font-bold text-sm">%</span>
                 </div>
@@ -151,18 +153,18 @@ export default function RiskCalculatorModal({
             {/* Price Levels Inputs */}
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="text-[11px] font-bold text-zinc-400 block mb-1">Entry Price</label>
+                <label className="text-[11px] font-bold text-zinc-400 block mb-1">{t('tradingSignals.entry', 'Entry Price')}</label>
                 <input
                   type="number"
                   step="0.0001"
                   value={entryPrice}
                   onChange={(e) => setEntryPrice(Number(e.target.value))}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-2 px-3 text-xs font-mono font-bold text-white focus:outline-none focus:border-fiery-orange/60"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-2 px-3 text-xs font-mono font-bold text-white focus:outline-none focus:border-[#FF6B00]/60"
                 />
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-rose-400 block mb-1">Stop Loss</label>
+                <label className="text-[11px] font-bold text-rose-400 block mb-1">{t('tradingSignals.stopLoss', 'Stop Loss')}</label>
                 <input
                   type="number"
                   step="0.0001"
@@ -173,7 +175,7 @@ export default function RiskCalculatorModal({
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-emerald-400 block mb-1">Take Profit 1</label>
+                <label className="text-[11px] font-bold text-emerald-400 block mb-1">{t('tradingSignals.takeProfit', 'Take Profit')}</label>
                 <input
                   type="number"
                   step="0.0001"
@@ -188,7 +190,7 @@ export default function RiskCalculatorModal({
 
           {/* Quick Info */}
           <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 text-xs text-zinc-400 flex items-start gap-2.5">
-            <AlertCircle className="w-4 h-4 text-fiery-amber shrink-0 mt-0.5" />
+            <AlertCircle className="w-4 h-4 text-[#FF8C33] shrink-0 mt-0.5" />
             <p className="leading-relaxed">
               Using a strict 1.0% to 2.0% risk rule preserves capital during drawdowns and ensures long-term compounding growth.
             </p>
@@ -200,9 +202,9 @@ export default function RiskCalculatorModal({
         <div className="p-5 border-t border-white/10 bg-white/[0.02] flex items-center justify-end">
           <button
             onClick={onClose}
-            className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-fiery-orange to-fiery-amber text-black font-extrabold text-xs shadow-fiery hover:scale-105 transition-transform"
+            className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#FF6B00] to-[#FF8C33] text-black font-extrabold text-xs hover:scale-105 transition-transform"
           >
-            Apply to Position
+            {t('common.close', 'Close')}
           </button>
         </div>
 

@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
 import { LogoIcon } from "./LogoIcon";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -48,169 +49,21 @@ interface MenuItem {
   subItems: SubItem[];
 }
 
-/* ---------------- MENU CONFIGS BY ROLE ---------------- */
-
-const adminMenuItems: MenuItem[] = [
-  {
-    id: "dashboard",
-    label: "DASHBOARD",
-    icon: LayoutDashboard,
-    subItems: [
-      { id: "overview", label: "Overview", path: "/admin" },
-     
-    ],
-  },
-  {
-    id: "member",
-    label: "MEMBER",
-    icon: Users,
-    subItems: [
-      { id: "users", label: "User Management", path: "/admin/users" },
-      { id: "roles", label: "Roles & Permissions", path: "/admin/roles" },
-    ],
-  },
-  {
-    id: "analytics",
-    label: "ANALYTICS",
-    icon: BarChart3,
-    subItems: [
-      { id: "analytics", label: "Analytics", path: "/admin/analytics" },
-      { id: "signals", label: "Signals", path: "/admin/signals" },
-    ],
-  },
-  {
-    id: "content",
-    label: "CONTENT",
-    icon: FileText,
-    subItems: [
-      { id: "articles", label: "Articles", path: "/admin/articles" },
-      { id: "brokers", label: "Brokers", path: "/admin/brokers" },
-    ],
-  },
-  {
-    id: "support",
-    label: "SUPPORT",
-    icon: MessageSquare,
-    subItems: [
-      { id: "client-support", label: "Client Support", path: "/admin/support" },
-    ],
-  },
-  {
-    id: "finance",
-    label: "FINANCE",
-    icon: Wallet,
-    subItems: [
-      { id: "deposits", label: "Deposits", path: "/admin/deposits" },
-      { id: "logs", label: "System Logs", path: "/admin/logs" },
-    ],
-  },
-];
-
-const adminPageCount = adminMenuItems.reduce((total, menu) => total + menu.subItems.length, 0);
-
-const getAdminMenuItemsForScope = (scope?: string): MenuItem[] => {
-  const normalizedScope = String(scope || '').toUpperCase();
-
-  if (normalizedScope === 'SUPER_ADMIN') {
-    return adminMenuItems;
-  }
-
-  if (normalizedScope === 'SIGNAL_ADMIN') {
-    return [
-      {
-        id: 'analytics',
-        label: 'ANALYTICS',
-        icon: BarChart3,
-        subItems: [{ id: 'signals', label: 'Signals', path: '/admin/signals' }],
-      },
-    ];
-  }
-
-  if (normalizedScope === 'CONTENT_ADMIN') {
-    return [
-      {
-        id: 'content',
-        label: 'CONTENT',
-        icon: FileText,
-        subItems: [{ id: 'articles', label: 'Articles', path: '/admin/articles' }],
-      },
-    ];
-  }
-
-  return adminMenuItems;
-};
-
-const investorMenuItems: MenuItem[] = [
-  {
-    id: "investor-dashboard",
-    label: "DASHBOARD",
-    icon: LayoutDashboard,
-    subItems: [
-      { id: "overview", label: "Overview", path: "/admin?tab=overview" }
-    ]
-  },
-  {
-    id: "investments",
-    label: "INVESTMENTS",
-    icon: TrendingUp,
-    subItems: [
-      { id: "invest-list", label: "My Investments", path: "/dashboard/investments" },
-      { id: "performance", label: "Performance", path: "/dashboard/performance" }
-    ]
-  },
-  {
-    id: "wallet",
-    label: "WALLET",
-    icon: Wallet,
-    subItems: [
-      { id: "trans", label: "Transactions", path: "/dashboard/transactions" }
-    ]
-  }
-];
-
-const premiumMenuItems: MenuItem[] = [
-  {
-    id: "premium-dashboard",
-    label: "DASHBOARD",
-    icon: LayoutDashboard,
-    subItems: [
-      { id: "overview", label: "Overview", path: "/admin?tab=overview" }
-    ]
-  },
-  {
-    id: "signals",
-    label: "SIGNALS",
-    icon: TrendingUp,
-    subItems: [
-      { id: "active-signals", label: "Forex Signals", path: "/signals" },
-      { id: "analysis", label: "Market Analysis", path: "/market-analysis" }
-    ]
-  },
-  {
-    id: "education",
-    label: "EDUCATION",
-    icon: BookOpen,
-    subItems: [
-      { id: "courses", label: "Premium Education", path: "/education" }
-    ]
-  }
-];
-
-/* ---------------- COMPONENT ---------------- */
-
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuthStore();
+  const { t } = useLanguage();
 
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
-    dashboard: true, // Default open
+    dashboard: true,
     member: false,
-    payment: false,
-    marketing: false,
-    report: false,
-    affiliate: false,
-    referral: false,
+    analytics: true,
+    content: false,
+    finance: false,
+    investments: true,
+    signals: true,
+    wallet: true,
   });
 
   const toggleMenu = (menuId: string) => {
@@ -220,28 +73,129 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     }));
   };
 
+  const adminMenuItems: MenuItem[] = [
+    {
+      id: "dashboard",
+      label: t('admin.dashboard', 'DASHBOARD'),
+      icon: LayoutDashboard,
+      subItems: [
+        { id: "overview", label: t('admin.overview', 'Overview'), path: "/admin" },
+      ],
+    },
+    {
+      id: "member",
+      label: t('admin.users', 'MEMBER'),
+      icon: Users,
+      subItems: [
+        { id: "users", label: t('admin.users', 'User Management'), path: "/admin/users" },
+        { id: "roles", label: t('admin.roles', 'Roles & Permissions'), path: "/admin/roles" },
+      ],
+    },
+    {
+      id: "analytics",
+      label: t('admin.analytics', 'ANALYTICS'),
+      icon: BarChart3,
+      subItems: [
+        { id: "analytics", label: t('admin.analytics', 'Analytics'), path: "/admin/analytics" },
+        { id: "signals", label: t('admin.signals', 'Signals'), path: "/admin/signals" },
+      ],
+    },
+    {
+      id: "content",
+      label: t('admin.articles', 'CONTENT'),
+      icon: FileText,
+      subItems: [
+        { id: "articles", label: t('admin.articles', 'Articles'), path: "/admin/articles" },
+        { id: "brokers", label: t('admin.brokers', 'Brokers'), path: "/admin/brokers" },
+      ],
+    },
+    {
+      id: "support",
+      label: t('admin.support', 'SUPPORT'),
+      icon: MessageSquare,
+      subItems: [
+        { id: "client-support", label: t('admin.support', 'Client Support'), path: "/admin/support" },
+      ],
+    },
+    {
+      id: "finance",
+      label: t('admin.deposits', 'FINANCE'),
+      icon: Wallet,
+      subItems: [
+        { id: "deposits", label: t('admin.deposits', 'Deposits'), path: "/admin/deposits" },
+        { id: "logs", label: t('admin.logs', 'System Logs'), path: "/admin/logs" },
+      ],
+    },
+  ];
+
+  const investorMenuItems: MenuItem[] = [
+    {
+      id: "investor-dashboard",
+      label: t('dashboard.title', 'DASHBOARD'),
+      icon: LayoutDashboard,
+      subItems: [
+        { id: "overview", label: t('admin.overview', 'Overview'), path: "/dashboard/user" }
+      ]
+    },
+    {
+      id: "investments",
+      label: t('investments.title', 'INVESTMENTS'),
+      icon: TrendingUp,
+      subItems: [
+        { id: "invest-list", label: t('investorDashboard.myInvestments', 'My Investments'), path: "/dashboard/investments" },
+      ]
+    },
+    {
+      id: "wallet",
+      label: t('dashboard.portfolio', 'WALLET'),
+      icon: Wallet,
+      subItems: [
+        { id: "trans", label: t('transactions.title', 'Transactions'), path: "/dashboard/transactions" }
+      ]
+    }
+  ];
+
+  const premiumMenuItems: MenuItem[] = [
+    {
+      id: "premium-dashboard",
+      label: t('dashboard.title', 'DASHBOARD'),
+      icon: LayoutDashboard,
+      subItems: [
+        { id: "overview", label: t('admin.overview', 'Overview'), path: "/dashboard/premium" }
+      ]
+    },
+    {
+      id: "signals",
+      label: t('nav.signals', 'SIGNALS'),
+      icon: TrendingUp,
+      subItems: [
+        { id: "active-signals", label: t('liveSignals.title', 'Forex Signals'), path: "/signals" },
+        { id: "analysis", label: t('nav.marketAnalysis', 'Market Analysis'), path: "/market-analysis" }
+      ]
+    }
+  ];
+
   const getMenuItems = (): MenuItem[] => {
     if (pathname.startsWith("/admin")) {
-      return getAdminMenuItemsForScope(user?.adminScope);
+      return adminMenuItems;
     }
 
     if (!user) return adminMenuItems;
 
     switch (user.role) {
       case "admin":
-        return getAdminMenuItemsForScope(user.adminScope);
+        return adminMenuItems;
       case "investor":
         return investorMenuItems;
       case "premium":
         return premiumMenuItems;
       default:
-        return adminMenuItems;
+        return investorMenuItems;
     }
   };
 
   const items = getMenuItems();
 
-  // Helper to check if any child item is active
   const isMenuGroupActive = (menu: MenuItem) => {
     return menu.subItems.some((sub) => {
       if (pathname === sub.path) return true;
@@ -286,7 +240,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
         <button
           onClick={onToggle}
-          className="p-1.5 rounded-lg hover:bg-white/5 transition-colors text-slate-400 hover:text-white flex-shrink-0 border border-transparent hover:border-white/10"
+          className="p-1.5 rounded-lg hover:bg-white/5 transition-colors text-slate-400 hover:text-white flex-shrink-0 border border-transparent hover:border-white/10 cursor-pointer"
           aria-label="Toggle sidebar"
         >
           {collapsed ? (
@@ -301,7 +255,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       <nav className="flex-1 py-4 sm:py-6 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent space-y-1 sm:space-y-1.5 px-3">
         {!collapsed && pathname.startsWith("/admin") && (
           <div className="px-3 py-2 mb-2 text-[10px] sm:text-xs font-semibold tracking-widest text-slate-400 uppercase">
-            Admin Panel
+            {t('nav.admin', 'Admin Panel')}
           </div>
         )}
         {items.map((menu) => {
@@ -310,11 +264,10 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
           return (
             <div key={menu.id} className="space-y-1">
-              {/* Accordion Trigger Header */}
               <button
                 onClick={() => toggleMenu(menu.id)}
                 className={cn(
-                  "w-full flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3.5 rounded-xl transition-all duration-200 group text-left",
+                  "w-full flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3.5 rounded-xl transition-all duration-200 group text-left cursor-pointer",
                   "text-slate-400 hover:text-white hover:bg-white/[0.04] border border-transparent",
                   isGroupActive && "bg-white/[0.02] text-white border-white/[0.03] shadow-md shadow-black/10",
                   collapsed && "justify-center px-0"
@@ -337,13 +290,11 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
                 {!collapsed && (
                   <div className="flex items-center gap-2">
-                    {/* Affiliate Badge */}
                     {menu.badge && (
                       <span className="bg-red-500 text-white font-bold text-[10px] px-1.5 py-0.5 rounded-full flex items-center justify-center animate-pulse shadow-lg shadow-red-500/20">
                         {menu.badge}
                       </span>
                     )}
-                    {/* Arrow / Chevron */}
                     <ChevronDown
                       className={cn(
                         "w-4 h-4 text-slate-500 transition-transform duration-300",
@@ -354,7 +305,6 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 )}
               </button>
 
-              {/* Submenu Accordion Items */}
               <AnimatePresence initial={false}>
                 {isOpen && !collapsed && (
                   <motion.div
@@ -398,20 +348,20 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             </div>
             <div className="min-w-0">
               <p className="text-xs sm:text-sm font-bold text-white truncate leading-snug">
-                {user.role.toUpperCase()}
+                {user.name || user.role.toUpperCase()}
               </p>
               <p className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-0.5">
-                Authorized Admin
+                {user.role.toUpperCase()}
               </p>
             </div>
           </div>
 
           <button
             onClick={logout}
-            className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/10 rounded-xl transition-all duration-200 text-xs sm:text-sm font-semibold"
+            className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/10 rounded-xl transition-all duration-200 text-xs sm:text-sm font-semibold cursor-pointer"
           >
             <LogOut className="w-4 h-4 flex-shrink-0" />
-            <span>Logout Account</span>
+            <span>{t('nav.logout', 'Logout Account')}</span>
           </button>
         </div>
       )}
