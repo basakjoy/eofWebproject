@@ -348,7 +348,11 @@ export default function RefinedTransactionsPage() {
 
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(28);
-      doc.setTextColor(...(amount < 0 ? ([225, 29, 72] as const) : ([5, 150, 105] as const)));
+      if (amount < 0) {
+        doc.setTextColor(225, 29, 72);
+      } else {
+        doc.setTextColor(5, 150, 105);
+      }
       doc.text(formatMoney(amount), 40, 135);
 
       doc.setFont('helvetica', 'normal');
