@@ -1,10 +1,16 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { ArrowUpRight, Play, ArrowRight, Activity } from 'lucide-react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
-import Candlestick3DUptrend from './Candlestick3DUptrend';
 import { getLocalizedPath, useLanguage } from '@/context/LanguageContext';
+
+const Candlestick3DUptrend = dynamic(() => import('./Candlestick3DUptrend'), {
+  ssr: false,
+  loading: () => null,
+});
 
 const ASSETS = [
   {
@@ -99,6 +105,31 @@ const COLOR_MAP = {
 
 export default function IntroSection() {
   const { locale, t } = useLanguage();
+  const [sceneReady, setSceneReady] = useState(false);
+
+  useEffect(() => {
+    let idleId: number | undefined;
+    let fallbackId: number | undefined;
+    const idleWindow = window as Window & {
+      requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+    const loadScene = () => {
+      if (fallbackId !== undefined) window.clearTimeout(fallbackId);
+      setSceneReady(true);
+    };
+
+    if (idleWindow.requestIdleCallback) {
+      idleId = idleWindow.requestIdleCallback(loadScene, { timeout: 2000 });
+    } else {
+      fallbackId = window.setTimeout(loadScene, 1200);
+    }
+
+    return () => {
+      if (idleId !== undefined) idleWindow.cancelIdleCallback?.(idleId);
+      if (fallbackId !== undefined) window.clearTimeout(fallbackId);
+    };
+  }, []);
 
   return (
     <section className="relative min-h-[720px] lg:min-h-screen flex items-center pt-28 sm:pt-32 pb-20 sm:pb-24 overflow-hidden bg-[#030305]">
@@ -107,7 +138,7 @@ export default function IntroSection() {
       <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
         {/* Full-width 3D Three.js Candlestick Uptrend Wave Canvas */}
         <div className="absolute inset-0 opacity-80 mix-blend-lighten">
-          <Candlestick3DUptrend />
+          {sceneReady && <Candlestick3DUptrend />}
         </div>
 
         {/* Top-right fiery ambient radial glow */}

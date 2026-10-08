@@ -56,9 +56,11 @@ import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import Badge from "@/components/common/Badge";
 import adminApi from "@/lib/adminApi";
+import investmentApi from "@/lib/investmentApi";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
 import { useLanguage } from "@/context/LanguageContext";
+import { toast } from "sonner";
 
 type DashboardTab = "overview" | "articles" | "users" | "signals" | "forex" | "blog" | "education" | "transactions" | "notifications" | "settings" | "traffic";
 const LIST_PAGE_SIZE = 20;
@@ -216,6 +218,15 @@ interface DashboardStats {
   };
 }
 
+interface InvestmentListItem {
+  id: string;
+  user?: { name?: string | null } | null;
+  plan?: string | null;
+  amount?: number | string | null;
+  status?: string | null;
+  roi?: number | string | null;
+}
+
 const mockArticles: Article[] = [
   { id: "1", title: "Understanding Risk Management in Forex", excerpt: "Learn the fundamentals of protecting your capital...", category: "Education", status: "published", views: 1240, comments: 23, author: "John Smith", date: "Jan 20, 2026", readTime: "8 min" },
   { id: "2", title: "Weekly Market Outlook: EUR/USD Analysis", excerpt: "A comprehensive technical and fundamental analysis...", category: "Analysis", status: "published", views: 892, comments: 15, author: "Sarah Chen", date: "Jan 19, 2026", readTime: "5 min" },
@@ -295,6 +306,16 @@ export default function AdminDashboard() {
   const [educationModules, setEducationModules] = useState<EducationModule[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [investmentRows, setInvestmentRows] = useState<Array<{
+    id: string;
+    userName: string;
+    plan: string;
+    amount: number;
+    status: string;
+    roi: number;
+  }>>([]);
+  const [profitInputs, setProfitInputs] = useState<Record<string, string>>({});
+  const [updatingInvestmentId, setUpdatingInvestmentId] = useState<string | null>(null);
   
   // Loading and error states
   const [loadingPage, setLoadingPage] = useState(false);
@@ -318,6 +339,44 @@ export default function AdminDashboard() {
 
     fetchStats();
   }, []);
+
+  useEffect(() => {
+    const fetchRecentInvestments = async () => {
+      if (activeTab !== 'overview') return;
+
+      try {
+        const response = await investmentApi.getAllInvestments({ limit: 8, offset: 0 });
+        if (!response?.success) return;
+
+        const rows = (response.data as InvestmentListItem[]).map((inv) => {
+          const amount = Number(inv.amount || 0);
+          const roi = Number(inv.roi || 0);
+          const pct = amount > 0 ? (roi / amount) * 100 : 0;
+
+          return {
+            id: inv.id,
+            userName: inv.user?.name || 'Unknown User',
+            plan: inv.plan || 'General',
+            amount,
+            status: inv.status || 'active',
+            roi,
+            profitPercent: pct,
+          };
+        });
+
+        setInvestmentRows(rows);
+        const nextInputs: Record<string, string> = {};
+        rows.forEach((row) => {
+          nextInputs[row.id] = String(row.profitPercent || 0);
+        });
+        setProfitInputs(nextInputs);
+      } catch (err) {
+        console.error('Error fetching recent investments:', err);
+      }
+    };
+
+    fetchRecentInvestments();
+  }, [activeTab]);
 
   // Update activeTab whenever search params change
   useEffect(() => {
@@ -454,6 +513,41 @@ export default function AdminDashboard() {
   };
 
   const filteredUsers = users.filter(user => !deletedUsers.has(user.id));
+
+  const handleProfitUpdate = async (investmentId: string) => {
+    const percentValue = Number(profitInputs[investmentId]);
+
+    if (!Number.isFinite(percentValue) || percentValue < 0 || percentValue > 100) {
+      toast.error('Profit percentage must be between 0 and 100.');
+      return;
+    }
+
+    setUpdatingInvestmentId(investmentId);
+
+    try {
+      const response = await investmentApi.updateInvestment(investmentId, { profitPercent: percentValue });
+      if (response?.success) {
+        const updatedInvestment = response.data;
+        const updatedRoi = Number(updatedInvestment?.roi || 0);
+        const amount = Number(updatedInvestment?.amount || 0);
+        setInvestmentRows((prev) => prev.map((row) => row.id === investmentId
+          ? { ...row, roi: updatedRoi, profitPercent: amount > 0 ? (updatedRoi / amount) * 100 : 0, status: updatedInvestment?.status || row.status }
+          : row
+        ));
+        toast.success(`Profit set to ${percentValue}% for this investment.`);
+      } else {
+        toast.error(response?.message || 'Unable to update investment profit.');
+      }
+    } catch (err: unknown) {
+      console.error('Error updating investment profit:', err);
+      const message = err && typeof err === 'object' && 'response' in err && err.response && typeof err.response === 'object' && 'data' in err.response && err.response.data && typeof err.response.data === 'object' && 'message' in err.response.data
+        ? String((err.response.data as { message?: string }).message)
+        : 'Failed to update investment profit.';
+      toast.error(message);
+    } finally {
+      setUpdatingInvestmentId(null);
+    }
+  };
 
   // Article Modal Handlers
   const handleOpenModal = () => setIsModalOpen(true);
@@ -678,6 +772,79 @@ export default function AdminDashboard() {
               </button>
             </motion.div>
           </div>
+
+          <motion.div
+            whileHover={{ y: -2 }}
+            className="bg-slate-950/60 border border-amber-500/20 rounded-2xl p-5 shadow-xl shadow-slate-950/20"
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-400">Investment Profit Controls</p>
+                <h3 className="mt-2 text-xl font-black text-white">Set admin ROI for active investments</h3>
+              </div>
+              <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400">
+                <span className="h-2 w-2 rounded-full bg-emerald-400" /> Update Ready
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[700px] text-left text-sm">
+                <thead>
+                  <tr className="border-b border-white/10 text-slate-400 text-[10px] uppercase tracking-[0.2em]">
+                    <th className="pb-3 pr-4 font-semibold">User</th>
+                    <th className="pb-3 pr-4 font-semibold">Plan</th>
+                    <th className="pb-3 pr-4 font-semibold">Amount</th>
+                    <th className="pb-3 pr-4 font-semibold">Current Profit</th>
+                    <th className="pb-3 pr-4 font-semibold">Profit %</th>
+                    <th className="pb-3 pr-4 font-semibold">Status</th>
+                    <th className="pb-3 font-semibold text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {investmentRows.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-4 text-slate-400 text-sm">No investment data available yet.</td>
+                    </tr>
+                  ) : (
+                    investmentRows.map((row) => (
+                      <tr key={row.id} className="border-b border-white/5 align-middle">
+                        <td className="py-3 pr-4 font-medium text-white">{row.userName}</td>
+                        <td className="py-3 pr-4 text-slate-300">{row.plan}</td>
+                        <td className="py-3 pr-4 font-mono text-emerald-300">${row.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td className="py-3 pr-4 font-mono text-amber-300">${row.roi.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td className="py-3 pr-4">
+                          <input
+                            type="number"
+                            min={0}
+                            max={100}
+                            step={0.1}
+                            value={profitInputs[row.id] ?? '0'}
+                            onChange={(e) => setProfitInputs((prev) => ({ ...prev, [row.id]: e.target.value }))}
+                            className="w-24 rounded-xl border border-white/10 bg-slate-900/80 px-3 py-2 text-sm text-white outline-none ring-0 focus:border-amber-400"
+                          />
+                        </td>
+                        <td className="py-3 pr-4">
+                          <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-sky-300">
+                            {row.status}
+                          </span>
+                        </td>
+                        <td className="py-3 text-right">
+                          <button
+                            type="button"
+                            disabled={updatingInvestmentId === row.id}
+                            onClick={() => handleProfitUpdate(row.id)}
+                            className="rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-950 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {updatingInvestmentId === row.id ? 'Updating...' : 'Apply Profit'}
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
 
           {/* Quick Access: Client Support & Live Chat Hub */}
           <motion.div 

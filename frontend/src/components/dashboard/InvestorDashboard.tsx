@@ -56,11 +56,6 @@ const STATUS_STYLES: Record<string, string> = {
 };
 const DEFAULT_STATUS_STYLE = 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300';
 
-function formatStatus(status?: InvestmentStatus): string {
-  if (!status) return 'Unknown';
-  return status.charAt(0).toUpperCase() + status.slice(1);
-}
-
 function formatDate(iso?: string): string {
   if (!iso) return '—';
   const d = new Date(iso);
@@ -103,11 +98,11 @@ export default function InvestorDashboard() {
     } catch (err) {
       console.error('Error fetching portfolio:', err);
       if (!isMountedRef.current) return;
-      setError('Failed to load your portfolio. Please try again.');
+      setError(t('investorDashboard.failedToLoadPortfolio', 'Failed to load your portfolio. Please try again.'));
     } finally {
       if (isMountedRef.current) setLoading(false);
     }
-  }, [user?.id]);
+  }, [t, user?.id]);
 
   useEffect(() => {
     fetchPortfolioData();
@@ -115,8 +110,20 @@ export default function InvestorDashboard() {
 
   const investments = portfolio?.investments ?? [];
   const roiValue = parseFloat(portfolio?.roi ?? '0') || 0;
-
   const chartData = portfolio?.monthlyPerformance ?? [];
+
+  const formatStatus = (status?: InvestmentStatus): string => {
+    const normalized = String(status ?? '').toLowerCase();
+    if (!normalized) return t('investorDashboard.unknown', 'Unknown');
+
+    const statusMap: Record<string, string> = {
+      active: t('common.active', 'Active'),
+      completed: t('common.completed', 'Completed'),
+      pending: t('common.pending', 'Pending'),
+    };
+
+    return statusMap[normalized] ?? normalized.charAt(0).toUpperCase() + normalized.slice(1);
+  };
 
   const handleNewInvestment = () => router.push('/dashboard/investments');
 
@@ -191,9 +198,9 @@ export default function InvestorDashboard() {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t('investorDashboard.growthChart', 'Investment Growth')}</h2>
           </div>
           {loading && !portfolio ? (
-            <div className="h-[300px] rounded bg-gray-100 dark:bg-gray-800 animate-pulse" role="status" aria-label="Loading investment growth" />
+            <div className="h-[300px] rounded bg-gray-100 dark:bg-gray-800 animate-pulse" role="status" aria-label={t('investorDashboard.loadingGrowth', 'Loading investment growth')} />
           ) : chartData.length === 0 ? (
-            <div className="h-[300px] flex items-center justify-center text-sm text-gray-500">No monthly performance data available.</div>
+            <div className="h-[300px] flex items-center justify-center text-sm text-gray-500">{t('investorDashboard.noMonthlyPerformance', 'No monthly performance data available.')}</div>
           ) : (
             <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={chartData}>
@@ -224,9 +231,9 @@ export default function InvestorDashboard() {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t('investorDashboard.investedVsProfit', 'Invested vs Profit')}</h2>
           </div>
           {loading && !portfolio ? (
-            <div className="h-[300px] rounded bg-gray-100 dark:bg-gray-800 animate-pulse" role="status" aria-label="Loading invested versus profit chart" />
+            <div className="h-[300px] rounded bg-gray-100 dark:bg-gray-800 animate-pulse" role="status" aria-label={t('investorDashboard.loadingComparison', 'Loading invested versus profit chart')} />
           ) : chartData.length === 0 ? (
-            <div className="h-[300px] flex items-center justify-center text-sm text-gray-500">No monthly performance data available.</div>
+            <div className="h-[300px] flex items-center justify-center text-sm text-gray-500">{t('investorDashboard.noMonthlyPerformance', 'No monthly performance data available.')}</div>
           ) : (
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={chartData}>
@@ -235,8 +242,8 @@ export default function InvestorDashboard() {
                 <YAxis />
                 <Tooltip formatter={(value: number | undefined) => (value !== undefined ? currency(value) : '')} />
                 <Legend />
-                <Line type="monotone" dataKey="invested" name="Invested" stroke="#3B82F6" strokeWidth={2} />
-                <Line type="monotone" dataKey="profit" name="Profit" stroke="#10B981" strokeWidth={2} />
+                <Line type="monotone" dataKey="invested" name={t('investorDashboard.invested', 'Invested')} stroke="#3B82F6" strokeWidth={2} />
+                <Line type="monotone" dataKey="profit" name={t('investorDashboard.profit', 'Profit')} stroke="#10B981" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           )}
@@ -272,7 +279,7 @@ export default function InvestorDashboard() {
                   <tr key={inv.id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-700">
                     <td className="px-4 py-3 font-medium">{currency(inv.amount)}</td>
                     <td className="px-4 py-3">
-                      {inv.duration} {inv.duration === 1 ? 'month' : 'months'}
+                      {inv.duration} {inv.duration === 1 ? t('investorDashboard.month', 'month') : t('investorDashboard.months', 'months')}
                     </td>
                     <td className="px-4 py-3">
                       <span

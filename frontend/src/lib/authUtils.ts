@@ -29,6 +29,7 @@ export function normalizeAuthUser(data: Record<string, unknown>): User {
   return {
     id: String(data.id ?? data.userId ?? ''),
     email: String(data.email ?? ''),
+    phone: typeof data.phone === 'string' ? data.phone : undefined,
     name: String(data.name ?? ''),
     role,
     adminScope,

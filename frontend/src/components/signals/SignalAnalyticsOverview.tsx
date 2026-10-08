@@ -125,7 +125,7 @@ export default function SignalAnalyticsOverview() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Cumulative Pips Growth Area Chart (2 Cols) */}
-        <motion.div variants={itemVariants} className="lg:col-span-2 border border-white/10 rounded-lg p-6 shadow-sm flex flex-col relative overflow-hidden group liquid-panel glass-card">
+        <motion.div variants={itemVariants} className="lg:col-span-2 min-w-0 border border-white/10 rounded-lg p-6 shadow-sm flex flex-col relative overflow-hidden group liquid-panel glass-card">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 relative z-10">
             <div>
               <h3 className="text-base font-semibold text-white flex items-center gap-2">
@@ -159,8 +159,8 @@ export default function SignalAnalyticsOverview() {
             </div>
           </div>
 
-          <div className="w-full h-72 mt-auto relative z-10">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="relative z-10 mt-auto h-72 min-w-0 w-full">
+            <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 640, height: 288 }}>
               <AreaChart data={pipsHistoryData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="pipsGradient" x1="0" y1="0" x2="0" y2="1">
@@ -176,7 +176,7 @@ export default function SignalAnalyticsOverview() {
                   contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)' }}
                   itemStyle={{ color: '#e4e4e7', fontSize: '14px' }}
                   labelStyle={{ color: '#a1a1aa', fontSize: '12px', marginBottom: '4px' }}
-                  formatter={(value: any) => [`+${value} pips`, 'Cumulative Pips']}
+                  formatter={(value: unknown) => [`+${String(value)} pips`, 'Cumulative Pips']}
                 />
                   <Area 
                   type="monotone" 
@@ -194,7 +194,7 @@ export default function SignalAnalyticsOverview() {
         </motion.div>
 
         {/* Asset Class Distribution Pie Chart (1 Col) */}
-        <motion.div variants={itemVariants} className="border border-white/10 rounded-lg p-6 shadow-sm flex flex-col hover:border-amber-300/30 transition-colors liquid-panel glass-card">
+        <motion.div variants={itemVariants} className="min-w-0 border border-white/10 rounded-lg p-6 shadow-sm flex flex-col hover:border-amber-300/30 transition-colors liquid-panel glass-card">
           <div className="mb-2">
             <h3 className="text-base font-semibold text-white flex items-center gap-2">
               <PieChartIcon className="w-4 h-4 text-[#FF8C33]" />
@@ -203,8 +203,8 @@ export default function SignalAnalyticsOverview() {
             <p className="text-xs text-zinc-400 mt-1">{t('tradingSignals.signalDistribution', 'Signal distribution by market')}</p>
           </div>
 
-          <div className="w-full flex-1 min-h-[200px] relative flex items-center justify-center my-4 group">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="relative my-4 flex h-56 min-h-[14rem] min-w-0 w-full items-center justify-center group">
+            <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 320, height: 224 }}>
               <PieChart>
                 <Pie
                   data={assetDistribution}
@@ -227,7 +227,7 @@ export default function SignalAnalyticsOverview() {
                   cursor={false}
                   contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)' }}
                   itemStyle={{ color: '#e4e4e7', fontSize: '14px', fontWeight: 500 }}
-                  formatter={(value: any) => [`${value}%`, 'Allocation']}
+                  formatter={(value: unknown) => [`${String(value)}%`, 'Allocation']}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -272,8 +272,8 @@ export default function SignalAnalyticsOverview() {
           <p className="text-xs text-zinc-400 mt-1">{t('tradingSignals.winLossRatioTopSymbols', 'Win/Loss ratio for the top traded symbols')}</p>
         </div>
 
-        <div className="w-full h-72">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="h-72 min-w-0 w-full">
+          <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 640, height: 288 }}>
             <BarChart data={pairPerformanceData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }} barGap={2}>
               <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
               <XAxis stroke="#71717a" dataKey="pair" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: '#71717a' }} dy={10} />

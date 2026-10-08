@@ -21,8 +21,7 @@ export default function Candlestick3DUptrend() {
 
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setSize(width, height);
-    // Limit pixel ratio for better performance while keeping edges smooth
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
 
     container.appendChild(renderer.domElement);
 
@@ -147,12 +146,28 @@ export default function Candlestick3DUptrend() {
     scene.add(particles);
 
     // 5. Animation Loop
-    let animationFrameId: number;
-    let clock = new THREE.Clock();
+    let animationFrameId: number | undefined;
+    let lastFrameTime = 0;
+    let isVisible = false;
+    const startTime = performance.now();
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    const animate = () => {
+    const animate = (frameTime: number) => {
+      if (!isVisible || document.hidden) {
+        animationFrameId = undefined;
+        return;
+      }
+
+      if (prefersReducedMotion) {
+        renderer.render(scene, camera);
+        animationFrameId = undefined;
+        return;
+      }
+
       animationFrameId = requestAnimationFrame(animate);
-      const elapsedTime = clock.getElapsedTime();
+      if (frameTime - lastFrameTime < 1000 / 30) return;
+      lastFrameTime = frameTime;
+      const elapsedTime = (frameTime - startTime) / 1000;
 
       // Slow, elegant background rotation & gentle floating
       candlesGroup.rotation.y = Math.sin(elapsedTime * 0.25) * 0.08;
@@ -190,23 +205,43 @@ export default function Candlestick3DUptrend() {
       renderer.render(scene, camera);
     };
 
-    animate();
+    const syncAnimation = () => {
+      if (isVisible && !document.hidden) {
+        if (animationFrameId === undefined) {
+          animationFrameId = requestAnimationFrame(animate);
+        }
+      } else if (animationFrameId !== undefined) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = undefined;
+      }
+    };
+
+    const intersectionObserver = new IntersectionObserver(([entry]) => {
+      isVisible = entry.isIntersecting;
+      syncAnimation();
+    });
+    intersectionObserver.observe(container);
+    document.addEventListener('visibilitychange', syncAnimation);
 
     // 6. Resize Handler
     const handleResize = () => {
-      if (!containerRef.current) return;
-      const w = containerRef.current.clientWidth;
-      const h = containerRef.current.clientHeight;
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      if (w <= 0 || h <= 0) return;
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
     };
 
-    window.addEventListener('resize', handleResize);
+    const resizeObserver = new ResizeObserver(handleResize);
+    resizeObserver.observe(container);
+    handleResize();
 
     return () => {
-      window.removeEventListener('resize', handleResize);
-      cancelAnimationFrame(animationFrameId);
+      intersectionObserver.disconnect();
+      resizeObserver.disconnect();
+      document.removeEventListener('visibilitychange', syncAnimation);
+      if (animationFrameId !== undefined) cancelAnimationFrame(animationFrameId);
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }
@@ -219,6 +254,9 @@ export default function Candlestick3DUptrend() {
           } else {
             object.material.dispose();
           }
+        } else if (object instanceof THREE.Points) {
+          object.geometry.dispose();
+          object.material.dispose();
         }
       });
       renderer.dispose();

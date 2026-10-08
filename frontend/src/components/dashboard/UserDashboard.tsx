@@ -139,22 +139,23 @@ function DashStatCard({ label, value, icon, accentClass, trend, loading }: StatC
 
 // ─── Signal Direction Chip ────────────────────────────────────────────────────
 
-function DirectionChip({ type }: { type: string }) {
-  const isBuy = type.toUpperCase() === 'BUY';
+function DirectionChip({ type, t }: { type: string; t: (key: string, fallback?: string) => string }) {
+  const isBuy = type?.toUpperCase() === 'BUY';
+  const label = isBuy ? t('tradingSignals.buy', 'BUY') : t('tradingSignals.sell', 'SELL');
   return (
     <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${isBuy
         ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
         : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
       }`}>
       {isBuy ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-      {type}
+      {label}
     </span>
   );
 }
 
 // ─── Status Chip ─────────────────────────────────────────────────────────────
 
-function StatusChip({ status }: { status: string }) {
+function StatusChip({ status, t }: { status: string; t: (key: string, fallback?: string) => string }) {
   const s = status?.toLowerCase();
   const config =
     s === 'active'
@@ -163,10 +164,16 @@ function StatusChip({ status }: { status: string }) {
         ? 'bg-white/5 text-white/30 border-white/10'
         : 'bg-amber-500/10 text-amber-400 border-amber-500/20';
 
+  const label =
+    s === 'active' ? t('common.active', 'Active') :
+    s === 'closed' ? t('common.completed', 'Closed') :
+    s === 'pending' ? t('common.pending', 'Pending') :
+    status;
+
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${config}`}>
       {s === 'active' && <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B00] animate-pulse" />}
-      {status}
+      {label}
     </span>
   );
 }
@@ -455,11 +462,11 @@ export default function UserDashboard() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/[0.04]">
-                  <th className="px-6 py-3 text-left text-[10px] font-black text-white/20 uppercase tracking-[0.18em]">Pair</th>
-                  <th className="px-4 py-3 text-left text-[10px] font-black text-white/20 uppercase tracking-[0.18em]">Direction</th>
-                  <th className="px-4 py-3 text-left text-[10px] font-black text-white/20 uppercase tracking-[0.18em] hidden sm:table-cell">Entry / TP</th>
-                  <th className="px-4 py-3 text-left text-[10px] font-black text-white/20 uppercase tracking-[0.18em] hidden md:table-cell">Timeframe</th>
-                  <th className="px-6 py-3 text-right text-[10px] font-black text-white/20 uppercase tracking-[0.18em]">Status</th>
+                  <th className="px-6 py-3 text-left text-[10px] font-black text-white/20 uppercase tracking-[0.18em]">{t('tradingSignals.pair', 'Pair')}</th>
+                  <th className="px-4 py-3 text-left text-[10px] font-black text-white/20 uppercase tracking-[0.18em]">{t('tradingSignals.type', 'Direction')}</th>
+                  <th className="px-4 py-3 text-left text-[10px] font-black text-white/20 uppercase tracking-[0.18em] hidden sm:table-cell">{t('tradingSignals.entryPrice', 'Entry')} / {t('tradingSignals.takeProfit', 'TP')}</th>
+                  <th className="px-4 py-3 text-left text-[10px] font-black text-white/20 uppercase tracking-[0.18em] hidden md:table-cell">{t('tradingSignals.timeframe', 'Timeframe')}</th>
+                  <th className="px-6 py-3 text-right text-[10px] font-black text-white/20 uppercase tracking-[0.18em]">{t('transactions.status', 'Status')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -495,7 +502,7 @@ export default function UserDashboard() {
                           </div>
                         </td>
                         <td className="px-4 py-3.5">
-                          <DirectionChip type={signal.type} />
+                          <DirectionChip type={signal.type} t={t} />
                         </td>
                         <td className="px-4 py-3.5 hidden sm:table-cell">
                           <span className="font-mono text-xs font-bold text-white/70">
@@ -513,7 +520,7 @@ export default function UserDashboard() {
                           </span>
                         </td>
                         <td className="px-6 py-3.5 text-right">
-                          <StatusChip status={signal.status} />
+                          <StatusChip status={signal.status} t={t} />
                         </td>
                       </tr>
                     );
@@ -552,6 +559,11 @@ export default function UserDashboard() {
             ) : (
               transactions.map(tx => {
                 const isCredit = ['profit', 'deposit', 'return'].includes(tx.type?.toLowerCase());
+                const txLabel = 
+                  tx.type?.toLowerCase() === 'deposit' ? t('transactions.filterDeposits', 'Deposit') :
+                  tx.type?.toLowerCase() === 'withdrawal' ? t('transactions.filterWithdrawals', 'Withdrawal') :
+                  tx.type?.toLowerCase() === 'profit' ? t('transactions.filterProfits', 'Profit') :
+                  tx.type;
                 return (
                   <div key={tx.id} className="flex items-start gap-3 px-5 py-4 hover:bg-white/[0.02] transition-colors">
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${isCredit ? 'bg-emerald-500/10' : 'bg-rose-500/10'
@@ -561,7 +573,7 @@ export default function UserDashboard() {
                         : <ArrowUpRight className="w-4 h-4 text-rose-400" />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-white capitalize truncate">{tx.type}</p>
+                      <p className="text-xs font-bold text-white capitalize truncate">{txLabel}</p>
                       <p className="text-[10px] text-white/30 font-medium mt-0.5 truncate">{tx.description || '—'}</p>
                       <div className="flex items-center justify-between mt-1.5">
                         <span className="text-[10px] font-semibold text-white/20">{timeAgo(tx.createdAt)}</span>

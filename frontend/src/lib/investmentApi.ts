@@ -79,6 +79,8 @@ export const investmentApi = {
   updateInvestment: async (investmentId: string, data: {
     status?: string;
     returns?: number;
+    profitPercent?: number;
+    profitAmount?: number;
     notes?: string;
   }) => {
     try {

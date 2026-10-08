@@ -101,7 +101,7 @@ function timeAgo(iso: string): string {
 
 // ─── Analysis Card ────────────────────────────────────────────────────────────
 
-function AnalysisCard({ analysis }: { analysis: Analysis }) {
+function AnalysisCard({ analysis, t }: { analysis: Analysis; t: (key: string, fallback?: string) => string }) {
   const [expanded, setExpanded] = useState(false);
   const s = SENTIMENT_CONFIG[analysis.sentiment ?? 'neutral'];
   const SentIcon = s.icon;
@@ -142,7 +142,7 @@ function AnalysisCard({ analysis }: { analysis: Analysis }) {
         {analysis.technicalLevel != null && (
           <div className="mb-4">
             <div className="flex items-center justify-between text-xs mb-1.5">
-              <span className="text-zinc-500 font-medium">Technical strength</span>
+              <span className="text-zinc-500 font-medium">{t('marketAnalysis.technicalAnalysis', 'Technical Strength')}</span>
               <span className={`font-bold ${s.color}`}>{analysis.technicalLevel}%</span>
             </div>
             <div className="h-1 w-full bg-panel-dark rounded-full overflow-hidden">
@@ -178,7 +178,7 @@ function AnalysisCard({ analysis }: { analysis: Analysis }) {
               className="flex items-center gap-1.5 text-xs font-bold text-fiery-orange hover:text-fiery-amber transition-colors"
             >
               <BookOpen className="w-3.5 h-3.5" />
-              {expanded ? 'Show less' : 'Read full analysis'}
+              {expanded ? t('common.close', 'Show less') : t('common.learnMore', 'Read full analysis')}
               {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
             </button>
           </div>
@@ -274,10 +274,10 @@ export default function MarketAnalysisPage() {
         <div>
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-fiery-orange/10 border border-fiery-orange/20 text-xs font-bold text-fiery-amber mb-2">
             <LineChart className="w-3.5 h-3.5 text-fiery-orange" />
-            Market Intelligence
+            {t('marketAnalysis.badge', 'Market Intelligence')}
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">Market Analysis</h1>
-          <p className="text-xs sm:text-sm text-zinc-400 mt-1">Professional forex insights and technical analysis from our analyst team.</p>
+          <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">{t('marketAnalysis.title', 'Market Analysis')}</h1>
+          <p className="text-xs sm:text-sm text-zinc-400 mt-1">{t('marketAnalysis.subtitle', 'Professional forex insights and technical analysis from our analyst team.')}</p>
         </div>
 
         <button
@@ -286,7 +286,7 @@ export default function MarketAnalysisPage() {
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-fiery-orange text-black font-extrabold text-xs hover:scale-105 transition-all disabled:opacity-50 self-start md:self-auto"
         >
           <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-          {refreshing ? 'Refreshing...' : 'Refresh Feed'}
+          {refreshing ? t('common.loading', 'Refreshing...') : t('admin.refresh', 'Refresh Feed')}
         </button>
       </div>
 
@@ -330,7 +330,7 @@ export default function MarketAnalysisPage() {
               onChange={e => setFilterPair(e.target.value)}
               className="w-full sm:w-auto appearance-none pl-8 pr-8 py-1.5 bg-panel-dark border border-white/10 rounded-xl text-xs font-bold text-zinc-300 focus:outline-none focus:border-fiery-orange/60 transition-colors"
             >
-              <option value="all">All Pairs</option>
+              <option value="all">{t('tradingSignals.allPairs', 'All Pairs')}</option>
               {availablePairs.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
             <ChevronDown className="w-3 h-3 text-zinc-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -341,13 +341,13 @@ export default function MarketAnalysisPage() {
       {/* ══ ANALYSIS GRID ══ */}
       {filtered.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {filtered.map(a => <AnalysisCard key={a.id} analysis={a} />)}
+          {filtered.map(a => <AnalysisCard key={a.id} analysis={a} t={t} />)}
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-20 bg-card-dark/40 rounded-3xl border border-white/10 text-center space-y-3">
           <Zap className="w-12 h-12 text-zinc-600" />
-          <h3 className="text-lg font-bold text-white">No reports found</h3>
-          <p className="text-sm text-zinc-500">Try adjusting your filters to see more analysis.</p>
+          <h3 className="text-lg font-bold text-white">{t('dashboard.noArticlesYet', 'No reports found')}</h3>
+          <p className="text-sm text-zinc-500">{t('common.noData', 'Try adjusting your filters to see more analysis.')}</p>
         </div>
       )}
     </div>

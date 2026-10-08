@@ -196,6 +196,8 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
 const updateInvestmentSchema = z.object({
   status: z.enum(['active', 'completed', 'cancelled', 'paused']).optional(),
   returns: z.number().optional(),
+  profitPercent: z.number().min(0).max(100).optional(),
+  profitAmount: z.number().min(0).optional(),
   notes: z.string().max(500).optional(),
 }).strict();
 
@@ -214,14 +216,24 @@ router.put('/:id', requireRole(['SUPER_ADMIN', 'SIGNAL_ADMIN']), async (req: Aut
       return res.status(404).json({ success: false, message: 'Investment not found' });
     }
 
-    const { status, returns } = parsed.data;
+    const { status, returns, profitPercent, profitAmount } = parsed.data;
     const data: any = {};
     if (status) data.status = status;
     if (returns !== undefined) data.roi = returns;
+    if (profitPercent !== undefined) {
+      data.roi = Number(existing.amount) * (profitPercent / 100);
+    }
+    if (profitAmount !== undefined) {
+      data.roi = profitAmount;
+    }
 
-    await prisma.investment.update({ where: { id: req.params.id }, data });
+    const updatedInvestment = await prisma.investment.update({ where: { id: req.params.id }, data });
 
-    res.json({ success: true, message: 'Investment updated successfully' });
+    res.json({
+      success: true,
+      message: 'Investment updated successfully',
+      data: updatedInvestment,
+    });
   } catch (error: any) {
     handleError(res, error, 'Failed to update investment');
   }

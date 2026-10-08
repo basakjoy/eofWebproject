@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { LogoIcon } from '@/components/common/LogoIcon';
 import { motion } from 'framer-motion';
 import { useLanguage, getLocalizedPath } from '@/context/LanguageContext';
-import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 
 export default function LoginPage() {
   const { t, locale } = useLanguage();
@@ -15,15 +14,14 @@ export default function LoginPage() {
       {/* Left Column: Form Section */}
       <div className="w-full lg:w-[440px] flex-shrink-0 flex flex-col p-8 sm:p-12 justify-between">
         <div>
-          <div className="flex items-center justify-between gap-2 mb-10">
+          <div className="flex items-center mb-10">
             <Link href={getLocalizedPath('/home', locale)} className="flex items-center gap-2">
               <LogoIcon size={32} />
               <span className="text-xl font-black text-[#0c243c] tracking-tight uppercase">Empire of Forex</span>
             </Link>
-            <LanguageSwitcher />
           </div>
           
-          <h1 className="text-2xl font-bold text-gray-900 mb-2 tracking-tight">
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
             {t('auth.signIn', 'Sign In')}
           </h1>
           <p className="text-sm text-gray-500 font-medium">
@@ -46,10 +44,16 @@ export default function LoginPage() {
 
       {/* Right Column: Hero Section with Floating Widgets */}
       <div className="hidden lg:block flex-1 relative overflow-hidden">
-        {/* Main Background Image */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: 'url("/images/auth-hero.png")' }}
+        <video
+          className="absolute inset-0 h-full w-full object-cover"
+          src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260813_092641_de52eb87-daf2-41db-92cb-7a56eae012a5.mp4"
+          
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          aria-hidden="true"
         />
         <div className="absolute inset-0 bg-black/30" />
 

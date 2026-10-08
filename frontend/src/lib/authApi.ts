@@ -26,6 +26,16 @@ export const authApi = {
     }
   },
 
+  updatePhone: async (userId: string, phone: string) => {
+    try {
+      const response = await apiClient.put(`/users/${userId}`, { phone });
+      return response.data;
+    } catch (error) {
+      console.error('Error updating user phone:', error);
+      throw error;
+    }
+  },
+
   // Login user
   login: async (data: { email: string; password: string }) => {
     try {

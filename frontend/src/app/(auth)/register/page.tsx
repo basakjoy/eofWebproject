@@ -1,121 +1,192 @@
 'use client';
 
-import RegisterForm from '@/components/auth/RegisterForm';
 import Link from 'next/link';
+import { motion, useReducedMotion } from 'framer-motion';
+import RegisterForm from '@/components/auth/RegisterForm';
 import { LogoIcon } from '@/components/common/LogoIcon';
-import { motion } from 'framer-motion';
 import { useLanguage, getLocalizedPath } from '@/context/LanguageContext';
-import LanguageSwitcher from '@/components/common/LanguageSwitcher';
+
+const HERO_VIDEO_URL =
+  'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260813_092641_de52eb87-daf2-41db-92cb-7a56eae012a5.mp4';
+
+const stagger = (delay: number) => ({
+  hidden: {},
+  show: { transition: { staggerChildren: 0.12, delayChildren: delay } },
+});
+
+const rise = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' as const } },
+};
+
+const iconProps = {
+  className: 'h-5 w-5',
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 1.8,
+  strokeLinecap: 'round' as const,
+  strokeLinejoin: 'round' as const,
+  viewBox: '0 0 24 24',
+  'aria-hidden': true,
+};
 
 export default function RegisterPage() {
   const { t, locale } = useLanguage();
+  const reduceMotion = useReducedMotion();
+  const initial = reduceMotion ? false : 'hidden';
+
+  const benefits = [
+    {
+      title: t('auth.benefitSignalsTitle', 'Trading signals'),
+      text: t('auth.benefitSignalsText', 'Clear, timely setups you can act on.'),
+      icon: (
+        <svg {...iconProps}>
+          <path d="M3 17l6-6 4 4 8-8" />
+          <path d="M15 7h6v6" />
+        </svg>
+      ),
+    },
+    {
+      title: t('auth.benefitAnalysisTitle', 'Real-time market analysis'),
+      text: t('auth.benefitAnalysisText', 'Follow the market as it moves, in one place.'),
+      icon: (
+        <svg {...iconProps}>
+          <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
+        </svg>
+      ),
+    },
+    {
+      title: t('auth.benefitPortfolioTitle', 'Portfolio management'),
+      text: t('auth.benefitPortfolioText', 'Track your investments with a clear overview.'),
+      icon: (
+        <svg {...iconProps}>
+          <path d="M3 8h18v11H3z" />
+          <path d="M8 8V6a2 2 0 012-2h4a2 2 0 012 2v2" />
+        </svg>
+      ),
+    },
+  ];
 
   return (
-    <div className="min-h-screen flex bg-white font-sans">
-      {/* Left Column: Form Section */}
-      <div className="w-full lg:w-[460px] flex-shrink-0 flex flex-col p-8 sm:p-12 justify-between">
-        <div>
-          <div className="flex items-center justify-between gap-2 mb-10">
-            <Link href={getLocalizedPath('/home', locale)} className="flex items-center gap-2">
-              <LogoIcon size={32} />
-              <span className="text-xl font-black text-[#0c243c] tracking-tight uppercase">Empire of Forex</span>
-            </Link>
-            <LanguageSwitcher />
-          </div>
-          
-          <h1 className="text-2xl font-bold text-gray-900 mb-2 tracking-tight">
+    <div className="flex min-h-screen bg-white font-sans">
+      {/* Left column: form */}
+      <div className="relative flex w-full flex-shrink-0 flex-col justify-between p-8 sm:p-12 lg:w-[500px] xl:w-[540px]">
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-orange-500 via-amber-400 to-transparent"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-orange-100/60 blur-3xl"
+        />
+
+        <div className="relative">
+          <Link
+            href={getLocalizedPath('/home', locale)}
+            className="mb-12 inline-flex items-center gap-2 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-500"
+          >
+            <LogoIcon size={32} />
+            <span className="text-xl font-black uppercase tracking-tight text-[#0c243c]">Empire of Forex</span>
+          </Link>
+
+          <h1 className="mb-3 text-3xl font-bold tracking-tight text-gray-900">
             {t('auth.createAccount', 'Create Account')}
           </h1>
-          <p className="text-sm text-gray-500 font-medium">
+          <p className="text-sm font-medium text-gray-500">
             {t('auth.alreadyHaveAccount', 'Already have an Empire of Forex account?')}{' '}
-            <Link href={getLocalizedPath('/login', locale)} className="text-gray-900 border-b-2 border-gray-900 font-bold ml-1">
+            <Link
+              href={getLocalizedPath('/login', locale)}
+              className="ml-1 border-b-2 border-orange-500 font-bold text-gray-900 transition-colors hover:text-orange-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-500"
+            >
               {t('auth.signIn', 'Sign In')}
             </Link>
           </p>
         </div>
 
-        <div className="my-6">
+        <div className="relative my-8">
           <RegisterForm />
+          <p className="mt-6 flex items-center gap-2 text-xs text-gray-500">
+            <svg
+              className="h-4 w-4 flex-shrink-0 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.8}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <rect x="5" y="11" width="14" height="9" rx="2" />
+              <path d="M8 11V8a4 4 0 018 0v3" />
+            </svg>
+            {t('auth.secureSignup', 'Your details are sent over an encrypted connection.')}
+          </p>
         </div>
 
-        <div className="mt-8 text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-relaxed">
-          Copyright © 2026 Empire of Forex <br />
-          International. {t('footer.rightsReserved', 'All rights reserved.')}
-        </div>
+        <p className="relative text-center text-xs leading-relaxed text-gray-400">
+          Copyright © 2026 Empire of Forex International. {t('footer.rightsReserved', 'All rights reserved.')}
+        </p>
       </div>
 
-      {/* Right Column: Hero Section with Floating Widgets */}
-      <div className="hidden lg:block flex-1 relative overflow-hidden">
-        {/* Main Background Image */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: 'url("/images/auth-hero.png")' }}
+      {/* Right column: hero */}
+      <div className="relative hidden flex-1 overflow-hidden bg-[#0a1624] lg:block">
+        <video
+          className="absolute inset-0 h-full w-full object-cover"
+          src={HERO_VIDEO_URL}
+          autoPlay={!reduceMotion}
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          aria-hidden="true"
         />
-        <div className="absolute inset-0 bg-black/30" />
 
-        <div className="relative z-10 p-20 h-full flex flex-col justify-start">
+        {/* Even tint plus top/bottom fade so the text stays readable over any frame of the video */}
+        <div aria-hidden="true" className="absolute inset-0 bg-black/30" />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-gradient-to-b from-[#0a1624]/80 via-transparent to-[#0a1624]/90"
+        />
+
+        <div className="relative z-10 flex h-full flex-col justify-between p-14 xl:p-20">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="max-w-md text-white drop-shadow-2xl"
+            variants={stagger(0.15)}
+            initial={initial}
+            animate="show"
+            className="max-w-xl"
           >
-            <h2 className="text-4xl font-extrabold leading-tight mb-6">
-              {t('auth.registerHeroTitle', 'Start managing your finances today')}
-            </h2>
-            <p className="text-xl font-medium opacity-90 mb-8 leading-normal">
-              {t('auth.registerHeroSubtitle', 'Join Empire of Forex and access the best trading and investment tools in the global market.')}
-            </p>
-            <Link 
-              href={getLocalizedPath('/register', locale)} 
-              className="inline-flex items-center gap-3 text-xl font-bold border-b-4 border-white pb-1 hover:gap-6 transition-all"
+            <motion.h2
+              variants={rise}
+              className="text-4xl font-bold leading-[1.1] tracking-tight text-white xl:text-5xl"
             >
-              {t('auth.getStartedNow', 'Get Started Now')} <span>&gt;</span>
-            </Link>
+              {t('auth.registerHeroTitle', 'Start managing your finances today')}
+            </motion.h2>
+            <motion.p variants={rise} className="mt-5 max-w-md text-lg leading-relaxed text-white/70">
+              {t(
+                'auth.registerHeroSubtitle',
+                'Join Empire of Forex and access the best trading and investment tools in the global market.'
+              )}
+            </motion.p>
           </motion.div>
 
-          <div className="absolute inset-0 pointer-events-none">
-            <motion.div 
-               animate={{ y: [0, -10, 0] }}
-               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-               className="absolute top-1/4 right-[40%] bg-white p-4 rounded-xl shadow-2xl pointer-events-auto"
-            >
-              <div className="w-10 h-10 bg-gray-50 flex items-center justify-center rounded-lg">
-                <svg className="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                </svg>
-              </div>
-            </motion.div>
-
-            <motion.div 
-               animate={{ y: [0, 10, 0] }}
-               transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-               className="absolute bottom-1/3 right-[10%] bg-white p-6 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] w-72 pointer-events-auto"
-            >
-              <div className="space-y-4">
-                <div>
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1.5">{t('auth.startingCurrency', 'Starting Currency')}</label>
-                  <div className="flex items-center justify-between px-3 py-2.5 bg-gray-50 border border-gray-100 rounded-lg">
-                    <div className="flex items-center gap-2">
-                       <span className="text-lg">🇬🇧</span>
-                       <span className="text-xs font-bold text-gray-700">GBP (United Kingdom)</span>
-                    </div>
-                    <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  </div>
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1.5">{t('auth.destinationCountry', 'Destination Country')}</label>
-                  <div className="flex items-center justify-between px-3 py-2.5 bg-gray-50 border border-gray-100 rounded-lg">
-                    <div className="flex items-center gap-2">
-                       <span className="text-lg">🇺🇸</span>
-                       <span className="text-xs font-bold text-gray-700">USA (US Dollar)</span>
-                    </div>
-                    <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
+          <motion.ul
+            variants={stagger(0.6)}
+            initial={initial}
+            animate="show"
+            className="max-w-xl divide-y divide-white/10 border-t border-white/10"
+          >
+            {benefits.map((b) => (
+              <motion.li key={b.title} variants={rise} className="flex items-center gap-4 py-4">
+                <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-orange-500/15 text-orange-400 ring-1 ring-orange-400/30">
+                  {b.icon}
+                </span>
+                <span>
+                  <span className="block font-semibold text-white">{b.title}</span>
+                  <span className="block text-sm text-white/60">{b.text}</span>
+                </span>
+              </motion.li>
+            ))}
+          </motion.ul>
         </div>
       </div>
     </div>

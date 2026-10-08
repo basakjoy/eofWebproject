@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { getSession, signIn } from 'next-auth/react';
+import { Loader2 } from 'lucide-react';
 import Button from '@/components/common/Button';
 import Alert from '@/components/common/Alert';
 import { useAuthStore } from '@/store/authStore';
@@ -10,23 +12,30 @@ import { authApi } from '@/lib/authApi';
 import { normalizeAuthUser } from '@/lib/authUtils';
 import { useLanguage, getLocalizedPath } from '@/context/LanguageContext';
 
+const PENDING_GOOGLE_SIGNUP_KEY = 'pending-google-signup';
+
+interface PendingGoogleSignup {
+  phone: string;
+  userType: 'user' | 'investor';
+}
+
 const COUNTRY_CODES = [
-  { code: '+880', country: '🇧🇩 Bangladesh' },
-  { code: '+1', country: '🇺🇸 USA' },
-  { code: '+44', country: '🇬🇧 UK' },
-  { code: '+91', country: '🇮🇳 India' },
-  { code: '+92', country: '🇵🇰 Pakistan' },
-  { code: '+86', country: '🇨🇳 China' },
-  { code: '+81', country: '🇯🇵 Japan' },
-  { code: '+33', country: '🇫🇷 France' },
-  { code: '+49', country: '🇩🇪 Germany' },
-  { code: '+39', country: '🇮🇹 Italy' },
-  { code: '+34', country: '🇪🇸 Spain' },
-  { code: '+61', country: '🇦🇺 Australia' },
-  { code: '+55', country: '🇧🇷 Brazil' },
-  { code: '+27', country: '🇿🇦 South Africa' },
-  { code: '+971', country: '🇦🇪 UAE' },
-  { code: '+966', country: '🇸🇦 Saudi Arabia' },
+  { code: '+880', country: 'Bangladesh' },
+  { code: '+1', country: 'USA' },
+  { code: '+44', country: 'UK' },
+  { code: '+91', country: 'India' },
+  { code: '+92', country: 'Pakistan' },
+  { code: '+86', country: 'China' },
+  { code: '+81', country: 'Japan' },
+  { code: '+33', country: 'France' },
+  { code: '+49', country: 'Germany' },
+  { code: '+39', country: 'Italy' },
+  { code: '+34', country: 'Spain' },
+  { code: '+61', country: 'Australia' },
+  { code: '+55', country: 'Brazil' },
+  { code: '+27', country: 'South Africa' },
+  { code: '+971', country: 'UAE' },
+  { code: '+966', country: 'Saudi Arabia' },
 ];
 
 export default function RegisterForm() {
@@ -34,6 +43,7 @@ export default function RegisterForm() {
   const { setSession } = useAuthStore();
   const { t, locale } = useLanguage();
   const [loading, setLoading] = useState(false);
+  const [oauthLoading, setOAuthLoading] = useState(false);
   const [error, setError] = useState('');
   const [userType, setUserType] = useState<'user' | 'investor'>('user');
   const [countryCode, setCountryCode] = useState('+1');
@@ -50,6 +60,74 @@ export default function RegisterForm() {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
+
+  const getInternationalPhone = () => `${countryCode}${formData.phone.replace(/\D/g, '')}`;
+
+  useEffect(() => {
+    const pendingSignup = sessionStorage.getItem(PENDING_GOOGLE_SIGNUP_KEY);
+    if (!pendingSignup) return;
+
+    let cancelled = false;
+
+    const completeGoogleSignup = async () => {
+      setOAuthLoading(true);
+      setError('');
+
+      try {
+        const pending = JSON.parse(pendingSignup) as PendingGoogleSignup;
+        const session = await getSession();
+        const sessionUser = session?.user as (NonNullable<typeof session>['user'] & {
+          id?: string;
+          role?: string;
+          accessToken?: string;
+        }) | undefined;
+
+        if (!sessionUser?.id || !sessionUser.email || !sessionUser.accessToken) {
+          throw new Error(t('auth.googleSessionMissing', 'Google sign-up could not be completed. Please try again.'));
+        }
+
+        const userData = {
+          id: sessionUser.id,
+          name: sessionUser.name || sessionUser.email.split('@')[0],
+          email: sessionUser.email,
+          role: sessionUser.role || 'user',
+          phone: pending.phone,
+        };
+        const user = normalizeAuthUser(userData);
+
+        authApi.saveSession(sessionUser.accessToken, userData);
+        setSession(sessionUser.accessToken, user);
+        await authApi.updatePhone(user.id, pending.phone);
+
+        sessionStorage.removeItem(PENDING_GOOGLE_SIGNUP_KEY);
+
+        if (!cancelled) {
+          const role = String(user.role).toLowerCase();
+          const dashboardPath = role === 'admin' || role === 'superadmin'
+            ? '/admin'
+            : role === 'investor'
+              ? '/dashboard/investments'
+              : role === 'premium'
+                ? '/dashboard/premium'
+                : '/dashboard/user';
+          router.replace(dashboardPath);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          const message = err instanceof Error ? err.message : t('auth.googleSignupFailed', 'Google sign-up failed. Please try again.');
+          setError(message);
+        }
+      } finally {
+        if (!cancelled) setOAuthLoading(false);
+      }
+    };
+
+    void completeGoogleSignup();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [router, setSession, t]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,6 +148,12 @@ export default function RegisterForm() {
       return;
     }
 
+    const phone = getInternationalPhone();
+    if (!/^\+[1-9]\d{6,14}$/.test(phone)) {
+      setError(t('auth.invalidPhoneNumber', 'Enter a valid phone number with its country code.'));
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -77,7 +161,7 @@ export default function RegisterForm() {
         name: `${formData.firstName} ${formData.lastName}`,
         email: formData.email,
         password: formData.password,
-        phone: `${countryCode}${formData.phone.replace(/^\+/, '').replace(/\D/g, '')}`,
+        phone,
         userType,
       });
 
@@ -93,15 +177,41 @@ export default function RegisterForm() {
       } else {
         router.push('/dashboard/user');
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+    } catch (err: unknown) {
+      const responseMessage = err && typeof err === 'object' && 'response' in err
+        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+        : undefined;
+      setError(responseMessage || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleOAuthSignUp = (provider: 'google') => {
-    console.log(`Sign up with ${provider}`);
+  const handleOAuthSignUp = async () => {
+    if (userType === 'investor') {
+      setError(t('auth.googleInvestorUnavailable', 'Google sign-up is currently available for trader accounts. Use email registration for an investor account.'));
+      return;
+    }
+
+    const phone = getInternationalPhone();
+    if (!/^\+[1-9]\d{6,14}$/.test(phone)) {
+      setError(t('auth.invalidPhoneNumber', 'Enter a valid phone number with its country code.'));
+      return;
+    }
+
+    setError('');
+    setOAuthLoading(true);
+
+    try {
+      sessionStorage.setItem(PENDING_GOOGLE_SIGNUP_KEY, JSON.stringify({ phone, userType }));
+      await signIn('google', {
+        callbackUrl: `${window.location.origin}${getLocalizedPath('/register', locale)}`,
+      });
+    } catch {
+      sessionStorage.removeItem(PENDING_GOOGLE_SIGNUP_KEY);
+      setError(t('auth.googleSignupFailed', 'Google sign-up failed. Please try again.'));
+      setOAuthLoading(false);
+    }
   };
 
   return (
@@ -198,6 +308,8 @@ export default function RegisterForm() {
               placeholder="123 456 789"
               value={formData.phone}
               onChange={handleChange}
+              autoComplete="tel-national"
+              inputMode="tel"
               required
               className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-300 transition-all font-medium text-sm"
             />
@@ -259,16 +371,19 @@ export default function RegisterForm() {
         <div>
           <button
             type="button"
-            onClick={() => handleOAuthSignUp('google')}
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all font-bold text-gray-700 text-xs shadow-sm cursor-pointer"
+            onClick={handleOAuthSignUp}
+            disabled={loading || oauthLoading}
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all font-bold text-gray-700 text-xs shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <svg className="w-4 h-4" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-            </svg>
-            Google
+            {oauthLoading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : (
+              <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+              </svg>
+            )}
+            {oauthLoading ? t('auth.connectingToGoogle', 'Connecting to Google...') : t('auth.continueWithGoogle', 'Continue with Google')}
           </button>
         </div>
       </form>

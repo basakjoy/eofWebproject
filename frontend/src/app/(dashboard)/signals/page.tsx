@@ -189,7 +189,7 @@ export default function SignalsPage() {
                 ? 'bg-fiery-orange/10 border-fiery-orange/30 text-fiery-amber'
                 : 'bg-white/5 border-white/10 text-zinc-500'
             }`}
-            title={soundEnabled ? 'Audio Alerts Enabled' : 'Audio Alerts Muted'}
+            title={soundEnabled ? t('userDashboard.signals.audioAlertsEnabled', 'Audio Alerts Enabled') : t('userDashboard.signals.audioAlertsMuted', 'Audio Alerts Muted')}
           >
             {soundEnabled ? <Volume2 className="w-4 h-4 text-fiery-orange" /> : <VolumeX className="w-4 h-4" />}
             <span className="hidden sm:inline">{soundEnabled ? t('userDashboard.signals.alertsOn', 'Alerts On') : t('userDashboard.signals.muted', 'Muted')}</span>
@@ -260,7 +260,7 @@ export default function SignalsPage() {
                 viewMode === 'grid' ? 'bg-fiery-orange shadow-md' : 'text-zinc-400 hover:text-white'
               }`}
             >
-              <Grid className="w-3.5 h-3.5" /> Cards
+              <Grid className="w-3.5 h-3.5" /> {t('userDashboard.signals.cards', 'Cards')}
             </button>
             <button
               onClick={() => setViewMode('table')}
@@ -268,7 +268,7 @@ export default function SignalsPage() {
                 viewMode === 'table' ? 'bg-fiery-orange shadow-md' : 'text-zinc-400 hover:text-white'
               }`}
             >
-              <List className="w-3.5 h-3.5" /> Terminal
+              <List className="w-3.5 h-3.5" /> {t('userDashboard.signals.terminal', 'Terminal')}
             </button>
             <button
               onClick={() => setViewMode('analytics')}
@@ -276,7 +276,7 @@ export default function SignalsPage() {
                 viewMode === 'analytics' ? 'bg-fiery-orange text-black shadow-md' : 'text-zinc-400 hover:text-white'
               }`}
             >
-              <BarChart3 className="w-3.5 h-3.5" /> Analytics
+              <BarChart3 className="w-3.5 h-3.5" /> {t('userDashboard.signals.analytics', 'Analytics')}
             </button>
           </div>
         </div>
@@ -293,7 +293,7 @@ export default function SignalsPage() {
                   : 'bg-transparent text-zinc-400 hover:text-white hover:bg-white/5'
               }`}
             >
-              {tab === 'All' ? 'All Signals' : tab}
+              {tab === 'All' ? t('userDashboard.signals.allSignals', 'All Signals') : tab}
             </button>
           ))}
         </div>
@@ -305,13 +305,13 @@ export default function SignalsPage() {
       ) : loading ? (
         <div className="py-16 text-center">
           <Loader2 className="w-10 h-10 text-fiery-orange animate-spin mx-auto mb-3" />
-          <p className="text-xs text-zinc-400">Fetching live market setups...</p>
+          <p className="text-xs text-zinc-400">{t('userDashboard.signals.fetching', 'Fetching live market setups...')}</p>
         </div>
       ) : filteredSignals.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 bg-card-dark/40 rounded-3xl border border-white/10 text-center p-8 space-y-3">
           <Zap className="w-10 h-10 text-zinc-500" />
-          <h3 className="text-lg font-bold text-white">No matching signals</h3>
-          <p className="text-xs text-zinc-400 max-w-sm">No active or closed signals found for your filter criteria.</p>
+          <h3 className="text-lg font-bold text-white">{t('userDashboard.signals.noMatching', 'No matching signals')}</h3>
+          <p className="text-xs text-zinc-400 max-w-sm">{t('userDashboard.signals.noMatchingDesc', 'No active or closed signals found for your filter criteria.')}</p>
         </div>
       ) : viewMode === 'grid' ? (
         /* GRID / CARD VIEW */
@@ -353,25 +353,25 @@ export default function SignalsPage() {
                         </span>
                       </div>
                       <span className="text-[10px] font-semibold text-zinc-400">
-                        Timeframe: <strong className="text-zinc-200">{signal.timeframe || '4H'}</strong>
+                        {t('userDashboard.signals.timeframe', 'Timeframe')}: <strong className="text-zinc-200">{signal.timeframe || '4H'}</strong>
                       </span>
                     </div>
                   </div>
 
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-panel-dark border border-white/10 text-xs text-fiery-amber font-bold shrink-0">
                     <span className="w-1.5 h-1.5 rounded-full bg-fiery-orange animate-pulse" />
-                    {signal.status || 'Active'}
+                    {signal.status ? t(`userDashboard.signals.${String(signal.status).toLowerCase()}`, String(signal.status)) : t('userDashboard.signals.active', 'Active')}
                   </span>
                 </div>
 
                 {/* Price Grid */}
                 <div className="grid grid-cols-2 gap-2 mb-3">
                   <div className="bg-panel-dark p-2.5 rounded-xl border border-white/5">
-                    <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block mb-0.5">Entry Price</span>
+                    <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block mb-0.5">{t('userDashboard.signals.entryPrice', 'Entry Price')}</span>
                     <span className="text-xs font-mono font-extrabold text-white">{entry}</span>
                   </div>
                   <div className="bg-rose-500/10 p-2.5 rounded-xl border border-rose-500/20">
-                    <span className="text-[9px] font-bold text-rose-400 uppercase tracking-wider block mb-0.5">Stop Loss</span>
+                    <span className="text-[9px] font-bold text-rose-400 uppercase tracking-wider block mb-0.5">{t('userDashboard.signals.stopLoss', 'Stop Loss')}</span>
                     <span className="text-xs font-mono font-extrabold text-rose-400">{sl}</span>
                   </div>
                 </div>
@@ -379,12 +379,12 @@ export default function SignalsPage() {
                 <div className="bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20 mb-4 flex items-center justify-between">
                   <div>
                     <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider block mb-0.5 flex items-center gap-1">
-                      <Target className="w-3 h-3" /> Target (TP1)
+                      <Target className="w-3 h-3" /> {t('userDashboard.signals.targetTp1', 'Target (TP1)')}
                     </span>
                     <span className="text-xs font-mono font-extrabold text-emerald-400">{tp1}</span>
                   </div>
                   <span className="text-[10px] font-black px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                    {signal.accuracy || 88}% Win
+                    {signal.accuracy || 88}% {t('userDashboard.signals.win', 'Win')}
                   </span>
                   {[signal.takeProfit1Hit, signal.takeProfit2Hit, signal.takeProfit3Hit].map((hit, index) => hit && (
                     <span key={index} className="text-[10px] font-black px-2 py-1 rounded bg-emerald-400 text-emerald-950">
@@ -400,13 +400,13 @@ export default function SignalsPage() {
                     className="text-xs font-bold text-zinc-400 hover:text-white flex items-center gap-1.5 transition-colors"
                   >
                     {copiedId === signal.id ? (
-                      <><Check className="w-3.5 h-3.5 text-emerald-400" /><span className="text-emerald-400">Copied!</span></>
+                      <><Check className="w-3.5 h-3.5 text-emerald-400" /><span className="text-emerald-400">{t('userDashboard.signals.copied', 'Copied!')}</span></>
                     ) : (
-                      <><Copy className="w-3.5 h-3.5" /><span>Copy Params</span></>
+                      <><Copy className="w-3.5 h-3.5" /><span>{t('userDashboard.signals.copyParams', 'Copy Params')}</span></>
                     )}
                   </button>
                   <span className="text-xs font-bold text-fiery-orange group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
-                    View Setup <Eye className="w-3.5 h-3.5" />
+                    {t('userDashboard.signals.viewSetup', 'View Setup')} <Eye className="w-3.5 h-3.5" />
                   </span>
                 </div>
               </div>
@@ -420,15 +420,15 @@ export default function SignalsPage() {
             <table className="w-full text-xs sm:text-sm text-left">
               <thead>
                 <tr className="bg-panel-dark/90 border-b border-white/10 text-zinc-400 font-semibold uppercase tracking-wider text-[10px]">
-                  <th className="py-3.5 px-4">Pair</th>
-                  <th className="py-3.5 px-4 text-center">Direction</th>
-                  <th className="py-3.5 px-4 text-center">Entry</th>
-                  <th className="py-3.5 px-4 text-center">TP1 Target</th>
-                  <th className="py-3.5 px-4 text-center">Stop Loss</th>
-                  <th className="py-3.5 px-4 text-center">TF</th>
-                  <th className="py-3.5 px-4 text-center">Win %</th>
-                  <th className="py-3.5 px-4 text-center">Status</th>
-                  <th className="py-3.5 px-4 text-right">Action</th>
+                  <th className="py-3.5 px-4">{t('userDashboard.signals.pair', 'Pair')}</th>
+                  <th className="py-3.5 px-4 text-center">{t('userDashboard.signals.direction', 'Direction')}</th>
+                  <th className="py-3.5 px-4 text-center">{t('userDashboard.signals.entryPrice', 'Entry')}</th>
+                  <th className="py-3.5 px-4 text-center">{t('userDashboard.signals.tp1Target', 'TP1 Target')}</th>
+                  <th className="py-3.5 px-4 text-center">{t('userDashboard.signals.stopLoss', 'Stop Loss')}</th>
+                  <th className="py-3.5 px-4 text-center">{t('userDashboard.signals.tf', 'TF')}</th>
+                  <th className="py-3.5 px-4 text-center">{t('userDashboard.signals.winPercent', 'Win %')}</th>
+                  <th className="py-3.5 px-4 text-center">{t('userDashboard.signals.status', 'Status')}</th>
+                  <th className="py-3.5 px-4 text-right">{t('userDashboard.signals.action', 'Action')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
@@ -470,7 +470,7 @@ export default function SignalsPage() {
                       <td className="py-3.5 px-4 text-center whitespace-nowrap">
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-panel-dark border border-white/10 text-[10px] text-fiery-amber font-semibold">
                           <span className="w-1.5 h-1.5 rounded-full bg-fiery-orange animate-pulse" />
-                          {signal.status || 'Active'}
+                          {signal.status ? t(`userDashboard.signals.${String(signal.status).toLowerCase()}`, String(signal.status)) : t('userDashboard.signals.active', 'Active')}
                         </span>
                       </td>
                       <td className="py-3.5 px-4 text-right">
@@ -478,7 +478,7 @@ export default function SignalsPage() {
                           onClick={(e) => handleCopyQuick(signal, e)}
                           className="px-3 py-1.5 rounded-lg bg-panel-dark hover:bg-white/10 border border-white/10 text-[10px] font-bold text-white transition-colors"
                         >
-                          {copiedId === signal.id ? 'Copied!' : 'Copy'}
+                          {copiedId === signal.id ? t('userDashboard.signals.copied', 'Copied!') : t('userDashboard.signals.copy', 'Copy')}
                         </button>
                       </td>
                     </tr>

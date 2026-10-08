@@ -8,6 +8,7 @@ import {
   TrendingUp,
   Search,
   Download,
+  FileDown,
   Filter,
   RefreshCw,
   CheckCircle2,
@@ -93,10 +94,15 @@ function signedAmount(transaction: TransactionRecord): number {
   return ['withdrawal', 'investment', 'upgrade'].includes(transaction.type.toLowerCase()) ? -amount : amount;
 }
 
+const formatMoney = (value: number) =>
+  `${value < 0 ? '-' : '+'}$${Math.abs(value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+
+const ORANGE: [number, number, number] = [249, 115, 22];
+
 export default function RefinedTransactionsPage() {
   const { user } = useAuthStore();
   const { t } = useLanguage();
-  
+
   const [transactions, setTransactions] = useState<TransactionRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -179,9 +185,23 @@ export default function RefinedTransactionsPage() {
     }
   };
 
-  // Export statement handler
+  // Export statement handler (CSV)
   const handleExportStatement = () => {
-    const headers = ['Transaction ID', 'Type', 'Description', 'Amount ($)', 'Status', 'Date', 'Reference', 'Method'];
+    if (isLoading || loadError || filteredTransactions.length === 0) return;
+
+    const headers = [
+      'Transaction ID',
+      'Type',
+      'Description',
+      'Amount ($)',
+      'Fee ($)',
+      'Net Amount ($)',
+      'Status',
+      'Date',
+      'Time',
+      'Reference',
+      'Method',
+    ];
     const escapeCsvCell = (value: string | number) => {
       const rawValue = String(value);
       const safeValue = typeof value === 'string' && /^[=+\-@\t\r]/.test(rawValue) ? `'${rawValue}` : rawValue;
@@ -194,9 +214,12 @@ export default function RefinedTransactionsPage() {
           transaction.id,
           transaction.type,
           transaction.description,
-          transaction.amount,
+          signedAmount(transaction),
+          transaction.fee ?? '',
+          transaction.netAmount ?? '',
           transaction.status,
           transaction.date,
+          transaction.time || 'N/A',
           transaction.reference || 'N/A',
           transaction.method || 'N/A',
         ].map(escapeCsvCell).join(',')
@@ -209,9 +232,175 @@ export default function RefinedTransactionsPage() {
     a.download = `EmpireOfForex_Statement_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-    toast.success('Transaction statement exported as CSV!');
+    toast.success('Transaction history downloaded as CSV.');
   };
 
+  // Export statement handler (PDF) - respects current search/filters
+  const handleExportPdf = async () => {
+    if (isLoading || loadError || filteredTransactions.length === 0) return;
+
+    try {
+      const [{ jsPDF }, { default: autoTable }] = await Promise.all([
+        import('jspdf'),
+        import('jspdf-autotable'),
+      ]);
+
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+
+      // Header
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(20);
+      doc.setTextColor(30);
+      doc.text('Transaction Statement', 40, 50);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text('Empire of Forex', 40, 68);
+      doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth - 40, 50, { align: 'right' });
+      doc.text(`Records: ${filteredTransactions.length}`, pageWidth - 40, 68, { align: 'right' });
+      doc.setDrawColor(...ORANGE);
+      doc.setLineWidth(1.5);
+      doc.line(40, 78, pageWidth - 40, 78);
+
+      // Summary line
+      doc.setTextColor(30);
+      doc.setFontSize(10);
+      doc.text(
+        `Deposits: $${stats.totalDeposits.toLocaleString('en-US', { minimumFractionDigits: 2 })}    ` +
+          `Profits: $${stats.totalProfits.toLocaleString('en-US', { minimumFractionDigits: 2 })}    ` +
+          `Withdrawals: $${stats.totalWithdrawals.toLocaleString('en-US', { minimumFractionDigits: 2 })}    ` +
+          `Net: $${stats.netBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}  (completed only)`,
+        40,
+        98
+      );
+
+      autoTable(doc, {
+        startY: 112,
+        head: [['ID', 'Type', 'Description', 'Method', 'Reference', 'Date', 'Status', 'Amount (USD)']],
+        body: filteredTransactions.map((tx) => [
+          String(tx.id),
+          tx.type,
+          tx.description,
+          tx.method || '-',
+          tx.reference || '-',
+          `${tx.date}${tx.time ? ' ' + tx.time : ''}`,
+          tx.status,
+          formatMoney(signedAmount(tx)),
+        ]),
+        styles: { fontSize: 8, cellPadding: 5, overflow: 'linebreak' },
+        headStyles: { fillColor: ORANGE, textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [250, 250, 250] },
+        columnStyles: {
+          0: { cellWidth: 70 },
+          2: { cellWidth: 150 },
+          7: { halign: 'right', fontStyle: 'bold' },
+        },
+        didParseCell: (data) => {
+          if (data.section === 'body' && data.column.index === 7) {
+            const text = String(data.cell.raw);
+            data.cell.styles.textColor = text.startsWith('-') ? [225, 29, 72] : [5, 150, 105];
+          }
+        },
+        margin: { left: 40, right: 40, bottom: 40 },
+      });
+
+      // Page numbers
+      const pageCount = doc.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(140);
+        doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, pageHeight - 20, { align: 'center' });
+      }
+
+      doc.save(`EmpireOfForex_Statement_${new Date().toISOString().slice(0, 10)}.pdf`);
+      toast.success('Statement downloaded as PDF.');
+    } catch {
+      toast.error('Could not generate the PDF. Please try again.');
+    }
+  };
+
+  // Single receipt PDF
+  const handleDownloadReceiptPdf = async (transaction: TransactionRecord) => {
+    try {
+      const [{ jsPDF }, { default: autoTable }] = await Promise.all([
+        import('jspdf'),
+        import('jspdf-autotable'),
+      ]);
+
+      const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const amount = signedAmount(transaction);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(20);
+      doc.setTextColor(30);
+      doc.text('Transaction Receipt', 40, 60);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text('Empire of Forex', 40, 78);
+      doc.setDrawColor(...ORANGE);
+      doc.setLineWidth(1.5);
+      doc.line(40, 90, pageWidth - 40, 90);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(28);
+      doc.setTextColor(...(amount < 0 ? ([225, 29, 72] as const) : ([5, 150, 105] as const)));
+      doc.text(formatMoney(amount), 40, 135);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(11);
+      doc.setTextColor(100);
+      doc.text(transaction.status.toUpperCase(), 40, 155);
+
+      const rows: [string, string][] = [
+        ['Transaction ID', String(transaction.id)],
+        ['Type', transaction.type],
+        ['Description', transaction.description],
+        ['Payment method', transaction.method || 'Not provided'],
+        ['Date', `${transaction.date} ${transaction.time ?? ''}`.trim()],
+      ];
+      if (transaction.reference) rows.push(['Reference', transaction.reference]);
+      if (transaction.fee !== undefined) rows.push(['Fee', `$${transaction.fee.toFixed(2)}`]);
+      if (transaction.netAmount !== undefined) rows.push(['Net amount', `$${transaction.netAmount.toFixed(2)}`]);
+
+      autoTable(doc, {
+        startY: 180,
+        body: rows,
+        theme: 'plain',
+        styles: { fontSize: 10, cellPadding: { top: 8, bottom: 8, left: 0, right: 0 } },
+        columnStyles: {
+          0: { textColor: [100, 100, 100], cellWidth: 140 },
+          1: { halign: 'right', fontStyle: 'bold' },
+        },
+        didDrawCell: (data) => {
+          doc.setDrawColor(228, 228, 231);
+          doc.setLineWidth(0.5);
+          doc.line(
+            data.cell.x,
+            data.cell.y + data.cell.height,
+            data.cell.x + data.cell.width,
+            data.cell.y + data.cell.height
+          );
+        },
+        margin: { left: 40, right: 40 },
+      });
+
+      doc.setFontSize(8);
+      doc.setTextColor(140);
+      doc.text(`Generated ${new Date().toLocaleString()}`, 40, doc.internal.pageSize.getHeight() - 30);
+
+      doc.save(`Receipt_${String(transaction.id).replace(/[^\w-]/g, '_')}.pdf`);
+      toast.success('Receipt downloaded as PDF.');
+    } catch {
+      toast.error('Could not generate the PDF. Please try again.');
+    }
+  };
+
+  // Browser print receipt
   const handlePrintReceipt = (transaction: TransactionRecord) => {
     const printWindow = window.open('', '_blank', 'width=760,height=800');
     if (!printWindow) {
@@ -288,7 +477,7 @@ export default function RefinedTransactionsPage() {
       .filter((t) => t.type === 'profit' && t.status === 'completed')
       .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
-      const totalWithdrawals = transactions
+    const totalWithdrawals = transactions
       .filter((t) => t.type === 'withdrawal' && t.status === 'completed')
       .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
@@ -383,7 +572,7 @@ export default function RefinedTransactionsPage() {
 
   return (
     <div className="space-y-8 p-2 sm:p-4 text-white font-poppins selection:bg-fiery-orange selection:text-white">
-      
+
       {/* ══ HEADER ══ */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-white/10">
         <div>
@@ -399,7 +588,7 @@ export default function RefinedTransactionsPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={fetchTransactions}
             disabled={isLoading}
@@ -411,31 +600,43 @@ export default function RefinedTransactionsPage() {
 
           <button
             onClick={handleExportStatement}
-            className="px-5 py-3 rounded-2xl bg-gradient-to-r from-fiery-orange via-fiery-red to-fiery-amber text-black font-extrabold text-xs sm:text-sm flex items-center gap-2 shadow-fiery hover:scale-[1.02] active:scale-[0.98] transition-all"
+            disabled={isLoading || !!loadError || filteredTransactions.length === 0}
+            aria-label={t('userDashboard.transactions.downloadCsv', 'Download transaction history as CSV')}
+            className="px-5 py-3 rounded-2xl bg-gradient-to-r from-fiery-orange via-fiery-red to-fiery-amber text-black font-extrabold text-xs sm:text-sm flex items-center gap-2 shadow-fiery hover:scale-[1.02] active:scale-[0.98] transition-all disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
           >
             <Download className="w-4 h-4 text-black" />
-            {t('userDashboard.transactions.exportStatement', 'Export Statement (CSV)')}
+            {t('userDashboard.transactions.downloadCsv', 'Download CSV')}
+          </button>
+
+          <button
+            onClick={() => void handleExportPdf()}
+            disabled={isLoading || !!loadError || filteredTransactions.length === 0}
+            aria-label={t('userDashboard.transactions.downloadPdf', 'Download transaction history as PDF')}
+            className="px-5 py-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-fiery-orange/40 text-fiery-amber font-extrabold text-xs sm:text-sm flex items-center gap-2 transition-all disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <FileDown className="w-4 h-4" />
+            {t('userDashboard.transactions.downloadPdf', 'Download PDF')}
           </button>
         </div>
       </div>
 
-        {loadError && (
-          <div role="alert" className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-            <span>{loadError}</span>
-            <button
-              onClick={() => void fetchTransactions()}
-              disabled={isLoading}
-              className="inline-flex items-center gap-2 self-start sm:self-auto font-semibold text-white hover:text-rose-200 disabled:opacity-50"
-            >
-              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-              Retry
-            </button>
-          </div>
-        )}
+      {loadError && (
+        <div role="alert" className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+          <span>{loadError}</span>
+          <button
+            onClick={() => void fetchTransactions()}
+            disabled={isLoading}
+            className="inline-flex items-center gap-2 self-start sm:self-auto font-semibold text-white hover:text-rose-200 disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Retry
+          </button>
+        </div>
+      )}
 
       {/* ══ SUMMARY STATS ══ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        
+
         {/* Net Flow */}
         <div className="bg-card-dark/80 backdrop-blur-xl p-5 rounded-3xl border border-white/10 relative overflow-hidden group hover:border-fiery-orange/40 transition-all">
           <div className="flex items-center justify-between">
@@ -508,7 +709,7 @@ export default function RefinedTransactionsPage() {
       {/* ══ CONTROLS: SEARCH & FILTERS ══ */}
       <div className="bg-card-dark/60 backdrop-blur-xl p-4 sm:p-5 rounded-3xl border border-white/10 space-y-4">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
-          
+
           {/* Search bar */}
           <div className="relative flex-1">
             <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" />
@@ -592,7 +793,7 @@ export default function RefinedTransactionsPage() {
 
       {/* ══ TRANSACTIONS TABLE & CARD FEED ══ */}
       <div className="bg-card-dark/80 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
-        
+
         {/* Desktop Table View */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -699,7 +900,7 @@ export default function RefinedTransactionsPage() {
                             isPositive ? 'text-emerald-400' : 'text-rose-400'
                           }`}
                         >
-                          {isPositive ? '+' : isPositive === false ? '-' : ''}
+                          {isPositive ? '+' : '-'}
                           ${Math.abs(displayAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                         </span>
                         <span className="text-[10px] text-zinc-500 block">USD</span>
@@ -868,12 +1069,18 @@ export default function RefinedTransactionsPage() {
               </div>
 
               {/* Modal Footer Actions */}
-              <div className="flex items-center gap-3 pt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                 <button
-                  onClick={() => handlePrintReceipt(selectedTxn)}
+                  onClick={() => void handleDownloadReceiptPdf(selectedTxn)}
                   className="w-full py-3 rounded-xl bg-gradient-to-r from-fiery-orange to-fiery-amber text-black font-extrabold text-xs flex items-center justify-center gap-2 shadow-fiery hover:scale-[1.02] transition-all"
                 >
-                  <Download className="w-4 h-4 text-black" /> Print / Save as PDF
+                  <FileDown className="w-4 h-4 text-black" /> Download PDF
+                </button>
+                <button
+                  onClick={() => handlePrintReceipt(selectedTxn)}
+                  className="w-full py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all"
+                >
+                  <Download className="w-4 h-4" /> Print
                 </button>
               </div>
             </motion.div>
