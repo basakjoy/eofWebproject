@@ -10,14 +10,17 @@ const bcrypt = require('bcryptjs');
 
 const prisma = new PrismaClient();
 
-const SUPER_ADMIN_EMAIL = 'superadmin@eofweb.com';
-const SUPER_ADMIN_PASSWORD = 'SuperAdmin@2024!';
-const SUPER_ADMIN_NAME = 'Super Admin';
+const SUPER_ADMIN_EMAIL = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+const SUPER_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const SUPER_ADMIN_NAME = process.env.ADMIN_NAME || 'Super Admin';
 
 async function main() {
+  if (!SUPER_ADMIN_EMAIL || !SUPER_ADMIN_PASSWORD || SUPER_ADMIN_PASSWORD.length < 16) {
+    throw new Error('Set ADMIN_EMAIL and a 16-character ADMIN_PASSWORD before running this script');
+  }
   console.log('🔧 Creating / updating super admin account...\n');
 
-  const hashedPassword = await bcrypt.hash(SUPER_ADMIN_PASSWORD, 10);
+  const hashedPassword = await bcrypt.hash(SUPER_ADMIN_PASSWORD, 12);
 
   const user = await prisma.user.upsert({
     where: { email: SUPER_ADMIN_EMAIL },
@@ -27,6 +30,7 @@ async function main() {
       adminScope: 'SUPER_ADMIN',
       adminScopeGrantedAt: new Date(),
       adminScopeGrantedBy: 'system',
+      tokenVersion: { increment: 1 },
     },
     create: {
       name: SUPER_ADMIN_NAME,
@@ -49,7 +53,6 @@ async function main() {
   console.log(' Super admin account ready!\n');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log(' Email   :', SUPER_ADMIN_EMAIL);
-  console.log(' Password:', SUPER_ADMIN_PASSWORD);
   console.log(' Role    :', user.role, '/', user.adminScope);
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
   console.log('Use these credentials to log into the admin dashboard.');

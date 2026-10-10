@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
 import { prisma } from '../database';
 import { getPermissionsForRole, Permission } from '../types/roles';
+import { verifyAccessToken } from '../lib/tokens';
 
 export interface AuthRequest extends Request {
   user?: {
@@ -15,6 +15,11 @@ export interface AuthRequest extends Request {
   };
 }
 
+export const getBearerToken = (req: Request): string | undefined => {
+  const match = /^Bearer\s+([^\s]+)$/i.exec(req.headers.authorization || '');
+  return match?.[1];
+};
+
 /**
  * Verify JWT token and load user with roles and permissions
  */
@@ -24,7 +29,7 @@ export const verifyToken = async (
   next: NextFunction
 ) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
+    const token = getBearerToken(req);
 
     if (!token) {
       return res.status(401).json({
@@ -33,7 +38,7 @@ export const verifyToken = async (
       });
     }
 
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+    const decoded = verifyAccessToken(token);
 
     // Get user from database
     const user = await prisma.user.findUnique({
@@ -51,10 +56,10 @@ export const verifyToken = async (
       }
     });
 
-    if (!user || user.status !== 'active') {
+    if (!user || user.status !== 'active' || user.tokenVersion !== decoded.authVersion) {
       return res.status(401).json({
         success: false,
-        message: 'User not found or inactive'
+        message: 'Invalid or revoked token'
       });
     }
 
@@ -79,24 +84,16 @@ export const verifyToken = async (
 
     next();
   } catch (error) {
-    if (error instanceof jwt.JsonWebTokenError) {
+    if (error instanceof Error && (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError')) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid token'
-      });
-    }
-
-    if (error instanceof jwt.TokenExpiredError) {
-      return res.status(401).json({
-        success: false,
-        message: 'Token expired'
+        message: error.name === 'TokenExpiredError' ? 'Token expired' : 'Invalid token'
       });
     }
 
     return res.status(500).json({
       success: false,
-      message: 'Authentication error',
-      error: error instanceof Error ? error.message : 'Unknown error'
+      message: 'Authentication error'
     });
   }
 };

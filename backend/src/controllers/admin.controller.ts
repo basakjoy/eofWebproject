@@ -2,7 +2,19 @@ import { Request, Response } from 'express';
 import { prisma } from '../database';
 import { Prisma } from '@prisma/client';
 import bcrypt from 'bcryptjs';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
+import { AuthRequest } from '../middleware/auth';
+import { Permission } from '../types/roles';
+
+const elevatedRoles = new Set(['admin', 'super_admin', 'marketing_admin', 'signal_admin', 'content_admin']);
+
+const canGrantRole = (req: Request, role: string) => {
+  if (!elevatedRoles.has(role)) return true;
+  const authReq = req as AuthRequest;
+  const isSuperAdmin = authReq.user?.role === 'super_admin' || authReq.user?.adminScope === 'SUPER_ADMIN';
+  if (role === 'super_admin') return isSuperAdmin;
+  return isSuperAdmin || authReq.user?.permissions.includes(Permission.CREATE_ADMIN) === true;
+};
 
 const dashboardPeriods = [
   { key: 'today', label: 'Today', start: (now: Date) => new Date(now.getFullYear(), now.getMonth(), now.getDate()), end: (now: Date) => now },
@@ -19,7 +31,7 @@ const inPeriod = (date: Date, period: typeof dashboardPeriods[number], now: Date
 export const getAllAdminUsers = async (req: Request, res: Response) => {
   try {
     const limit = Math.min(Math.max(Number(req.query.limit) || 20, 1), 100);
-    const offset = Math.max(Number(req.query.offset) || 0, 0);
+    const offset = Math.min(Math.max(Number(req.query.offset) || 0, 0), 10_000);
     const [users, total] = await Promise.all([
       prisma.user.findMany({
         orderBy: { createdAt: 'desc' },
@@ -39,7 +51,7 @@ export const getAllAdminUsers = async (req: Request, res: Response) => {
   } catch (error: any) {
     res.status(500).json({
       success: false,
-      message: error.message || 'Failed to fetch admin users',
+      message: 'Failed to fetch admin users',
     });
   }
 };
@@ -67,7 +79,7 @@ export const getAdminUser = async (req: Request, res: Response) => {
   } catch (error: any) {
     res.status(500).json({
       success: false,
-      message: error.message || 'Failed to fetch admin user',
+      message: 'Failed to fetch admin user',
     });
   }
 };
@@ -84,13 +96,23 @@ export const createAdminUser = async (req: Request, res: Response) => {
       });
     }
 
-    const existingUser = await prisma.user.findUnique({ where: { email } });
+    const normalizedRole = String(role).toLowerCase();
+    if (!canGrantRole(req, normalizedRole)) {
+      return res.status(403).json({ success: false, message: 'You do not have permission to grant this role' });
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const existingUser = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (existingUser) return res.status(409).json({ success: false, message: 'Email is already registered' });
 
-    const user = await prisma.user.create({
-      data: { name, email, password: await bcrypt.hash(password, 12), role: String(role).toLowerCase() },
-      select: { id: true, name: true, email: true, role: true, status: true, createdAt: true, updatedAt: true },
-    });
+    const actorId = (req as AuthRequest).user!.userId;
+    const [user] = await prisma.$transaction([
+      prisma.user.create({
+        data: { name: String(name).trim(), email: normalizedEmail, password: await bcrypt.hash(password, 12), role: normalizedRole },
+        select: { id: true, name: true, email: true, role: true, status: true, createdAt: true, updatedAt: true },
+      }),
+      prisma.log.create({ data: { userId: actorId, action: 'ADMIN_USER_CREATED', ipAddress: req.ip } }),
+    ]);
 
     res.status(201).json({
       success: true,
@@ -100,7 +122,7 @@ export const createAdminUser = async (req: Request, res: Response) => {
   } catch (error: any) {
     res.status(500).json({
       success: false,
-      message: error.message || 'Failed to create admin user',
+      message: 'Failed to create admin user',
     });
   }
 };
@@ -119,14 +141,32 @@ export const updateAdminUser = async (req: Request, res: Response) => {
       });
     }
 
-    const updatedUser = await prisma.user.update({
-      where: { id },
-      data: {
-        ...(name !== undefined ? { name } : {}),
-        ...(role !== undefined ? { role: String(role).toLowerCase() } : {}),
-        ...(status !== undefined ? { status: String(status).toLowerCase() } : {}),
-      },
-      select: { id: true, name: true, email: true, role: true, status: true, createdAt: true, updatedAt: true },
+    const actor = (req as AuthRequest).user;
+    if (elevatedRoles.has(existingUser.role) && !actor?.permissions.includes(Permission.EDIT_ADMIN)) {
+      return res.status(403).json({ success: false, message: 'You do not have permission to edit admin accounts' });
+    }
+    if (existingUser.adminScope === 'SUPER_ADMIN' && actor?.adminScope !== 'SUPER_ADMIN') {
+      return res.status(403).json({ success: false, message: 'Only a super admin can edit a super admin account' });
+    }
+
+    if (role !== undefined && !canGrantRole(req, String(role).toLowerCase())) {
+      return res.status(403).json({ success: false, message: 'You do not have permission to grant this role' });
+    }
+
+    const authUser = (req as AuthRequest).user!;
+    const updatedUser = await prisma.$transaction(async (tx) => {
+      const updated = await tx.user.update({
+        where: { id },
+        data: {
+          ...(name !== undefined ? { name } : {}),
+          ...(role !== undefined ? { role: String(role).toLowerCase() } : {}),
+          ...(status !== undefined ? { status: String(status).toLowerCase() } : {}),
+          ...((role !== undefined || status !== undefined) ? { tokenVersion: { increment: 1 } } : {}),
+        },
+        select: { id: true, name: true, email: true, role: true, status: true, createdAt: true, updatedAt: true },
+      });
+      await tx.log.create({ data: { userId: authUser.userId, action: 'ADMIN_USER_UPDATED', ipAddress: req.ip } });
+      return updated;
     });
 
     res.json({
@@ -137,7 +177,7 @@ export const updateAdminUser = async (req: Request, res: Response) => {
   } catch (error: any) {
     res.status(500).json({
       success: false,
-      message: error.message || 'Failed to update admin user',
+      message: 'Failed to update admin user',
     });
   }
 };
@@ -155,7 +195,18 @@ export const deleteAdminUser = async (req: Request, res: Response) => {
       });
     }
 
-    await prisma.user.delete({ where: { id } });
+    const actor = (req as AuthRequest).user;
+    if (elevatedRoles.has(user.role) && !actor?.permissions.includes(Permission.DELETE_ADMIN)) {
+      return res.status(403).json({ success: false, message: 'You do not have permission to delete admin accounts' });
+    }
+    if (user.adminScope === 'SUPER_ADMIN' && actor?.adminScope !== 'SUPER_ADMIN') {
+      return res.status(403).json({ success: false, message: 'Only a super admin can delete a super admin account' });
+    }
+
+    await prisma.$transaction([
+      prisma.user.delete({ where: { id } }),
+      prisma.log.create({ data: { userId: (req as AuthRequest).user!.userId, action: 'ADMIN_USER_DELETED', ipAddress: req.ip } }),
+    ]);
 
     res.json({
       success: true,
@@ -164,7 +215,7 @@ export const deleteAdminUser = async (req: Request, res: Response) => {
   } catch (error: any) {
     res.status(500).json({
       success: false,
-      message: error.message || 'Failed to delete admin user',
+      message: 'Failed to delete admin user',
     });
   }
 };
@@ -172,30 +223,34 @@ export const deleteAdminUser = async (req: Request, res: Response) => {
 // Log admin action
 export const logAdminAction = async (req: Request, res: Response) => {
   try {
-    const { adminId, action, targetId, targetType, changes, reason, ipAddress } = req.body;
+    const { action, targetId, targetType, changes, reason } = req.body;
+    const authReq = req as AuthRequest;
 
-    if (!adminId || !action) {
+    if (!authReq.user?.userId || !action) {
       return res.status(400).json({
         success: false,
         message: 'adminId and action are required',
       });
     }
 
-    const adminUser = await prisma.adminUser.findFirst({
-      where: { OR: [{ id: String(adminId) }, { userId: String(adminId) }] },
-    });
+    const adminUser = await prisma.adminUser.findUnique({ where: { userId: authReq.user.userId } });
     if (!adminUser) return res.status(404).json({ success: false, message: 'Admin profile not found' });
+
+    const serializedChanges = changes ? JSON.stringify(changes) : null;
+    if (serializedChanges && serializedChanges.length > 5000) {
+      return res.status(400).json({ success: false, message: 'Changes payload is too large' });
+    }
 
     const log = await prisma.adminAction.create({
       data: {
-        id: uuidv4(),
+        id: randomUUID(),
         adminId: adminUser.id,
         action: String(action),
         targetId: targetId ? String(targetId) : null,
         targetType: targetType ? String(targetType) : null,
-        changes: changes ? JSON.stringify(changes) : null,
+        changes: serializedChanges,
         reason: reason ? String(reason) : null,
-        ipAddress: ipAddress ? String(ipAddress) : null,
+        ipAddress: req.ip,
         status: 'success',
       },
     });
@@ -208,7 +263,7 @@ export const logAdminAction = async (req: Request, res: Response) => {
   } catch (error: any) {
     res.status(500).json({
       success: false,
-      message: error.message || 'Failed to log admin action',
+      message: 'Failed to log admin action',
     });
   }
 };
@@ -226,7 +281,7 @@ export const getAdminLogs = async (req: Request, res: Response) => {
         where,
         orderBy: { createdAt: 'desc' },
         take: Math.min(Math.max(Number(limit) || 50, 1), 100),
-        skip: Math.max(Number(offset) || 0, 0),
+        skip: Math.min(Math.max(Number(offset) || 0, 0), 10_000),
         select: { id: true, adminId: true, action: true, targetId: true, targetType: true, reason: true, status: true, createdAt: true, admin: { select: { user: { select: { name: true, email: true } } } } },
       }),
       prisma.adminAction.count({ where }),
@@ -241,7 +296,7 @@ export const getAdminLogs = async (req: Request, res: Response) => {
   } catch (error: any) {
     res.status(500).json({
       success: false,
-      message: error.message || 'Failed to fetch admin logs',
+      message: 'Failed to fetch admin logs',
     });
   }
 };
@@ -409,7 +464,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
   } catch (error: any) {
     res.status(500).json({
       success: false,
-      message: error.message || 'Failed to fetch dashboard stats',
+      message: 'Failed to fetch dashboard stats',
     });
   }
 };

@@ -88,6 +88,7 @@ export async function grantAdminByEmail(
         adminScope: scope,
         adminScopeGrantedAt: new Date(),
         adminScopeGrantedBy: performedBy,
+        tokenVersion: { increment: 1 },
       },
     });
 
@@ -172,6 +173,7 @@ export async function revokeAdmin(
         adminScope: null,
         adminScopeGrantedAt: null,
         adminScopeGrantedBy: null,
+        tokenVersion: { increment: 1 },
       },
     });
 
@@ -237,6 +239,7 @@ export async function updateAdminScope(
       where: { id: userId },
       data: {
         adminScope: newScope,
+        tokenVersion: { increment: 1 },
       },
     });
 

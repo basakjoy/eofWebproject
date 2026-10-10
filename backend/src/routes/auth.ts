@@ -1,11 +1,28 @@
 import express, { Request, Response } from 'express';
+import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { v4 as uuidv4 } from 'uuid';
+import { z } from 'zod';
+import { randomUUID } from 'crypto';
+import { OAuth2Client } from 'google-auth-library';
 import { prisma } from '../database';
 import { authLimiter } from '../middleware/rateLimiter';
+import { createAccessToken, createSessionTokens, hashRefreshToken, verifyAccessToken } from '../lib/tokens';
+import { getBearerToken } from '../middleware/auth';
 
 const router = express.Router();
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+const registrationSchema = z.object({
+  name: z.string().trim().min(1).max(100),
+  email: z.string().trim().email().max(254),
+  password: z.string().min(6).max(72),
+  phone: z.string().max(30).optional(),
+  userType: z.enum(['user', 'investor']).optional(),
+}).strict();
+const loginSchema = z.object({
+  email: z.string().trim().email().max(254),
+  password: z.string().min(1).max(72),
+}).strict();
 
 interface AuthRequest extends Request {
   user?: any;
@@ -14,39 +31,19 @@ interface AuthRequest extends Request {
 // Register endpoint
 router.post('/register', authLimiter, async (req: Request, res: Response) => {
   try {
-    const { name, email, password, phone, userType = 'user' } = req.body;
+    const parsed = registrationSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ success: false, message: 'Invalid registration details' });
+    const { name, email, password, phone, userType = 'user' } = parsed.data;
+    const normalizedEmail = email.trim().toLowerCase();
     const normalizedPhone = phone ? String(phone).replace(/(?!^\+)\D/g, '') : null;
-
-    // Validation
-    if (!name || !email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: 'Name, email, and password are required',
-      });
-    }
 
     if (normalizedPhone && !/^\+[1-9]\d{6,14}$/.test(normalizedPhone)) {
       return res.status(400).json({ success: false, message: 'Phone must include a valid country code' });
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({
-        success: false,
-        message: 'Password must be at least 6 characters',
-      });
-    }
-
-    // Validate userType
-    if (!['user', 'investor'].includes(userType)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid user type. Must be "user" or "investor"',
-      });
-    }
-
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email },
+      where: { email: normalizedEmail },
     });
 
     if (existingUser) {
@@ -57,14 +54,14 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
     }
 
     // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     // Create user
     const user = await prisma.user.create({
       data: {
-        id: uuidv4(),
-        name,
-        email,
+        id: randomUUID(),
+        name: name.trim(),
+        email: normalizedEmail,
         password: hashedPassword,
         phone: normalizedPhone,
         role: userType,
@@ -73,11 +70,7 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
     });
 
     // Create JWT token
-    const token = jwt.sign(
-      { userId: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET || 'secret',
-      { expiresIn: '7d' }
-    );
+    const tokens = await createSessionTokens(user);
 
     res.status(201).json({
       success: true,
@@ -88,14 +81,14 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
         email: user.email,
         role: user.role,
         phone: user.phone,
-        token,
+        ...tokens,
       },
     });
   } catch (error: any) {
-    console.error('Registration error:', error);
+    console.error('Registration failed');
     res.status(500).json({
       success: false,
-      message: error.message || 'Registration failed',
+      message: 'Registration failed',
     });
   }
 });
@@ -103,16 +96,10 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
 // Login endpoint
 router.post('/login', authLimiter, async (req: Request, res: Response) => {
   try {
-    const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
-    const password = typeof req.body.password === 'string' ? req.body.password : '';
-
-    // Validation
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: 'Email and password are required',
-      });
-    }
+    const parsed = loginSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ success: false, message: 'Email and password are required' });
+    const email = parsed.data.email.toLowerCase();
+    const password = parsed.data.password;
 
     // Find user
     const user = await prisma.user.findUnique({
@@ -145,11 +132,7 @@ router.post('/login', authLimiter, async (req: Request, res: Response) => {
     }
 
     // Create JWT token
-    const token = jwt.sign(
-      { userId: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET || 'secret',
-      { expiresIn: '7d' }
-    );
+    const tokens = await createSessionTokens(user);
 
     res.json({
       success: true,
@@ -161,22 +144,93 @@ router.post('/login', authLimiter, async (req: Request, res: Response) => {
         role: user.role,
         adminScope: user.adminScope,
         phone: user.phone,
-        token,
+        ...tokens,
       },
     });
   } catch (error: any) {
-    console.error('Login error:', error);
+    console.error('Login failed');
     res.status(500).json({
       success: false,
-      message: error.message || 'Login failed',
+      message: 'Login failed',
     });
+  }
+});
+
+router.post('/refresh', authLimiter, async (req: Request, res: Response) => {
+  const parsed = z.object({ refreshToken: z.string().min(40).max(200) }).strict().safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ success: false, message: 'Invalid refresh token request' });
+  }
+
+  const now = new Date();
+  const tokenHash = hashRefreshToken(parsed.data.refreshToken);
+  try {
+    const stored = await prisma.refreshToken.findUnique({
+      where: { tokenHash },
+      include: { user: { select: { id: true, email: true, role: true, status: true, tokenVersion: true } } },
+    });
+    if (!stored) return res.status(401).json({ success: false, message: 'Invalid refresh token' });
+
+    if (stored.consumedAt) {
+      await prisma.$transaction(async (tx) => {
+        await tx.refreshToken.updateMany({ where: { familyId: stored.familyId, revokedAt: null }, data: { revokedAt: now } });
+        await tx.refreshToken.updateMany({ where: { userId: stored.userId, revokedAt: null }, data: { revokedAt: now } });
+        await tx.user.update({ where: { id: stored.userId }, data: { tokenVersion: { increment: 1 } } });
+      });
+      return res.status(401).json({ success: false, message: 'Refresh token reuse detected' });
+    }
+
+    if (stored.revokedAt || stored.expiresAt <= now || stored.user.status !== 'active' ||
+        stored.tokenVersion !== stored.user.tokenVersion) {
+      return res.status(401).json({ success: false, message: 'Invalid refresh token' });
+    }
+
+    const nextRefreshToken = crypto.randomBytes(48).toString('base64url');
+    const nextTokenHash = hashRefreshToken(nextRefreshToken);
+    const rotated = await prisma.$transaction(async (tx) => {
+      const consumed = await tx.refreshToken.updateMany({
+        where: { id: stored.id, consumedAt: null, revokedAt: null, expiresAt: { gt: now } },
+        data: { consumedAt: now },
+      });
+      if (consumed.count !== 1) return false;
+      await tx.refreshToken.create({
+        data: {
+          id: randomUUID(),
+          userId: stored.userId,
+          tokenHash: nextTokenHash,
+          familyId: stored.familyId,
+          tokenVersion: stored.user.tokenVersion,
+          expiresAt: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
+        },
+      });
+      return true;
+    });
+
+    if (!rotated) {
+      await prisma.$transaction(async (tx) => {
+        await tx.refreshToken.updateMany({ where: { userId: stored.userId, revokedAt: null }, data: { revokedAt: now } });
+        await tx.user.update({ where: { id: stored.userId }, data: { tokenVersion: { increment: 1 } } });
+      });
+      return res.status(401).json({ success: false, message: 'Refresh token reuse detected' });
+    }
+
+    return res.json({
+      success: true,
+      data: {
+        token: createAccessToken(stored.user),
+        refreshToken: nextRefreshToken,
+      },
+    });
+  } catch (error) {
+    console.error('Refresh token processing failed');
+    return res.status(500).json({ success: false, message: 'Unable to refresh session' });
   }
 });
 
 // Verify token endpoint
 router.get('/verify', async (req: AuthRequest, res: Response) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
+    const token = getBearerToken(req);
 
     if (!token) {
       return res.status(401).json({
@@ -185,22 +239,24 @@ router.get('/verify', async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+    const decoded = verifyAccessToken(token);
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
-      select: { id: true, name: true, email: true, role: true, adminScope: true },
+      select: { id: true, name: true, email: true, role: true, adminScope: true, status: true, tokenVersion: true },
     });
 
-    if (!user) {
+    if (!user || user.status !== 'active' || user.tokenVersion !== decoded.authVersion) {
       return res.status(401).json({
         success: false,
         message: 'User not found',
       });
     }
 
+    const { status: _status, tokenVersion: _tokenVersion, ...publicUser } = user;
+
     res.json({
       success: true,
-      data: user,
+      data: publicUser,
     });
   } catch (error: any) {
     console.error('Verify error:', error);
@@ -214,7 +270,7 @@ router.get('/verify', async (req: AuthRequest, res: Response) => {
 // Get current user endpoint
 router.get('/me', async (req: AuthRequest, res: Response) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
+    const token = getBearerToken(req);
 
     if (!token) {
       return res.status(401).json({
@@ -223,22 +279,24 @@ router.get('/me', async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+    const decoded = verifyAccessToken(token);
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
-      select: { id: true, name: true, email: true, role: true, status: true, adminScope: true },
+      select: { id: true, name: true, email: true, role: true, status: true, adminScope: true, tokenVersion: true },
     });
 
-    if (!user) {
+    if (!user || user.status !== 'active' || user.tokenVersion !== decoded.authVersion) {
       return res.status(401).json({
         success: false,
         message: 'User not found',
       });
     }
 
+    const { tokenVersion: _tokenVersion, ...publicUser } = user;
+
     res.json({
       success: true,
-      data: user,
+      data: publicUser,
     });
   } catch (error: any) {
     console.error('Get user error:', error);
@@ -252,15 +310,25 @@ router.get('/me', async (req: AuthRequest, res: Response) => {
 // Google OAuth endpoint
 router.post('/google', authLimiter, async (req: Request, res: Response) => {
   try {
-    const { email, name, googleId } = req.body;
-
-    // Validation
-    if (!email) {
-      return res.status(400).json({
+    const parsed = z.object({ idToken: z.string().min(20).max(8192) }).strict().safeParse(req.body);
+    if (!parsed.success || !process.env.GOOGLE_CLIENT_ID) {
+      return res.status(parsed.success ? 503 : 400).json({
         success: false,
-        message: 'Email is required for Google login',
+        message: parsed.success ? 'Google login is not configured' : 'A valid Google ID token is required',
       });
     }
+
+    let ticket;
+    try {
+      ticket = await googleClient.verifyIdToken({ idToken: parsed.data.idToken, audience: process.env.GOOGLE_CLIENT_ID });
+    } catch {
+      return res.status(401).json({ success: false, message: 'Invalid Google ID token' });
+    }
+    const payload = ticket.getPayload();
+    if (!payload?.email || payload.email_verified !== true) {
+      return res.status(401).json({ success: false, message: 'Google account email is not verified' });
+    }
+    const email = payload.email.trim().toLowerCase();
 
     // Check if user exists
     let user = await prisma.user.findUnique({
@@ -269,12 +337,12 @@ router.post('/google', authLimiter, async (req: Request, res: Response) => {
 
     // If user doesn't exist, create one
     if (!user) {
-      const hashedPassword = await bcrypt.hash(googleId || 'google-auth', 10);
+      const hashedPassword = await bcrypt.hash(randomUUID(), 12);
       
       user = await prisma.user.create({
         data: {
-          id: uuidv4(),
-          name: name || email.split('@')[0],
+          id: randomUUID(),
+          name: payload.name?.slice(0, 100) || email.split('@')[0],
           email,
           password: hashedPassword,
           role: 'user',
@@ -283,12 +351,12 @@ router.post('/google', authLimiter, async (req: Request, res: Response) => {
       });
     }
 
+    if (user.status !== 'active') {
+      return res.status(401).json({ success: false, message: 'Your account is not active' });
+    }
+
     // Generate JWT token
-    const token = jwt.sign(
-      { userId: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET || 'secret',
-      { expiresIn: '7d' }
-    );
+    const tokens = await createSessionTokens(user);
 
     res.json({
       success: true,
@@ -298,14 +366,14 @@ router.post('/google', authLimiter, async (req: Request, res: Response) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        token,
+        ...tokens,
       },
     });
-  } catch (error: any) {
-    console.error('Google OAuth error:', error);
+  } catch {
+    console.error('Google OAuth verification failed');
     res.status(500).json({
       success: false,
-      message: error.message || 'Google OAuth login failed',
+      message: 'Google OAuth login failed',
     });
   }
 });

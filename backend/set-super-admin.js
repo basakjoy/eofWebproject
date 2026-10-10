@@ -9,7 +9,8 @@ const prisma = new PrismaClient();
         role: 'admin',
         adminScope: 'SUPER_ADMIN',
         adminScopeGrantedAt: new Date(),
-        adminScopeGrantedBy: 'system'
+        adminScopeGrantedBy: 'system',
+        tokenVersion: { increment: 1 },
       },
       select: { id: true, email: true, role: true, adminScope: true }
     });

@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { prisma } from '../database';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import { z } from 'zod';
 import { verifyToken, AuthRequest as AuthMiddlewareRequest } from '../middleware/auth';
 import { requireAdminScope } from '../middleware/superadmin.middleware';
@@ -475,7 +475,7 @@ router.post(
         tp3 = takeProfitsValue[2] ?? null;
       }
 
-      const signalId = uuidv4();
+      const signalId = randomUUID();
 
       const signal = await prisma.signal.create({
         data: {

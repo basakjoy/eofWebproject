@@ -2,8 +2,8 @@ import express, { Request, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
 import { prisma } from '../database';
-import { v4 as uuidv4 } from 'uuid';
-import { verifyToken } from '../middleware/auth';
+import { randomUUID } from 'crypto';
+import { AuthRequest, verifyToken } from '../middleware/auth';
 import { requireAdminScope } from '../middleware/superadmin.middleware';
 
 const router = express.Router();
@@ -13,7 +13,7 @@ const uploadStorage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, uploadDir),
   filename: (_req, file, cb) => {
     const ext = path.extname(file.originalname) || '';
-    cb(null, `${uuidv4()}${ext}`);
+    cb(null, `${randomUUID()}${ext}`);
   },
 });
 
@@ -21,11 +21,30 @@ const upload = multer({
   storage: uploadStorage,
   limits: { fileSize: 2_500_000 },
   fileFilter: (_req, file, cb) => {
-    if (!file.mimetype.startsWith('image/')) {
-      return cb(new Error('Only image files are allowed'));}
+    const allowedTypes: Record<string, string> = {
+      'image/jpeg': '.jpg',
+      'image/png': '.png',
+      'image/webp': '.webp',
+      'image/gif': '.gif',
+    };
+    if (allowedTypes[file.mimetype] !== path.extname(file.originalname).toLowerCase()) {
+      return cb(new Error('Only JPEG, PNG, WebP, and GIF images are allowed'));
+    }
     cb(null, true);
   },
 });
+
+const protectDraftListing = (req: Request, res: Response, next: express.NextFunction) => {
+  if (req.query.published !== 'all') return next();
+  verifyToken(req as AuthRequest, res, () =>
+    requireAdminScope(['CONTENT_ADMIN', 'SUPER_ADMIN'])(req as AuthRequest, res, next)
+  );
+};
+
+const optionalAuth = (req: Request, res: Response, next: express.NextFunction) => {
+  if (!req.headers.authorization) return next();
+  return verifyToken(req as AuthRequest, res, next);
+};
 
 // ─── Helpers ────────────────────────────────────────────────
 function slugify(text: string): string {
@@ -38,7 +57,7 @@ function slugify(text: string): string {
 }
 
 // ─── GET /api/blog — Public: list published articles ────────
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', protectDraftListing, async (req: Request, res: Response) => {
   try {
     const {
       category,
@@ -144,13 +163,19 @@ router.post('/upload', verifyToken, requireAdminScope(['CONTENT_ADMIN', 'SUPER_A
 });
 
 // ─── GET /api/blog/:slug — Public: single article ───────────
-router.get('/:slug', async (req: Request, res: Response) => {
+router.get('/:slug', optionalAuth, async (req: AuthRequest, res: Response) => {
   try {
     const article = await prisma.faqArticle.findUnique({
       where: { slug: req.params.slug },
     });
 
     if (!article) {
+      return res.status(404).json({ success: false, message: 'Article not found' });
+    }
+
+    const scope = String(req.user?.adminScope || '').toUpperCase();
+    const canViewDraft = req.user?.role === 'admin' && (scope === 'CONTENT_ADMIN' || scope === 'SUPER_ADMIN');
+    if (!article.published && !canViewDraft) {
       return res.status(404).json({ success: false, message: 'Article not found' });
     }
 
@@ -199,7 +224,7 @@ router.post('/', verifyToken, requireAdminScope(['CONTENT_ADMIN', 'SUPER_ADMIN']
 
     const article = await prisma.faqArticle.create({
       data: {
-        id: uuidv4(),
+        id: randomUUID(),
         title,
         slug,
         category,

@@ -1,27 +1,9 @@
 
 import prisma from './lib/prisma';
 import bcrypt from 'bcryptjs';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 console.log('✓ Prisma Client initialized');
-
-// Legacy compatibility functions for gradual migration
-// These are now wrappers around Prisma queries
-
-export const runAsync = async (sql: string, params: any[] = []): Promise<void> => {
-  // For raw queries if needed, use prisma.$executeRawUnsafe
-  console.log('Note: Using Prisma for database operations');
-};
-
-export const getAsync = async (sql: string, params: any[] = []): Promise<any> => {
-  console.log('Note: Using Prisma for database operations');
-  return null;
-};
-
-export const allAsync = async (sql: string, params: any[] = []): Promise<any[]> => {
-  console.log('Note: Using Prisma for database operations');
-  return [];
-};
 
 // Initialize database tables via Prisma
 export const initializeTables = async () => {
@@ -52,9 +34,15 @@ export const closeDatabase = async () => {
 // Seed initial data
 export const seedInitialData = async () => {
   try {
+    const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    if (!adminEmail || !adminPassword || adminPassword.length < 16) {
+      throw new Error('ADMIN_EMAIL and a 16-character ADMIN_PASSWORD are required to seed the initial administrator');
+    }
+
     // Check if super admin exists
     const superAdminExists = await prisma.user.findUnique({
-      where: { email: 'superadmin@admin.com' },
+      where: { email: adminEmail },
     });
 
     if (!superAdminExists) {
@@ -63,7 +51,7 @@ export const seedInitialData = async () => {
       // Create roles
       const superAdminRole = await prisma.role.create({
         data: {
-          id: uuidv4(),
+          id: randomUUID(),
           name: 'super_admin',
           description: 'Super Administrator with all permissions',
         },
@@ -71,7 +59,7 @@ export const seedInitialData = async () => {
 
       const adminRole = await prisma.role.create({
         data: {
-          id: uuidv4(),
+          id: randomUUID(),
           name: 'admin',
           description: 'Administrator with most permissions',
         },
@@ -79,7 +67,7 @@ export const seedInitialData = async () => {
 
       const marketingAdminRole = await prisma.role.create({
         data: {
-          id: uuidv4(),
+          id: randomUUID(),
           name: 'marketing_admin',
           description: 'Marketing Admin with limited permissions',
         },
@@ -87,7 +75,7 @@ export const seedInitialData = async () => {
 
       const analystRole = await prisma.role.create({
         data: {
-          id: uuidv4(),
+          id: randomUUID(),
           name: 'analyst',
           description: 'Analyst with read-only access',
         },
@@ -95,7 +83,7 @@ export const seedInitialData = async () => {
 
       const userRole = await prisma.role.create({
         data: {
-          id: uuidv4(),
+          id: randomUUID(),
           name: 'user',
           description: 'Regular user with basic access',
         },
@@ -136,7 +124,7 @@ export const seedInitialData = async () => {
         permissions.map((perm) =>
           prisma.permission.create({
             data: {
-              id: uuidv4(),
+              id: randomUUID(),
               name: perm.name,
               description: perm.description,
               resource: perm.resource,
@@ -181,7 +169,7 @@ export const seedInitialData = async () => {
           permIds.map((permId) =>
             prisma.rolePermission.create({
               data: {
-                id: uuidv4(),
+                id: randomUUID(),
                 roleId,
                 permissionId: permId,
               },
@@ -193,13 +181,13 @@ export const seedInitialData = async () => {
       console.log('✓ Role-Permission mappings created');
 
       // Create super admin user
-      const hashedPassword = await bcrypt.hash('SuperAdmin@123', 10);
+      const hashedPassword = await bcrypt.hash(adminPassword, 12);
 
       await prisma.user.create({
         data: {
-          id: uuidv4(),
+          id: randomUUID(),
           name: 'Super Admin',
-          email: 'superadmin@admin.com',
+          email: adminEmail,
           password: hashedPassword,
           role: 'super_admin',
           roleId: superAdminRole.id,
@@ -208,8 +196,7 @@ export const seedInitialData = async () => {
       });
 
       console.log('✓ Super admin created');
-      console.log('  Email: superadmin@admin.com');
-      console.log('  Password: SuperAdmin@123');
+      console.log(`  Email: ${adminEmail}`);
     }
   } catch (error) {
     console.error('Error seeding data:', error);

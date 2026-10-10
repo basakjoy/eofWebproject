@@ -1,8 +1,9 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { prisma } from '../database';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import { z } from 'zod';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
+import { createSharedRateLimitStore } from '../middleware/rateLimiter';
 import { verifyToken, AuthRequest as AuthMiddlewareRequest } from '../middleware/auth';
 
 const router = express.Router();
@@ -227,6 +228,7 @@ const requireTicketOwnerOrSupport = async (req: AuthRequest, res: Response, next
 // ---------- Rate limiters ----------
 
 const ticketRateLimiter = rateLimit({
+  store: createSharedRateLimitStore('rl:support-tickets:'),
   windowMs: 15 * 60 * 1000,
   max: 5,
   standardHeaders: true,
@@ -236,6 +238,7 @@ const ticketRateLimiter = rateLimit({
 });
 
 const messageRateLimiter = rateLimit({
+  store: createSharedRateLimitStore('rl:support-messages:'),
   windowMs: 5 * 60 * 1000,
   max: 20,
   standardHeaders: true,
@@ -452,7 +455,7 @@ router.post(
 
       const ticket = await prisma.supportTicket.create({
         data: {
-          id: uuidv4(),
+          id: randomUUID(),
           subject,
           description,
           category,
@@ -623,7 +626,7 @@ router.post(
 
       const message = await prisma.supportMessage.create({
         data: {
-          id: uuidv4(),
+          id: randomUUID(),
           ticketId: ticket.id,
           userId: req.user!.userId,
           message: content,

@@ -1,5 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
 import rateLimit, { ipKeyGenerator } from "express-rate-limit";
+import { createSharedRateLimitStore } from '../middleware/rateLimiter';
 import { z } from "zod";
 import { verifyToken, AuthRequest } from "../middleware/auth";
 import { validateWithdrawalRequest, requireWithdrawalAdmin } from "../middleware/withdrawals.middleware";
@@ -8,6 +9,7 @@ import * as withdrawalsController from '../controllers/withdrawals.controller';
 const router = express.Router();
 
 const createWithdrawalLimiter = rateLimit({
+    store: createSharedRateLimitStore('rl:withdrawals:'),
     windowMs: 60 * 60 * 1000,
     limit: 10,
     standardHeaders: true,
@@ -17,6 +19,7 @@ const createWithdrawalLimiter = rateLimit({
 });
 
 const adminActionLimiter = rateLimit({
+    store: createSharedRateLimitStore('rl:withdrawal-admin:'),
     windowMs: 15 * 60 * 1000,
     limit: 60,
     standardHeaders: true,

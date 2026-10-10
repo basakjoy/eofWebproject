@@ -1,0 +1,11 @@
+CREATE INDEX "investments_userId_createdAt_idx" ON "investments"("userId", "createdAt");
+CREATE INDEX "investments_userId_status_idx" ON "investments"("userId", "status");
+CREATE INDEX "transactions_userId_createdAt_idx" ON "transactions"("userId", "createdAt");
+CREATE INDEX "transactions_userId_type_status_idx" ON "transactions"("userId", "type", "status");
+CREATE INDEX "transactions_type_status_createdAt_idx" ON "transactions"("type", "status", "createdAt");
+CREATE INDEX "transactions_status_createdAt_idx" ON "transactions"("status", "createdAt");
+CREATE INDEX "admin_actions_adminId_createdAt_idx" ON "admin_actions"("adminId", "createdAt");
+CREATE INDEX "users_createdAt_idx" ON "users"("createdAt");
+CREATE INDEX "support_tickets_userId_createdAt_idx" ON "support_tickets"("userId", "createdAt");
+CREATE INDEX "support_messages_ticketId_createdAt_idx" ON "support_messages"("ticketId", "createdAt");
+CREATE INDEX "faq_articles_published_createdAt_idx" ON "faq_articles"("published", "createdAt");

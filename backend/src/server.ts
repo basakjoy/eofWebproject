@@ -1,12 +1,13 @@
 
+import './config/env';
 import express, { Express, Request, Response, NextFunction } from 'express';
 import http from 'http';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import fs from 'fs';
+import { randomUUID } from 'crypto';
 import helmet from 'helmet';
 import hpp from 'hpp';
-import { globalLimiter } from './middleware/rateLimiter';
+import { closeRateLimitStore, connectRateLimitStore, globalLimiter } from './middleware/rateLimiter';
 import path from 'path';
 import authRoutes from './routes/auth';
 import investmentRoutes from './routes/investments';
@@ -22,11 +23,14 @@ import supportRoutes from './routes/support';
 import usersRoutes from './routes/users';
 import blogRoutes from './routes/blog';
 import { setupSupportWebSocket } from './websocket/supportHandler';
-
-dotenv.config();
+import { prisma } from './database';
+import { resolveJwtSecret } from './lib/tokens';
 
 const app: Express = express();
 const PORT = process.env.PORT || 5000;
+const trustProxyHops = Number(process.env.TRUST_PROXY_HOPS || 1);
+if (!Number.isInteger(trustProxyHops) || trustProxyHops < 0) throw new Error('TRUST_PROXY_HOPS must be a non-negative integer');
+app.set('trust proxy', trustProxyHops);
 
 // Middleware
 const uploadsPath = path.join(__dirname, '../uploads');
@@ -36,6 +40,15 @@ if (!fs.existsSync(uploadsPath)) {
 // Security Middleware
 app.use(helmet());
 app.use(hpp());
+
+// Request logging middleware
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const requestId = randomUUID();
+  (req as Request & { requestId?: string }).requestId = requestId;
+  res.setHeader('X-Request-Id', requestId);
+  console.info(JSON.stringify({ level: 'info', event: 'http_request', requestId, method: req.method, path: req.path }));
+  next();
+});
 
 // Rate Limiting (apply to all /api routes)
 app.use('/api', globalLimiter);
@@ -56,8 +69,8 @@ app.use(cors({
   credentials: process.env.CORS_CREDENTIALS === 'true'
 }));
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: false, limit: '16kb', parameterLimit: 100 }));
 app.use('/uploads', express.static(uploadsPath));
 
 // Handle OPTIONS preflight requests for CORS
@@ -72,15 +85,18 @@ app.options('*', cors({
   credentials: process.env.CORS_CREDENTIALS === 'true'
 }));
 
-// Request logging middleware
-app.use((req: Request, res: Response, next: NextFunction) => {
-  console.log(`${req.method} ${req.path}`);
-  next();
-});
-
 // Health check
 app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'Server is running', timestamp: new Date() });
+});
+
+app.get('/ready', async (_req: Request, res: Response) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({ status: 'ready' });
+  } catch {
+    res.status(503).json({ status: 'not ready' });
+  }
 });
 
 
@@ -89,6 +105,20 @@ app.get('/health', (req: Request, res: Response) => {
 const startServer = async () => {
   try {
     console.log('\n Starting server...\n');
+    if (process.env.NODE_ENV === 'production') {
+      if (!process.env.JWT_SECRET || process.env.JWT_SECRET.trim().length < 32) {
+        throw new Error('JWT_SECRET must be configured with at least 32 characters');
+      }
+    } else {
+      resolveJwtSecret();
+    }
+    if (process.env.NODE_ENV === 'production' && !process.env.CORS_ORIGIN?.trim()) {
+      throw new Error('CORS_ORIGIN must be configured in production');
+    }
+    if (process.env.NODE_ENV === 'production' && !process.env.REDIS_URL) {
+      throw new Error('REDIS_URL must be configured in production for distributed rate limiting');
+    }
+    await connectRateLimitStore();
 
     // Register routes
     app.use('/api/auth', authRoutes);
@@ -116,16 +146,40 @@ const startServer = async () => {
 
     // Error handling middleware (must be after routes)
     app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-      console.error('Error:', err.message);
-      res.status(err.status || 500).json({
+      if (res.headersSent) return next(err);
+      const status = Number.isInteger(err.status) && err.status >= 400 && err.status < 500 ? err.status : 500;
+      console.error(JSON.stringify({
+        level: 'error',
+        event: 'http_error',
+        requestId: (req as Request & { requestId?: string }).requestId,
+        status,
+        message: process.env.NODE_ENV === 'development' ? err.message : undefined,
+      }));
+      res.status(status).json({
         success: false,
-        message: err.message || 'Internal Server Error',
-        error: process.env.NODE_ENV === 'development' ? err : {},
+        message: status === 500 ? 'Internal Server Error' : err.message || 'Request failed',
       });
     });
 
     const server = http.createServer(app);
-    setupSupportWebSocket(server);
+    server.requestTimeout = 30_000;
+    server.headersTimeout = 15_000;
+    server.keepAliveTimeout = 5_000;
+    const supportWss = setupSupportWebSocket(server);
+
+    const shutdown = (signal: string) => {
+      console.info(JSON.stringify({ level: 'info', event: 'shutdown_started', signal }));
+      server.close(() => {
+        supportWss.clients.forEach((client) => client.terminate());
+        supportWss.close(() => {
+          void Promise.all([prisma.$disconnect(), closeRateLimitStore()]).finally(() => process.exit(0));
+        });
+      });
+      const forceExit = setTimeout(() => process.exit(1), 10_000);
+      forceExit.unref();
+    };
+    process.once('SIGTERM', () => shutdown('SIGTERM'));
+    process.once('SIGINT', () => shutdown('SIGINT'));
 
     server.listen(PORT, () => {
       console.log(`✓ Server running on http://localhost:${PORT}\n`);

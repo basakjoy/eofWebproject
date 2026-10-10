@@ -57,6 +57,7 @@ model User {
   phone                   String?
   role                    String                  @default("user")
   roleId                  String?
+  tokenVersion            Int                     @default(0)
   adminScope              AdminScope?
   adminScopeGrantedAt     DateTime?
   adminScopeGrantedBy     String?
@@ -91,8 +92,27 @@ model User {
   withdrawalLimits        WithdrawalLimit?
   withdrawalsApproved     Withdrawal[]            @relation("approvedBy")
   withdrawalsCreated      Withdrawal[]            @relation("createdBy")
+  refreshTokens           RefreshToken[]
 
+  @@index([createdAt])
   @@map("users")
+}
+
+model RefreshToken {
+  id           String    @id
+  userId       String
+  tokenHash    String    @unique
+  familyId     String
+  tokenVersion Int
+  expiresAt    DateTime
+  consumedAt   DateTime?
+  revokedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([familyId])
+  @@map("refresh_tokens")
 }
 
 model Investment {
@@ -101,28 +121,48 @@ model Investment {
   amount    Decimal  @db.Decimal(15, 2)
   plan      String
   status    String   @default("pending")
-  roi       Decimal  @default(0) @db.Decimal(5, 2)
+  roi       Decimal  @default(0) @db.Decimal(15, 2)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId, createdAt])
+  @@index([userId, status])
   @@map("investments")
 }
 
 model Transaction {
-  id          String   @id @default(cuid())
-  userId      String
-  type        String
-  amount      Decimal  @db.Decimal(15, 2)
-  description String?  @db.Text
-  status      String   @default("pending")
-  metadata    String?  @db.Text
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(cuid())
+  userId         String
+  idempotencyKey String?
+  type           String
+  amount         Decimal  @db.Decimal(15, 2)
+  description    String?  @db.Text
+  status         String   @default("pending")
+  metadata       String?  @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, idempotencyKey])
+  @@index([userId, createdAt])
+  @@index([userId, type, status])
+  @@index([type, status, createdAt])
+  @@index([status, createdAt])
   @@map("transactions")
+}
+
+model ProfitDistribution {
+  id              String   @id @default(cuid())
+  period          String   @unique
+  initiatedBy     String
+  profitPercent   Decimal  @db.Decimal(5, 2)
+  investmentCount Int
+  totalAmount     Decimal  @db.Decimal(15, 2)
+  createdAt       DateTime @default(now())
+
+  @@map("profit_distributions")
 }
 
 model Translation {
@@ -141,30 +181,30 @@ model Translation {
 }
 
 model Signal {
-  id          String   @id @default(cuid())
-  pair        String
-  type        String
-  direction   String?
-  strength    String?
-  source      String?
-  entryPoint  String?
-  entryPrice  String?
-  stopLoss    String?
-  takeProfit  String?
-  takeProfit1 String?
-  takeProfit2 String?
-  takeProfit3 String?
-  takeProfit1Hit Boolean @default(false)
-  takeProfit2Hit Boolean @default(false)
-  takeProfit3Hit Boolean @default(false)
-  accuracy    String   @default("0%")
-  reliability String?
-  timeframe   String?
-  status      String   @default("active")
-  createdBy   String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  creator     User?    @relation("createdBy", fields: [createdBy], references: [id])
+  id             String   @id @default(cuid())
+  pair           String
+  type           String
+  direction      String?
+  strength       String?
+  source         String?
+  entryPoint     String?
+  entryPrice     String?
+  stopLoss       String?
+  takeProfit     String?
+  takeProfit1    String?
+  takeProfit2    String?
+  takeProfit3    String?
+  takeProfit1Hit Boolean  @default(false)
+  takeProfit2Hit Boolean  @default(false)
+  takeProfit3Hit Boolean  @default(false)
+  accuracy       String   @default("0%")
+  reliability    String?
+  timeframe      String?
+  status         String   @default("active")
+  createdBy      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  creator        User?    @relation("createdBy", fields: [createdBy], references: [id])
 
   @@map("signals")
 }
@@ -237,6 +277,7 @@ model AdminAction {
   createdAt  DateTime  @default(now())
   admin      AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
 
+  @@index([adminId, createdAt])
   @@map("admin_actions")
 }
 
@@ -282,6 +323,8 @@ model Analysis {
   comments    AnalysisComment[]
   metrics     AnalysisMetric[]
 
+  @@index([status, createdAt])
+  @@index([createdBy, createdAt])
   @@map("analysis")
 }
 
@@ -308,6 +351,8 @@ model AnalysisComment {
   analysis   Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([analysisId, createdAt])
+  @@index([userId, createdAt])
   @@map("analysis_comments")
 }
 
@@ -409,6 +454,8 @@ model Notification {
   history   NotificationHistory[]
   user      User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId, createdAt])
+  @@index([userId, read, createdAt])
   @@map("notifications")
 }
 
@@ -492,6 +539,7 @@ model SupportTicket {
   assignee       User?            @relation("assignedTo", fields: [assignedTo], references: [id])
   creator        User             @relation("createdBy", fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId, createdAt])
   @@map("support_tickets")
 }
 
@@ -506,6 +554,7 @@ model SupportMessage {
   ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([ticketId, createdAt])
   @@map("support_messages")
 }
 
@@ -540,6 +589,7 @@ model FaqArticle {
   updatedAt      DateTime @updatedAt
   creator        User     @relation("createdBy", fields: [author], references: [id], onDelete: Cascade)
 
+  @@index([published, createdAt])
   @@map("faq_articles")
 }
 
@@ -574,6 +624,7 @@ model SupportMetric {
 model Withdrawal {
   id                 String                  @id @default(cuid())
   userId             String
+  idempotencyKey     String?
   amount             Decimal                 @db.Decimal(15, 2)
   currency           String                  @default("USD")
   method             String
@@ -591,6 +642,9 @@ model Withdrawal {
   user               User                    @relation("createdBy", fields: [userId], references: [id], onDelete: Cascade)
   accounts           UserWithdrawalAccount[] @relation("UserWithdrawalAccountToWithdrawal")
 
+  @@unique([userId, idempotencyKey])
+  @@index([status, createdAt])
+  @@index([userId, createdAt])
   @@map("withdrawals")
 }
 

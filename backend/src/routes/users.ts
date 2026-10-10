@@ -1,9 +1,10 @@
 import express, { Response } from 'express';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
+import { createSharedRateLimitStore } from '../middleware/rateLimiter';
 import { prisma } from '../database';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import {
   verifyToken,
   requirePermission,
@@ -20,6 +21,7 @@ const ADMIN_ROLES: string[] = [UserRole.ADMIN, UserRole.SUPER_ADMIN];
 // Mutating endpoints (create/update/delete) are the ones worth throttling —
 // listing/reading is already permission-gated and low-risk.
 const mutationLimiter = rateLimit({
+  store: createSharedRateLimitStore('rl:user-mutations:'),
   windowMs: 15 * 60 * 1000,
   limit: 30,
   standardHeaders: true,
@@ -29,6 +31,7 @@ const mutationLimiter = rateLimit({
 });
 
 const deleteLimiter = rateLimit({
+  store: createSharedRateLimitStore('rl:user-deletes:'),
   windowMs: 15 * 60 * 1000,
   limit: 10,
   standardHeaders: true,
@@ -226,7 +229,7 @@ router.post(
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
-      const id = uuidv4();
+      const id = randomUUID();
 
       const newUser = await prisma.user.create({
         data: {
@@ -338,7 +341,7 @@ router.put('/:id', verifyToken, mutationLimiter, async (req: AuthRequest, res: R
 
     let hashedPassword = user.password;
     if (updates.password) {
-      hashedPassword = await bcrypt.hash(updates.password, 10);
+      hashedPassword = await bcrypt.hash(updates.password, 12);
     }
 
     await prisma.user.update({
@@ -350,6 +353,9 @@ router.put('/:id', verifyToken, mutationLimiter, async (req: AuthRequest, res: R
         role: updates.role ?? user.role,
         status: updates.status ?? user.status,
         password: hashedPassword,
+        ...((updates.password || updates.role !== undefined || updates.status !== undefined)
+          ? { tokenVersion: { increment: 1 } }
+          : {}),
       },
     });
 

@@ -6,7 +6,7 @@ async function main() {
   try {
     const user = await prisma.user.update({
       where: { email: 'joyempireofforex@gmail.com' },
-      data: { role: 'admin' },
+      data: { role: 'admin', tokenVersion: { increment: 1 } },
     });
     console.log('✅ User updated:', user.email, 'Role:', user.role);
   } catch (error) {

@@ -1,5 +1,6 @@
 import express, { NextFunction, Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
+import { createSharedRateLimitStore } from '../middleware/rateLimiter';
 import { z } from 'zod';
 import { verifyToken, AuthRequest } from '../middleware/auth';
 import { requireSuperAdmin } from '../middleware/superadmin.middleware';
@@ -10,6 +11,7 @@ const router = express.Router();
 
 
 const adminManagementLimiter = rateLimit({
+  store: createSharedRateLimitStore('rl:admin-management:'),
   windowMs: 15 * 60 * 1000,
   limit: 10,
   standardHeaders: true,

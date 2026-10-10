@@ -1,8 +1,8 @@
 import WebSocket, { Server } from 'ws';
 import { IncomingMessage } from 'http';
-import jwt from 'jsonwebtoken';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import prisma from '../lib/prisma';
+import { verifyAccessToken } from '../lib/tokens';
 
 export interface AuthenticatedWebSocket extends WebSocket {
   userId?: string;
@@ -111,10 +111,8 @@ function getAssistantReply(text: string): string {
 export function setupSupportWebSocket(server: any) {
   const wss = new Server({
     noServer: true,
-    perMessageDeflate: {
-      serverNoContextTakeover: true,
-      clientNoContextTakeover: true,
-    },
+    maxPayload: 16 * 1024,
+    perMessageDeflate: false,
   });
 
   // Handle WebSocket upgrade
@@ -138,24 +136,16 @@ export function setupSupportWebSocket(server: any) {
           return;
         }
 
-        const rawSecret = process.env.JWT_SECRET || 'secret';
-        const secret = rawSecret.trim();
-
-        let decoded: any;
+        let decoded;
         try {
-          decoded = jwt.verify(token, secret);
-        } catch (jwtErr) {
-          try {
-            decoded = jwt.verify(token, 'your-secret-key');
-          } catch {
-            console.warn('[WebSocket] Token verification failed:', jwtErr);
-            socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
-            socket.destroy();
-            return;
-          }
+          decoded = verifyAccessToken(token);
+        } catch {
+          socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+          socket.destroy();
+          return;
         }
 
-        const userId = decoded.userId || decoded.id;
+        const userId = decoded.userId;
         if (!userId) {
           socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
           socket.destroy();
@@ -165,10 +155,10 @@ export function setupSupportWebSocket(server: any) {
         // Fetch user from db
         const dbUser = await prisma.user.findUnique({
           where: { id: userId },
-          select: { id: true, name: true, role: true, status: true },
+          select: { id: true, name: true, role: true, status: true, tokenVersion: true },
         });
 
-        if (!dbUser || dbUser.status !== 'active') {
+        if (!dbUser || dbUser.status !== 'active' || dbUser.tokenVersion !== decoded.authVersion) {
           console.warn('[WebSocket] User not found or inactive:', userId);
           socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
           socket.destroy();
@@ -179,7 +169,7 @@ export function setupSupportWebSocket(server: any) {
           ws.userId = dbUser.id;
           ws.userName = dbUser.name;
           ws.userRole = dbUser.role;
-          ws.sessionId = uuidv4();
+          ws.sessionId = randomUUID();
           ws.isAlive = true;
 
           // Add to userSockets map
@@ -223,6 +213,8 @@ export function setupSupportWebSocket(server: any) {
 
 async function handleConnection(ws: AuthenticatedWebSocket) {
   const userId = ws.userId!;
+  let messageWindowStart = Date.now();
+  let messageCount = 0;
   console.log(`[WebSocket] Connected: ${ws.userName} (${userId})`);
 
   ws.on('error', (err) => {
@@ -323,10 +315,25 @@ async function handleConnection(ws: AuthenticatedWebSocket) {
   // Handle incoming messages
   ws.on('message', async (data: string) => {
     try {
+      const now = Date.now();
+      if (now - messageWindowStart >= 60_000) {
+        messageWindowStart = now;
+        messageCount = 0;
+      }
+      messageCount += 1;
+      if (messageCount > 30) {
+        ws.close(1008, 'Message rate limit exceeded');
+        return;
+      }
+
       const parsed: SupportMessagePayload = JSON.parse(data.toString());
 
       if (parsed.type === 'message' && parsed.content && parsed.content.trim()) {
         const content = parsed.content.trim();
+        if (content.length > 4000) {
+          ws.send(JSON.stringify({ type: 'error', content: 'Message is too long', timestamp: Date.now() }));
+          return;
+        }
 
         // Ensure ticket
         let ticketId = ws.ticketId;

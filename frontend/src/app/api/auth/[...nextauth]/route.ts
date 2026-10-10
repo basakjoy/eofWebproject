@@ -31,7 +31,7 @@ const handler = NextAuth({
           );
 
           const { data } = response.data;
-          const { token, ...user } = data;
+          const { token, refreshToken, ...user } = data;
 
           return {
             id: user.id || user.userId,
@@ -39,6 +39,7 @@ const handler = NextAuth({
             name: user.name,
             role: user.role,
             token,
+            refreshToken,
           };
         } catch (error) {
           throw new Error("Invalid email or password");
@@ -52,6 +53,8 @@ const handler = NextAuth({
         token.role = (user as any).role;
         token.id = user.id;
         token.accessToken = (user as any).token;
+        token.refreshToken = (user as any).refreshToken;
+        token.accessTokenExpires = Date.now() + 7 * 24 * 60 * 60 * 1000;
       }
       
       // Handle Google OAuth - exchange for backend token
@@ -60,20 +63,34 @@ const handler = NextAuth({
           const response = await axios.post(
             `${getApiBaseUrl()}/auth/google`,
             {
-              email: user.email,
-              name: user.name,
-              googleId: user.id,
+              idToken: account.id_token,
             }
           );
 
           const { data } = response.data;
-          const { token: backendToken, ...userData } = data;
+          const { token: backendToken, refreshToken, ...userData } = data;
 
           token.role = userData.role;
           token.id = userData.id || userData.userId;
           token.accessToken = backendToken;
+          token.refreshToken = refreshToken;
+          token.accessTokenExpires = Date.now() + 7 * 24 * 60 * 60 * 1000;
         } catch (error) {
           console.error("Failed to authenticate with backend:", error);
+        }
+      }
+
+      if (token.accessToken && token.refreshToken && Number(token.accessTokenExpires) <= Date.now()) {
+        try {
+          const response = await axios.post(`${getApiBaseUrl()}/auth/refresh`, {
+            refreshToken: token.refreshToken,
+          });
+          token.accessToken = response.data.data.token;
+          token.refreshToken = response.data.data.refreshToken;
+          token.accessTokenExpires = Date.now() + 7 * 24 * 60 * 60 * 1000;
+          delete token.error;
+        } catch {
+          token.error = 'RefreshAccessTokenError';
         }
       }
 
@@ -86,6 +103,7 @@ const handler = NextAuth({
         (session.user as any).role = token.role;
         (session.user as any).accessToken = token.accessToken;
       }
+      if (token.error) (session as any).error = token.error;
       return session;
     },
   },

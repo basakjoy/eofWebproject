@@ -1,10 +1,11 @@
 import express, { Request, Response } from 'express';
 import { prisma } from '../database';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import { z } from 'zod';
 import { verifyToken } from '../middleware/auth';
 import { requireRole } from '../middleware/auth';
 import rateLimit from 'express-rate-limit';
+import { createSharedRateLimitStore } from '../middleware/rateLimiter';
 
 const router = express.Router();
 
@@ -23,6 +24,7 @@ const isSelfOrAdmin = (req: AuthRequest, targetUserId: string) => {
 };
 
 const createTransactionLimiter = rateLimit({
+  store: createSharedRateLimitStore('rl:transactions:'),
   windowMs: 60 * 60 * 1000,
   limit: 20,
   standardHeaders: true,
@@ -45,7 +47,7 @@ router.get('/user/:userId', async (req: AuthRequest, res: Response) => {
 
     const { type, status } = req.query;
     const limit = Math.min(parseInt(String(req.query.limit)) || 50, 100);
-    const offset = Math.max(parseInt(String(req.query.offset)) || 0, 0);
+    const offset = Math.min(Math.max(parseInt(String(req.query.offset)) || 0, 0), 10_000);
 
     const where: any = { userId };
     if (type) where.type = String(type);
@@ -67,7 +69,7 @@ router.get('/', requireRole(['admin', 'superadmin', 'SUPER_ADMIN', 'SIGNAL_ADMIN
   try {
     const { userId, type, status } = req.query;
     const limit = Math.min(parseInt(String(req.query.limit)) || 50, 100);
-    const offset = Math.max(parseInt(String(req.query.offset)) || 0, 0);
+    const offset = Math.min(Math.max(parseInt(String(req.query.offset)) || 0, 0), 10_000);
 
     const where: any = {};
     if (userId) where.userId = String(userId);
@@ -103,6 +105,12 @@ const createTransactionSchema = z.object({
 }).strict();
 
 router.post('/', createTransactionLimiter, async (req: AuthRequest, res: Response) => {
+  const userId = req.user.userId;
+  const idempotencyKey = req.get('Idempotency-Key');
+  if (idempotencyKey && !/^[\x21-\x7E]{8,128}$/.test(idempotencyKey)) {
+    return res.status(400).json({ success: false, message: 'Invalid Idempotency-Key' });
+  }
+
   try {
     const parsed = createTransactionSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -113,13 +121,25 @@ router.post('/', createTransactionLimiter, async (req: AuthRequest, res: Respons
     }
 
     const { type, amount, description, metadata } = parsed.data;
-    const userId = req.user.userId; // never trust body userId
-    const transactionId = uuidv4();
+    if (idempotencyKey) {
+      const previous = await prisma.transaction.findUnique({
+        where: { userId_idempotencyKey: { userId, idempotencyKey } },
+      });
+      if (previous) {
+        if (previous.type !== type || Number(previous.amount) !== amount) {
+          return res.status(409).json({ success: false, message: 'Idempotency key was already used for a different request' });
+        }
+        return res.json({ success: true, message: 'Transaction already created', data: previous });
+      }
+    }
+
+    const transactionId = randomUUID();
 
     const transaction = await prisma.transaction.create({
       data: {
         id: transactionId,
         userId,
+        idempotencyKey,
         type,
         amount,
         description: description || '',
@@ -130,6 +150,12 @@ router.post('/', createTransactionLimiter, async (req: AuthRequest, res: Respons
 
     res.status(201).json({ success: true, message: 'Transaction created successfully', data: transaction });
   } catch (error: any) {
+    if (idempotencyKey && error?.code === 'P2002') {
+      const previous = await prisma.transaction.findUnique({
+        where: { userId_idempotencyKey: { userId, idempotencyKey } },
+      });
+      if (previous) return res.json({ success: true, message: 'Transaction already created', data: previous });
+    }
     handleError(res, error, 'Failed to create transaction');
   }
 });
@@ -187,7 +213,7 @@ router.put('/:id', requireRole(['admin', 'superadmin', 'SUPER_ADMIN', 'SIGNAL_AD
     if (adminUser) {
       await prisma.adminAction.create({
         data: {
-          id: uuidv4(),
+          id: randomUUID(),
           adminId: adminUser.id,
           action: `deposit_${status}`,
           targetId: transaction.id,
@@ -218,27 +244,33 @@ router.get('/stats/:userId', async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ success: false, message: 'Not authorized to view these stats' });
     }
 
-    const transactions = await prisma.transaction.findMany({ where: { userId } });
-
     let totalDeposits = 0;
     let totalWithdrawals = 0;
     let totalInvested = 0;
     let totalProfit = 0;
     let pendingAmount = 0;
 
-    for (const t of transactions) {
-      const amt = Number(t.amount);
-      if (t.type === 'deposit') totalDeposits += amt;
-      else if (t.type === 'withdrawal') totalWithdrawals += amt;
-      else if (t.type === 'investment') totalInvested += amt;
-      else if (t.type === 'profit') totalProfit += amt;
-      if (t.status === 'pending') pendingAmount += amt;
+    const transactionGroups = await prisma.transaction.groupBy({
+      by: ['type', 'status'],
+      where: { userId },
+      _sum: { amount: true },
+      _count: { _all: true },
+    });
+    let totalTransactions = 0;
+    for (const group of transactionGroups) {
+      const amount = Number(group._sum.amount || 0);
+      totalTransactions += group._count._all;
+      if (group.type === 'deposit') totalDeposits += amount;
+      else if (group.type === 'withdrawal') totalWithdrawals += amount;
+      else if (group.type === 'investment') totalInvested += amount;
+      else if (group.type === 'profit') totalProfit += amount;
+      if (group.status === 'pending') pendingAmount += amount;
     }
 
     res.json({
       success: true,
       data: {
-        totalTransactions: transactions.length,
+        totalTransactions,
         totalDeposits,
         totalWithdrawals,
         totalInvested,

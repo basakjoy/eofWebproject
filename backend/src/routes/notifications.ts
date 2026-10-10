@@ -4,9 +4,11 @@ import { requireRole } from '../middleware/auth';
 import { validateNotification } from '../middleware/notifications.middleware';
 import * as notificationController from '../controllers/notifications.controller';
 import rateLimit from 'express-rate-limit';
+import { createSharedRateLimitStore } from '../middleware/rateLimiter';
 const router = express.Router();
 
 const sendNotificationLimiter = rateLimit({
+    store: createSharedRateLimitStore('rl:notifications:'),
     windowMs: 15 * 60 * 1000,
     limit: 50,
     standardHeaders: true,

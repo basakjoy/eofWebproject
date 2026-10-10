@@ -1,403 +1,285 @@
 import { Request, Response } from 'express';
-import { getAsync, allAsync, runAsync } from '../database';
-import { v4 as uuidv4 } from 'uuid';
+import { Prisma } from '@prisma/client';
+import { randomUUID } from 'crypto';
+import { z } from 'zod';
+import { prisma } from '../database';
+import { AuthRequest } from '../middleware/auth';
+import { Permission } from '../types/roles';
 
-interface AuthRequest extends Request {
-  user?: any;
-}
+const fail = (res: Response, message: string) =>
+  res.status(500).json({ success: false, message });
 
-// TODO: align this with however your JWT payload actually signals admin
-// access (e.g. req.user.role === 'SUPER_ADMIN', or a permissions array like
-// req.user.permissions.includes('MANAGE_WITHDRAWALS')). This mirrors the
-// pattern requireWithdrawalAdmin presumably already checks at the route
-// level — duplicating a lightweight version here so the controller can also
-// tell "is this person allowed to see/act on someone else's withdrawal".
-function isWithdrawalAdmin(req: AuthRequest): boolean {
-  return (
-    req.user?.role === 'SUPER_ADMIN' ||
-    req.user?.role === 'ADMIN' ||
-    (Array.isArray(req.user?.permissions) &&
-      req.user.permissions.includes('MANAGE_WITHDRAWALS'))
-  );
-}
+const isWithdrawalAdmin = (req: AuthRequest) =>
+  ['admin', 'super_admin'].includes(req.user?.role || '') ||
+  req.user?.adminScope === 'SUPER_ADMIN' ||
+  req.user?.permissions.includes(Permission.PROCESS_WITHDRAWALS) === true;
 
-const VALID_STATUSES = ['pending', 'approved', 'rejected', 'completed'];
+const idempotencyKeySchema = z.string().regex(/^[\x21-\x7E]{8,128}$/);
 
-// Get all withdrawals (admin-only at the router level)
 export const getAllWithdrawals = async (req: Request, res: Response) => {
   try {
-    const { status, userId, limit = 20, offset = 0 } = req.query;
-
-    const parsedLimit = Math.min(Math.max(parseInt(String(limit), 10) || 20, 1), 100);
-    const parsedOffset = Math.max(parseInt(String(offset), 10) || 0, 0);
-
-    if (status && !VALID_STATUSES.includes(String(status))) {
-      return res.status(400).json({ success: false, message: 'Invalid status filter' });
-    }
-
-    let query = 'SELECT * FROM withdrawals WHERE 1=1';
-    const params: any[] = [];
-
-    if (status) {
-      query += ' AND status = ?';
-      params.push(status);
-    }
-    if (userId) {
-      query += ' AND userId = ?';
-      params.push(userId);
-    }
-
-    query += ' ORDER BY createdAt DESC LIMIT ? OFFSET ?';
-    params.push(parsedLimit, parsedOffset);
-
-    const withdrawals = await allAsync(query, params);
-    res.json({
-      success: true,
-      data: withdrawals,
+    const parsed = z.object({
+      status: z.enum(['pending', 'approved', 'rejected', 'completed']).optional(),
+      userId: z.string().max(100).optional(),
+      limit: z.coerce.number().int().min(1).max(100).default(20),
+      offset: z.coerce.number().int().min(0).max(10_000).default(0),
+    }).strict().safeParse(req.query);
+    if (!parsed.success) return res.status(400).json({ success: false, message: 'Invalid withdrawal filters' });
+    const { status, userId, limit, offset } = parsed.data;
+    const data = await prisma.withdrawal.findMany({
+      where: { ...(status ? { status } : {}), ...(userId ? { userId } : {}) },
+      take: limit,
+      skip: offset,
+      orderBy: { createdAt: 'desc' },
     });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to fetch withdrawals',
-    });
+    return res.json({ success: true, data });
+  } catch {
+    return fail(res, 'Failed to fetch withdrawals');
   }
 };
 
-// Get withdrawal by ID
 export const getWithdrawalById = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
-    const withdrawal = await getAsync('SELECT * FROM withdrawals WHERE id = ?', [id]);
-
-    if (!withdrawal) {
+    const withdrawal = await prisma.withdrawal.findUnique({ where: { id: req.params.id } });
+    if (!withdrawal) return res.status(404).json({ success: false, message: 'Withdrawal not found' });
+    if (withdrawal.userId !== req.user!.userId && !isWithdrawalAdmin(req)) {
       return res.status(404).json({ success: false, message: 'Withdrawal not found' });
     }
-
-    // Ownership check: a user may only view their own withdrawal unless they're an admin.
-    const isOwner = withdrawal.userId === req.user?.userId;
-    if (!isOwner && !isWithdrawalAdmin(req)) {
-      return res.status(403).json({ success: false, message: 'Insufficient permissions' });
-    }
-
-    res.json({ success: true, data: withdrawal });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to fetch withdrawal',
-    });
+    return res.json({ success: true, data: withdrawal });
+  } catch {
+    return fail(res, 'Failed to fetch withdrawal');
   }
 };
 
-// Request withdrawal
 export const requestWithdrawal = async (req: AuthRequest, res: Response) => {
+  const input = z.object({
+    amount: z.coerce.number().finite().positive().max(10_000_000),
+    currency: z.string().trim().min(3).max(10).default('USD'),
+    method: z.string().trim().min(1).max(50),
+    accountId: z.string().max(100).optional(),
+    reason: z.string().max(500).optional(),
+  }).strict().safeParse(req.body);
+  if (!input.success) return res.status(400).json({ success: false, message: 'Invalid withdrawal request' });
+
+  const userId = req.user!.userId;
+  const idempotencyKey = req.get('Idempotency-Key');
+  if (idempotencyKey && !idempotencyKeySchema.safeParse(idempotencyKey).success) {
+    return res.status(400).json({ success: false, message: 'Invalid Idempotency-Key' });
+  }
+  const { amount, currency, method, accountId, reason } = input.data;
+
   try {
-    const { amount, currency = 'USD', method, accountId, reason } = req.body;
-    const userId = req.user?.userId;
-
-    if (!userId) {
-      return res.status(401).json({ success: false, message: 'Authentication required' });
-    }
-
-    if (!amount || !method) {
-      return res.status(400).json({
-        success: false,
-        message: 'amount and method are required',
+    if (idempotencyKey) {
+      const previous = await prisma.withdrawal.findUnique({
+        where: { userId_idempotencyKey: { userId, idempotencyKey } },
       });
-    }
-
-    const numericAmount = Number(amount);
-    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'amount must be a positive number',
-      });
-    }
-
-    // Verify the withdrawal method exists and is currently available —
-    // previously any string was accepted with no check against real methods.
-    const methodRecord = await getAsync(
-      'SELECT * FROM withdrawal_methods WHERE code = ? AND available = 1',
-      [method]
-    );
-    if (!methodRecord) {
-      return res.status(400).json({ success: false, message: 'Invalid or unavailable withdrawal method' });
-    }
-    if (
-      (methodRecord.minAmount != null && numericAmount < methodRecord.minAmount) ||
-      (methodRecord.maxAmount != null && numericAmount > methodRecord.maxAmount)
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: `Amount must be between ${methodRecord.minAmount} and ${methodRecord.maxAmount} for this method`,
-      });
-    }
-
-    // IDOR fix: verify the destination account actually belongs to the
-    // requesting user — previously accountId was trusted straight from the
-    // request body, letting a user withdraw to someone else's payout account.
-    if (accountId) {
-      const account = await getAsync(
-        'SELECT * FROM user_withdrawal_accounts WHERE id = ? AND userId = ?',
-        [accountId, userId]
-      );
-      if (!account) {
-        return res.status(403).json({ success: false, message: 'Withdrawal account not found or not owned by you' });
+      if (previous) {
+        if (Number(previous.amount) !== amount || previous.method !== method || previous.currency !== currency ||
+            previous.destinationDetails !== (accountId || null)) {
+          return res.status(409).json({ success: false, message: 'Idempotency key was already used for a different request' });
+        }
+        return res.json({ success: true, message: 'Withdrawal request already created', data: { id: previous.id, status: previous.status } });
       }
     }
 
-    // Check withdrawal limit
-    const limit = await getAsync(
-      'SELECT * FROM withdrawal_limits WHERE userId = ?',
-      [userId]
-    );
-
-    if (limit && (limit.remainingDaily < numericAmount || limit.remainingMonthly < numericAmount)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Withdrawal exceeds your limit',
-      });
+    const methodRecord = await prisma.withdrawalMethod.findFirst({ where: { code: method, available: true } });
+    if (!methodRecord) return res.status(400).json({ success: false, message: 'Invalid or unavailable withdrawal method' });
+    if ((methodRecord.minAmount && amount < Number(methodRecord.minAmount)) ||
+        (methodRecord.maxAmount && amount > Number(methodRecord.maxAmount))) {
+      return res.status(400).json({ success: false, message: 'Amount is outside the allowed range for this method' });
+    }
+    if (accountId) {
+      const account = await prisma.userWithdrawalAccount.findFirst({ where: { id: accountId, userId, methodId: methodRecord.id } });
+      if (!account) return res.status(403).json({ success: false, message: 'Withdrawal account not found or not owned by you' });
     }
 
-    const withdrawalId = uuidv4();
-    await runAsync(
-      `INSERT INTO withdrawals (id, userId, amount, currency, method, destinationDetails, reason, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')`,
-      [withdrawalId, userId, numericAmount, currency, method, accountId, reason]
-    );
+    const withdrawal = await prisma.$transaction(async (tx) => {
+      const limit = await tx.withdrawalLimit.findUnique({ where: { userId } });
+      if (limit && (limit.remainingDaily !== null || limit.remainingMonthly !== null)) {
+        const where: Prisma.WithdrawalLimitWhereInput = {
+          id: limit.id,
+          ...(limit.remainingDaily !== null ? { remainingDaily: { gte: amount } } : {}),
+          ...(limit.remainingMonthly !== null ? { remainingMonthly: { gte: amount } } : {}),
+        };
+        const data: Prisma.WithdrawalLimitUpdateManyMutationInput = {
+          ...(limit.remainingDaily !== null ? { remainingDaily: { decrement: amount } } : {}),
+          ...(limit.remainingMonthly !== null ? { remainingMonthly: { decrement: amount } } : {}),
+        };
+        const reserved = await tx.withdrawalLimit.updateMany({ where, data });
+        if (reserved.count !== 1) throw new Error('WITHDRAWAL_LIMIT_EXCEEDED');
+      }
 
-    res.status(201).json({
+      return tx.withdrawal.create({
+        data: {
+          id: randomUUID(),
+          userId,
+          idempotencyKey,
+          amount,
+          currency: currency.toUpperCase(),
+          method,
+          destinationDetails: accountId || null,
+          reason: reason || null,
+          status: 'pending',
+        },
+      });
+    });
+    return res.status(201).json({
       success: true,
       message: 'Withdrawal request created successfully',
-      data: { id: withdrawalId, status: 'pending' },
+      data: { id: withdrawal.id, status: withdrawal.status },
     });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to request withdrawal',
-    });
+  } catch (error) {
+    if (error instanceof Error && error.message === 'WITHDRAWAL_LIMIT_EXCEEDED') {
+      return res.status(400).json({ success: false, message: 'Withdrawal exceeds your limit' });
+    }
+    if (idempotencyKey && error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      const previous = await prisma.withdrawal.findUnique({ where: { userId_idempotencyKey: { userId, idempotencyKey } } });
+      if (previous && Number(previous.amount) === amount && previous.method === method) {
+        return res.json({ success: true, message: 'Withdrawal request already created', data: { id: previous.id, status: previous.status } });
+      }
+      if (previous) return res.status(409).json({ success: false, message: 'Idempotency key was already used for a different request' });
+    }
+    return fail(res, 'Failed to request withdrawal');
   }
 };
 
-// Approve withdrawal
 export const approveWithdrawal = async (req: AuthRequest, res: Response) => {
+  const transactionId = z.string().max(100).optional().safeParse(req.body?.transactionId);
+  if (!transactionId.success) return res.status(400).json({ success: false, message: 'Invalid transaction id' });
   try {
-    const { id } = req.params;
-    const { transactionId } = req.body;
-    const adminId = req.user?.userId;
-
-    const withdrawal = await getAsync('SELECT * FROM withdrawals WHERE id = ?', [id]);
-    if (!withdrawal) {
-      return res.status(404).json({ success: false, message: 'Withdrawal not found' });
-    }
-
-    // Conflict of interest: an admin may not approve their own withdrawal request.
-    if (withdrawal.userId === adminId) {
-      return res.status(403).json({
-        success: false,
-        message: 'You cannot approve your own withdrawal request',
+    const withdrawal = await prisma.withdrawal.findUnique({ where: { id: req.params.id } });
+    if (!withdrawal) return res.status(404).json({ success: false, message: 'Withdrawal not found' });
+    if (withdrawal.userId === req.user!.userId) return res.status(403).json({ success: false, message: 'You cannot approve your own withdrawal request' });
+    const updated = await prisma.$transaction(async (tx) => {
+      const result = await tx.withdrawal.updateMany({
+        where: { id: withdrawal.id, status: 'pending' },
+        data: { status: 'approved', transactionId: transactionId.data || null, approvedBy: req.user!.userId, approvedAt: new Date() },
       });
-    }
-
-    // State machine: only a pending withdrawal can be approved.
-    if (withdrawal.status !== 'pending') {
-      return res.status(409).json({
-        success: false,
-        message: `Cannot approve a withdrawal with status '${withdrawal.status}'`,
-      });
-    }
-
-    await runAsync(
-      `UPDATE withdrawals SET status = 'approved', transactionId = ?, approvedBy = ?, approvedAt = CURRENT_TIMESTAMP
-       WHERE id = ?`,
-      [transactionId || null, adminId, id]
-    );
-
-    res.json({ success: true, message: 'Withdrawal approved successfully' });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to approve withdrawal',
+      if (result.count !== 1) return false;
+      await tx.log.create({ data: { userId: req.user!.userId, action: `APPROVE_WITHDRAWAL: ${withdrawal.id}`, status: 'success' } });
+      return true;
     });
+    if (!updated) return res.status(409).json({ success: false, message: 'Withdrawal is no longer pending' });
+    return res.json({ success: true, message: 'Withdrawal approved successfully' });
+  } catch {
+    return fail(res, 'Failed to approve withdrawal');
   }
 };
 
-// Reject withdrawal
 export const rejectWithdrawal = async (req: AuthRequest, res: Response) => {
+  const rejectionReason = z.string().trim().min(1).max(500).safeParse(req.body?.rejectionReason);
+  if (!rejectionReason.success) return res.status(400).json({ success: false, message: 'rejectionReason is required' });
   try {
-    const { id } = req.params;
-    const { rejectionReason } = req.body;
-    const adminId = req.user?.userId;
-
-    if (!rejectionReason || !String(rejectionReason).trim()) {
-      return res.status(400).json({ success: false, message: 'rejectionReason is required' });
-    }
-
-    const withdrawal = await getAsync('SELECT * FROM withdrawals WHERE id = ?', [id]);
-    if (!withdrawal) {
-      return res.status(404).json({ success: false, message: 'Withdrawal not found' });
-    }
-
-    // State machine: only a pending withdrawal can be rejected.
-    if (withdrawal.status !== 'pending') {
-      return res.status(409).json({
-        success: false,
-        message: `Cannot reject a withdrawal with status '${withdrawal.status}'`,
+    const withdrawal = await prisma.withdrawal.findUnique({ where: { id: req.params.id } });
+    if (!withdrawal) return res.status(404).json({ success: false, message: 'Withdrawal not found' });
+    if (withdrawal.userId === req.user!.userId) return res.status(403).json({ success: false, message: 'You cannot reject your own withdrawal request' });
+    const updated = await prisma.$transaction(async (tx) => {
+      const result = await tx.withdrawal.updateMany({
+        where: { id: withdrawal.id, status: 'pending' },
+        data: { status: 'rejected', rejectionReason: rejectionReason.data, approvedBy: req.user!.userId },
       });
-    }
-
-    await runAsync(
-      `UPDATE withdrawals SET status = 'rejected', rejectionReason = ?, approvedBy = ?
-       WHERE id = ?`,
-      [rejectionReason, adminId, id]
-    );
-
-    res.json({ success: true, message: 'Withdrawal rejected successfully' });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to reject withdrawal',
+      if (result.count !== 1) return false;
+      await tx.log.create({ data: { userId: req.user!.userId, action: `REJECT_WITHDRAWAL: ${withdrawal.id}`, status: 'success' } });
+      return true;
     });
+    if (!updated) return res.status(409).json({ success: false, message: 'Withdrawal is no longer pending' });
+    return res.json({ success: true, message: 'Withdrawal rejected successfully' });
+  } catch {
+    return fail(res, 'Failed to reject withdrawal');
   }
 };
 
-// Complete withdrawal
 export const completeWithdrawal = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
-
-    const withdrawal = await getAsync('SELECT * FROM withdrawals WHERE id = ?', [id]);
-    if (!withdrawal) {
-      return res.status(404).json({ success: false, message: 'Withdrawal not found' });
-    }
-
-    // State machine: a withdrawal must be approved before it can be completed.
-    // Previously any withdrawal — pending, rejected, whatever — could be marked
-    // completed directly, skipping the approval step entirely.
-    if (withdrawal.status !== 'approved') {
-      return res.status(409).json({
-        success: false,
-        message: `Cannot complete a withdrawal with status '${withdrawal.status}'`,
+    const withdrawal = await prisma.withdrawal.findUnique({ where: { id: req.params.id } });
+    if (!withdrawal) return res.status(404).json({ success: false, message: 'Withdrawal not found' });
+    if (withdrawal.userId === req.user!.userId) return res.status(403).json({ success: false, message: 'You cannot complete your own withdrawal request' });
+    const updated = await prisma.$transaction(async (tx) => {
+      const result = await tx.withdrawal.updateMany({
+        where: { id: withdrawal.id, status: 'approved' },
+        data: { status: 'completed', completedAt: new Date() },
       });
-    }
-
-    await runAsync(
-      `UPDATE withdrawals SET status = 'completed', completedAt = CURRENT_TIMESTAMP, completedBy = ?
-       WHERE id = ?`,
-      [req.user?.userId ?? null, id]
-    );
-
-    res.json({ success: true, message: 'Withdrawal completed successfully' });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to complete withdrawal',
+      if (result.count !== 1) return false;
+      await tx.log.create({ data: { userId: req.user!.userId, action: `COMPLETE_WITHDRAWAL: ${withdrawal.id}`, status: 'success' } });
+      return true;
     });
+    if (!updated) return res.status(409).json({ success: false, message: 'Withdrawal is not approved' });
+    return res.json({ success: true, message: 'Withdrawal completed successfully' });
+  } catch {
+    return fail(res, 'Failed to complete withdrawal');
   }
 };
 
-// Add withdrawal method
 export const addWithdrawalMethod = async (req: Request, res: Response) => {
+  const parsed = z.object({
+    name: z.string().trim().min(1).max(100),
+    code: z.string().trim().min(1).max(50),
+    minAmount: z.coerce.number().finite().nonnegative().optional(),
+    maxAmount: z.coerce.number().finite().nonnegative().optional(),
+    fee: z.coerce.number().finite().nonnegative().max(100).optional(),
+    processingTime: z.string().max(100).optional(),
+  }).strict().safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ success: false, message: 'Invalid withdrawal method' });
+  if (parsed.data.minAmount !== undefined && parsed.data.maxAmount !== undefined && parsed.data.minAmount > parsed.data.maxAmount) {
+    return res.status(400).json({ success: false, message: 'minAmount cannot exceed maxAmount' });
+  }
   try {
-    const { name, code, minAmount, maxAmount, fee, processingTime } = req.body;
-
-    if (!name || !code) {
-      return res.status(400).json({
-        success: false,
-        message: 'name and code are required',
-      });
-    }
-
-    const numMin = minAmount != null ? Number(minAmount) : null;
-    const numMax = maxAmount != null ? Number(maxAmount) : null;
-    const numFee = fee != null ? Number(fee) : null;
-
-    if (numMin != null && (!Number.isFinite(numMin) || numMin < 0)) {
-      return res.status(400).json({ success: false, message: 'minAmount must be a non-negative number' });
-    }
-    if (numMax != null && (!Number.isFinite(numMax) || numMax < 0)) {
-      return res.status(400).json({ success: false, message: 'maxAmount must be a non-negative number' });
-    }
-    if (numMin != null && numMax != null && numMin > numMax) {
-      return res.status(400).json({ success: false, message: 'minAmount cannot exceed maxAmount' });
-    }
-    if (numFee != null && (!Number.isFinite(numFee) || numFee < 0)) {
-      return res.status(400).json({ success: false, message: 'fee must be a non-negative number' });
-    }
-
-    const existing = await getAsync('SELECT id FROM withdrawal_methods WHERE code = ?', [code]);
-    if (existing) {
-      return res.status(409).json({ success: false, message: 'A withdrawal method with this code already exists' });
-    }
-
-    const methodId = uuidv4();
-    await runAsync(
-      `INSERT INTO withdrawal_methods (id, name, code, minAmount, maxAmount, fee, processingTime)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [methodId, name, code, numMin, numMax, numFee, processingTime]
-    );
-
-    res.status(201).json({
-      success: true,
-      message: 'Withdrawal method added successfully',
+    await prisma.withdrawalMethod.create({
+      data: {
+        id: randomUUID(),
+        ...parsed.data,
+        fee: parsed.data.fee ?? 0,
+      },
     });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to add withdrawal method',
-    });
+    return res.status(201).json({ success: true, message: 'Withdrawal method added successfully' });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      return res.status(409).json({ success: false, message: 'A withdrawal method with this name or code already exists' });
+    }
+    return fail(res, 'Failed to add withdrawal method');
   }
 };
 
-// Get withdrawal methods
-export const getWithdrawalMethods = async (req: Request, res: Response) => {
+export const getWithdrawalMethods = async (_req: Request, res: Response) => {
   try {
-    const methods = await allAsync('SELECT * FROM withdrawal_methods WHERE available = 1');
-    res.json({ success: true, data: methods });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to fetch withdrawal methods',
-    });
+    const methods = await prisma.withdrawalMethod.findMany({ where: { available: true }, orderBy: { name: 'asc' } });
+    return res.json({ success: true, data: methods });
+  } catch {
+    return fail(res, 'Failed to fetch withdrawal methods');
   }
 };
 
-// Get user withdrawal accounts
 export const getUserWithdrawalAccounts = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.userId;
-
-    const accounts = await allAsync(
-      'SELECT * FROM user_withdrawal_accounts WHERE userId = ?',
-      [userId]
-    );
-
-    res.json({ success: true, data: accounts });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to fetch withdrawal accounts',
+    const accounts = await prisma.userWithdrawalAccount.findMany({
+      where: { userId: req.user!.userId },
+      select: {
+        id: true,
+        userId: true,
+        methodId: true,
+        accountName: true,
+        accountDetails: true,
+        isDefault: true,
+        verified: true,
+        createdAt: true,
+        method: { select: { name: true, code: true } },
+      },
+      orderBy: { createdAt: 'desc' },
     });
+    return res.json({ success: true, data: accounts });
+  } catch {
+    return fail(res, 'Failed to fetch withdrawal accounts');
   }
 };
 
-// Get withdrawal report
 export const getWithdrawalReport = async (req: Request, res: Response) => {
   try {
-    const { period = 'monthly' } = req.query;
-
-    const report = await getAsync(
-      'SELECT * FROM withdrawal_reports WHERE period = ? ORDER BY createdAt DESC LIMIT 1',
-      [period]
-    );
-
-    res.json({
-      success: true,
-      data: report || { message: 'No report available for this period' },
+    const report = await prisma.withdrawalReport.findFirst({
+      where: { period: String(req.params.period) },
+      orderBy: { createdAt: 'desc' },
     });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to fetch withdrawal report',
-    });
+    return res.json({ success: true, data: report || { message: 'No report available for this period' } });
+  } catch {
+    return fail(res, 'Failed to fetch withdrawal report');
   }
 };
