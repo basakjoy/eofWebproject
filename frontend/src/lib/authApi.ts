@@ -47,6 +47,16 @@ export const authApi = {
     }
   },
 
+  requestPasswordReset: async (email: string) => {
+    const response = await apiClient.post('/auth/forgot-password', { email });
+    return response.data;
+  },
+
+  resetPassword: async (data: { token: string; password: string }) => {
+    const response = await apiClient.post('/auth/reset-password', data);
+    return response.data;
+  },
+
   // Logout user (client-side)
   logout: () => {
     clearAuthSession();
