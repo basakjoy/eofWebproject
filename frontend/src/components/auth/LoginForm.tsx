@@ -224,10 +224,7 @@ export default function LoginForm() {
           className="w-full py-3.5 bg-[#0a2a2a] hover:bg-[#082222] text-white rounded-xl font-bold text-base transition-all shadow-md active:scale-[0.99] flex items-center justify-center gap-2"
         >
           {loading ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              {t('auth.signingIn', 'Signing In...')}
-            </>
+            t('auth.signingIn', 'Signing In...')
           ) : (
             t('auth.signIn', 'Sign In')
           )}
