@@ -5,6 +5,8 @@ import Button from '@/components/common/Button';
 import { Edit2, Trash2, Eye, RefreshCw, X, Plus, Users as UsersIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { adminApi } from '@/lib/adminApi';
+import { hasAdminPermission } from '@/lib/authUtils';
+import { useAuthStore } from '@/store/authStore';
 
 type ManagedUser = { id: string; name: string; email: string; role: string; status: string };
 type FormState = { name: string; email: string; password: string; role: string; status: string };
@@ -35,6 +37,8 @@ const AVATAR_HUES = [
 const getAvatarHue = (seed: string) => AVATAR_HUES[[...seed].reduce((acc, c) => acc + c.charCodeAt(0), 0) % AVATAR_HUES.length];
 
 export default function UserManager() {
+  const currentUser = useAuthStore((state) => state.user);
+  const canManageUsers = hasAdminPermission(currentUser, 'manage_users');
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -115,10 +119,12 @@ export default function UserManager() {
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Button size="sm" onClick={() => { setEditingId(null); setForm(emptyForm); setShowForm(true); }}>
-            <Plus className="h-4 w-4" />
-            Add user
-          </Button>
+          {canManageUsers && (
+            <Button size="sm" onClick={() => { setEditingId(null); setForm(emptyForm); setShowForm(true); }}>
+              <Plus className="h-4 w-4" />
+              Add user
+            </Button>
+          )}
         </div>
       </div>
 
@@ -131,7 +137,7 @@ export default function UserManager() {
         </div>
       )}
 
-      {showForm && (
+      {showForm && canManageUsers && (
         <form onSubmit={submit} className="mt-5 grid gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 md:grid-cols-5">
           <div className="md:col-span-5 flex items-center justify-between">
             <h3 className="text-sm font-semibold text-slate-200">{editingId ? 'Edit user' : 'New user'}</h3>
@@ -252,17 +258,21 @@ export default function UserManager() {
                       <button onClick={() => setViewing(user)} aria-label={`View ${user.name}`} className="rounded-md p-1.5 text-slate-500 transition-colors hover:bg-blue-500/10 hover:text-blue-300">
                         <Eye className="h-4 w-4" />
                       </button>
-                      <button onClick={() => edit(user)} aria-label={`Edit ${user.name}`} className="rounded-md p-1.5 text-slate-500 transition-colors hover:bg-amber-500/10 hover:text-amber-300">
-                        <Edit2 className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => void remove(user)}
-                        aria-label={`Delete ${user.name}`}
-                        disabled={deletingId === user.id}
-                        className="rounded-md p-1.5 text-slate-500 transition-colors hover:bg-red-500/10 hover:text-red-300 disabled:opacity-50"
-                      >
-                        <Trash2 className={`h-4 w-4 ${deletingId === user.id ? 'animate-pulse' : ''}`} />
-                      </button>
+                      {canManageUsers && (
+                        <>
+                          <button onClick={() => edit(user)} aria-label={`Edit ${user.name}`} className="rounded-md p-1.5 text-slate-500 transition-colors hover:bg-amber-500/10 hover:text-amber-300">
+                            <Edit2 className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => void remove(user)}
+                            aria-label={`Delete ${user.name}`}
+                            disabled={deletingId === user.id}
+                            className="rounded-md p-1.5 text-slate-500 transition-colors hover:bg-red-500/10 hover:text-red-300 disabled:opacity-50"
+                          >
+                            <Trash2 className={`h-4 w-4 ${deletingId === user.id ? 'animate-pulse' : ''}`} />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>

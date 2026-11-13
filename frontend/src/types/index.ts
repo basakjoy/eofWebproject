@@ -1,14 +1,17 @@
 // User Types
-export type UserRole = 'user' | 'premium' | 'investor' | 'admin';
+export type UserRole = 'user' | 'premium' | 'investor' | 'admin' | 'super_admin';
 export type AdminScope = 'SIGNAL_ADMIN' | 'CONTENT_ADMIN' | 'SUPER_ADMIN' | string;
 
 export interface User {
   id: string;
-  email: string;
+  email: string | null;
+  username?: string | null;
   phone?: string;
   name: string;
   role: UserRole;
   adminScope?: AdminScope;
+  adminPermissionsConfigured?: boolean;
+  permissions?: string[];
   avatar?: string;
   createdAt: string;
   updatedAt: string;
@@ -16,7 +19,7 @@ export interface User {
 
 // Authentication
 export interface LoginFormData {
-  email: string;
+  identifier: string;
   password: string;
 }
 

@@ -29,6 +29,7 @@ import { useAuthStore } from "@/store/authStore";
 import { LogoIcon } from "./LogoIcon";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/context/LanguageContext";
+import { isSuperAdminUser } from "@/lib/authUtils";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -88,7 +89,6 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       icon: Users,
       subItems: [
         { id: "users", label: t('admin.users', 'User Management'), path: "/admin/users" },
-        { id: "roles", label: t('admin.roles', 'Roles & Permissions'), path: "/admin/roles" },
       ],
     },
     {
@@ -126,6 +126,16 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         { id: "logs", label: t('admin.logs', 'System Logs'), path: "/admin/logs" },
       ],
     },
+    ...(isSuperAdminUser(user)
+      ? [{
+          id: "super-admin",
+          label: "SUPER ADMIN",
+          icon: Shield,
+          subItems: [
+            { id: "control-center", label: "Control Center", path: "/super-admin" },
+          ],
+        }]
+      : []),
   ];
 
   const investorMenuItems: MenuItem[] = [
@@ -194,17 +204,41 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     }
   };
 
-  const items = getMenuItems();
+  const canAccessAdminPath = (path: string) => {
+    if (!user?.adminPermissionsConfigured || isSuperAdminUser(user)) return true;
+    const permissionsByPath: Record<string, string[]> = {
+      '/admin': ['view_admin_dashboard'],
+      '/admin/users': ['view_users', 'manage_users'],
+      '/admin/analytics': ['view_analytics'],
+      '/admin/signals': ['create_signal', 'view_signals', 'edit_signals', 'delete_signals'],
+      '/admin/articles': ['view_articles', 'manage_articles', 'view_insights'],
+      '/admin/brokers': ['view_brokers', 'manage_brokers'],
+      '/admin/deposits': ['view_deposits', 'manage_deposits'],
+      '/admin/support': ['view_support', 'manage_support'],
+      '/admin/logs': ['view_activity_logs'],
+    };
+    const requiredPermissions = permissionsByPath[path] || [];
+    return !requiredPermissions.length ||
+      requiredPermissions.some((permission) => user.permissions?.includes(permission));
+  };
+
+  const items = getMenuItems()
+    .map((menu) => ({
+      ...menu,
+      subItems: menu.subItems.filter((sub) => canAccessAdminPath(sub.path)),
+    }))
+    .filter((menu) => menu.subItems.length > 0);
 
   const isMenuGroupActive = (menu: MenuItem) => {
     return menu.subItems.some((sub) => {
       if (pathname === sub.path) return true;
-      return pathname.startsWith(sub.path);
+      return sub.path !== "/admin" && pathname.startsWith(sub.path);
     });
   };
 
   const isSubItemActive = (subPath: string) => {
     if (pathname === subPath) return true;
+    if (subPath === '/admin') return false;
     return pathname.startsWith(subPath);
   };
 

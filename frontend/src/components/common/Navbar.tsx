@@ -9,6 +9,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useRouter, usePathname } from 'next/navigation';
 import LanguageSwitcher from './LanguageSwitcher';
 import { getLocalizedPath, useLanguage } from '@/context/LanguageContext';
+import { getDashboardPath } from '@/lib/authUtils';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -117,10 +118,10 @@ export default function Navbar() {
                   <div className="absolute top-full right-0 mt-3 w-48 bg-[#111116] border border-white/10 rounded-2xl shadow-2xl backdrop-blur-2xl z-50 p-1">
                     <div className="p-3 border-b border-white/10">
                       <p className="text-xs font-bold text-white">{user.name}</p>
-                      <p className="text-[10px] text-gray-400">{user.email}</p>
+                      <p className="text-[10px] text-gray-400">{user.username || user.email || ''}</p>
                     </div>
                     <Link
-                      href={user.role === 'admin' ? '/admin/dashboard' : '/dashboard/user'}
+                      href={getDashboardPath(user)}
                       className="flex items-center gap-2 px-3 py-2 text-xs text-white hover:bg-white/5 rounded-xl transition-colors"
                       onClick={() => setProfileOpen(false)}
                     >
@@ -194,7 +195,7 @@ export default function Navbar() {
                 {isAuthenticated && user ? (
                   <div className="space-y-2">
                     <Link
-                      href={user.role === 'admin' ? '/admin/dashboard' : '/dashboard/user'}
+                      href={getDashboardPath(user)}
                       className="w-full flex items-center justify-center gap-2 p-2.5 rounded-full bg-white text-black text-xs font-semibold"
                       onClick={() => setIsOpen(false)}
                     >

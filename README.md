@@ -53,3 +53,19 @@ docker compose -f frontend/docker-compose.yml up --build
 ## Production Notes
 
 The API uses Express middleware for security, CORS, rate limiting, uploads, and error handling. The Prisma schema is the source of truth for the database model layer, and PostgreSQL is the intended production data store.
+
+## Admin and Super-Admin Access
+
+The existing `/admin` area remains the standard admin dashboard. The separate `/super-admin` control center is restricted by the backend to accounts with the `super_admin` role or the `admin` role plus `SUPER_ADMIN` scope. Super admins can create admins and super admins, assign and update module permissions, suspend or reactivate admin accounts, open platform-management tools, and inspect administrator API activity. Administrators without super-admin access are redirected away from this control center.
+
+API activity records include the request method, path, status, duration, IP address, and authenticated actor when available. Request bodies are not recorded. Username-only accounts cannot use email-based password recovery, so issue and store their credentials securely.
+
+Apply the Prisma migrations before starting the updated backend:
+
+```bash
+cd backend
+npx prisma migrate deploy
+npx prisma generate
+```
+
+Admins can sign in with either their email address or username.

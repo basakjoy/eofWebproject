@@ -12,6 +12,8 @@ import {
   Plus,
 } from 'lucide-react';
 import { brokersApi } from '@/lib/brokersApi';
+import { hasAdminPermission } from '@/lib/authUtils';
+import { useAuthStore } from '@/store/authStore';
 
 const cn = (...classes: Array<string | false | null | undefined>) =>
   classes.filter(Boolean).join(' ');
@@ -55,6 +57,8 @@ const Toast = ({ message, type, onClose }: { message: string; type: ToastType; o
 };
 
 export default function AdminBrokersPage() {
+  const user = useAuthStore((state) => state.user);
+  const canManageBrokers = hasAdminPermission(user, 'manage_brokers');
   const [brokers, setBrokers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -105,6 +109,7 @@ export default function AdminBrokersPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canManageBrokers) return;
     setIsSubmitting(true);
 
     try {
@@ -149,6 +154,7 @@ export default function AdminBrokersPage() {
   };
 
   const handleDelete = async (brokerId: string) => {
+    if (!canManageBrokers) return;
     if (!confirm('Are you sure you want to delete this broker?')) return;
     
     try {
@@ -189,9 +195,9 @@ export default function AdminBrokersPage() {
       </div>
 
       {/* Two-column layout */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div className={cn("grid grid-cols-1 gap-6", canManageBrokers ? "xl:grid-cols-3" : "xl:grid-cols-1")}>
         {/* Left: Add Broker Form */}
-        <div className="xl:col-span-1">
+        {canManageBrokers && <div className="xl:col-span-1">
           <div className="bg-zinc-800 rounded-sm border border-zinc-700 p-6 sticky top-6">
             <div className="mb-6">
               <h2 className="text-lg font-semibold mb-1 flex items-center gap-2">
@@ -367,10 +373,10 @@ export default function AdminBrokersPage() {
               </button>
             </form>
           </div>
-        </div>
+        </div>}
 
         {/* Right: Brokers List */}
-        <div className="xl:col-span-2">
+        <div className={canManageBrokers ? "xl:col-span-2" : "xl:col-span-1"}>
           {/* Search */}
           <div className="mb-4 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
@@ -429,7 +435,7 @@ export default function AdminBrokersPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <button
+                          {canManageBrokers && <button
                             onClick={() => handleDelete(broker.id)}
                             disabled={deletingId === broker.id}
                             className="text-red-500 hover:text-red-400 disabled:opacity-50 transition-colors"
@@ -439,7 +445,7 @@ export default function AdminBrokersPage() {
                             ) : (
                               <Trash2 className="w-4 h-4" />
                             )}
-                          </button>
+                          </button>}
                         </td>
                       </tr>
                     ))}

@@ -36,7 +36,6 @@ const navItems = [
 
 const adminItems = [
   { icon: Users, label: "User Management", path: "/admin/users" },
-  { icon: Shield, label: "Roles & Permissions", path: "/admin/roles" },
   { icon: Bell, label: "Notifications", path: "/admin/notifications" },
   { icon: Settings, label: "Settings", path: "/admin/settings" },
 ];

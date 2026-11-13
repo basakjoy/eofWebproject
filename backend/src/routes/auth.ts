@@ -5,10 +5,13 @@ import { z } from 'zod';
 import { randomUUID } from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
 import nodemailer from 'nodemailer';
+import { AdminSessionExitReason } from '@prisma/client';
 import { prisma } from '../database';
 import { authLimiter } from '../middleware/rateLimiter';
-import { createAccessToken, createSessionTokens, hashRefreshToken, verifyAccessToken } from '../lib/tokens';
-import { getBearerToken } from '../middleware/auth';
+import { createAccessToken, createRefreshTokenValue, createSessionTokens, hashRefreshToken, isAdminAccount, verifyAccessToken } from '../lib/tokens';
+import { AuthRequest as VerifiedAuthRequest, getBearerToken, getIp, verifyToken } from '../middleware/auth';
+import { getPermissionsForRole } from '../types/roles';
+import { closeAdminSession, forceCloseAdminSessions } from '../websocket/adminPresence';
 
 const router = express.Router();
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -21,9 +24,12 @@ const registrationSchema = z.object({
   userType: z.enum(['user', 'investor']).optional(),
 }).strict();
 const loginSchema = z.object({
-  email: z.string().trim().email().max(254),
+  identifier: z.string().trim().min(1).max(254).optional(),
+  email: z.string().trim().min(1).max(254).optional(),
   password: z.string().min(1).max(72),
-}).strict();
+}).strict().refine((data) => Boolean(data.identifier || data.email), {
+  message: 'Username or email is required',
+});
 const forgotPasswordSchema = z.object({
   email: z.string().trim().email().max(254),
 }).strict();
@@ -36,6 +42,7 @@ const PASSWORD_RESET_RESPONSE = 'If an eligible account exists for that email, a
 
 interface AuthRequest extends Request {
   user?: any;
+  sessionId?: string;
 }
 
 // Register endpoint
@@ -107,13 +114,25 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
 router.post('/login', authLimiter, async (req: Request, res: Response) => {
   try {
     const parsed = loginSchema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ success: false, message: 'Email and password are required' });
-    const email = parsed.data.email.toLowerCase();
+    if (!parsed.success) return res.status(400).json({ success: false, message: 'Username/email and password are required' });
+    const identifier = (parsed.data.identifier || parsed.data.email || '').trim().toLowerCase();
     const password = parsed.data.password;
 
-    // Find user
-    const user = await prisma.user.findUnique({
-      where: { email },
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: identifier },
+          { username: identifier },
+        ],
+      },
+      include: {
+        adminPermissions: { select: { permission: true } },
+        userRole: {
+          include: {
+            rolePermissions: { include: { permission: true } },
+          },
+        },
+      },
     });
 
     if (!user) {
@@ -142,7 +161,10 @@ router.post('/login', authLimiter, async (req: Request, res: Response) => {
     }
 
     // Create JWT token
-    const tokens = await createSessionTokens(user);
+    const tokens = await createSessionTokens(user, {
+      ipAddress: getIp(req),
+      userAgent: req.get('user-agent') || null,
+    });
 
     res.json({
       success: true,
@@ -151,8 +173,15 @@ router.post('/login', authLimiter, async (req: Request, res: Response) => {
         id: user.id,
         name: user.name,
         email: user.email,
+        username: user.username,
         role: user.role,
         adminScope: user.adminScope,
+        adminPermissionsConfigured: user.adminPermissionsConfigured,
+        permissions: user.adminPermissionsConfigured
+          ? user.adminPermissions.map(({ permission }) => permission)
+          : user.userRole
+            ? user.userRole.rolePermissions.map(({ permission }) => permission.name)
+            : getPermissionsForRole(user.role),
         phone: user.phone,
         ...tokens,
       },
@@ -163,6 +192,21 @@ router.post('/login', authLimiter, async (req: Request, res: Response) => {
       success: false,
       message: 'Login failed',
     });
+  }
+});
+
+router.post('/logout', verifyToken, async (req: VerifiedAuthRequest, res: Response, next) => {
+  try {
+    if (req.sessionId) {
+      await closeAdminSession(req.sessionId, req.user!.userId, AdminSessionExitReason.LOGOUT);
+      await prisma.refreshToken.updateMany({
+        where: { sessionId: req.sessionId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+    }
+    return res.json({ success: true });
+  } catch (error) {
+    return next(error);
   }
 });
 
@@ -179,7 +223,7 @@ router.post('/forgot-password', authLimiter, async (req: Request, res: Response)
       select: { id: true, email: true, status: true },
     });
 
-    if (user && ['active', 'inactive'].includes(user.status)) {
+    if (user?.email && ['active', 'inactive'].includes(user.status)) {
       const token = crypto.randomBytes(32).toString('hex');
       const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
       await prisma.$transaction([
@@ -258,7 +302,9 @@ router.post('/reset-password', authLimiter, async (req: Request, res: Response) 
         data: {
           password: hashedPassword,
           status: 'active',
+          isActive: true,
           tokenVersion: { increment: 1 },
+          permissionsVersion: { increment: 1 },
         },
       });
       if (updated.count !== 1) return false;
@@ -282,7 +328,7 @@ router.post('/reset-password', authLimiter, async (req: Request, res: Response) 
 });
 
 router.post('/refresh', authLimiter, async (req: Request, res: Response) => {
-  const parsed = z.object({ refreshToken: z.string().min(40).max(200) }).strict().safeParse(req.body);
+  const parsed = z.object({ refreshToken: z.string().min(40).max(2048) }).strict().safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ success: false, message: 'Invalid refresh token request' });
   }
@@ -292,25 +338,71 @@ router.post('/refresh', authLimiter, async (req: Request, res: Response) => {
   try {
     const stored = await prisma.refreshToken.findUnique({
       where: { tokenHash },
-      include: { user: { select: { id: true, email: true, role: true, status: true, tokenVersion: true } } },
+      include: {
+        user: {
+          select: {
+            id: true,
+            role: true,
+            roleId: true,
+            adminScope: true,
+            permissionsVersion: true,
+            status: true,
+            isActive: true,
+            tokenVersion: true,
+          },
+        },
+      },
     });
     if (!stored) return res.status(401).json({ success: false, message: 'Invalid refresh token' });
+
+    if (stored.sessionId) {
+      if (!isAdminAccount(stored.user)) {
+        await closeAdminSession(stored.sessionId, stored.userId, AdminSessionExitReason.FORCED);
+        return res.status(401).json({ success: false, message: 'Admin access has been removed' });
+      }
+      const session = await prisma.adminSession.findUnique({
+        where: { id: stored.sessionId },
+        select: { adminId: true, logoutAt: true },
+      });
+      if (!session || session.adminId !== stored.userId || session.logoutAt) {
+        return res.status(401).json({ success: false, message: 'Admin session is closed' });
+      }
+    }
 
     if (stored.consumedAt) {
       await prisma.$transaction(async (tx) => {
         await tx.refreshToken.updateMany({ where: { familyId: stored.familyId, revokedAt: null }, data: { revokedAt: now } });
         await tx.refreshToken.updateMany({ where: { userId: stored.userId, revokedAt: null }, data: { revokedAt: now } });
-        await tx.user.update({ where: { id: stored.userId }, data: { tokenVersion: { increment: 1 } } });
+        await tx.user.update({
+          where: { id: stored.userId },
+          data: { tokenVersion: { increment: 1 }, permissionsVersion: { increment: 1 } },
+        });
       });
+      await forceCloseAdminSessions(stored.userId);
       return res.status(401).json({ success: false, message: 'Refresh token reuse detected' });
     }
 
-    if (stored.revokedAt || stored.expiresAt <= now || stored.user.status !== 'active' ||
-        stored.tokenVersion !== stored.user.tokenVersion) {
+    if (
+      stored.revokedAt ||
+      stored.user.status !== 'active' ||
+      !stored.user.isActive ||
+      stored.tokenVersion !== stored.user.tokenVersion ||
+      !stored.user.roleId
+    ) {
+      return res.status(401).json({ success: false, message: 'Invalid refresh token' });
+    }
+    if (stored.expiresAt <= now) {
+      if (stored.sessionId) {
+        await closeAdminSession(stored.sessionId, stored.userId, AdminSessionExitReason.TOKEN_EXPIRED);
+      }
       return res.status(401).json({ success: false, message: 'Invalid refresh token' });
     }
 
-    const nextRefreshToken = crypto.randomBytes(48).toString('base64url');
+    const nextRefreshToken = createRefreshTokenValue(
+      stored.userId,
+      stored.user.tokenVersion,
+      stored.sessionId || undefined
+    );
     const nextTokenHash = hashRefreshToken(nextRefreshToken);
     const rotated = await prisma.$transaction(async (tx) => {
       const consumed = await tx.refreshToken.updateMany({
@@ -322,6 +414,7 @@ router.post('/refresh', authLimiter, async (req: Request, res: Response) => {
         data: {
           id: randomUUID(),
           userId: stored.userId,
+          sessionId: stored.sessionId,
           tokenHash: nextTokenHash,
           familyId: stored.familyId,
           tokenVersion: stored.user.tokenVersion,
@@ -334,16 +427,30 @@ router.post('/refresh', authLimiter, async (req: Request, res: Response) => {
     if (!rotated) {
       await prisma.$transaction(async (tx) => {
         await tx.refreshToken.updateMany({ where: { userId: stored.userId, revokedAt: null }, data: { revokedAt: now } });
-        await tx.user.update({ where: { id: stored.userId }, data: { tokenVersion: { increment: 1 } } });
+        await tx.user.update({
+          where: { id: stored.userId },
+          data: { tokenVersion: { increment: 1 }, permissionsVersion: { increment: 1 } },
+        });
       });
+      await forceCloseAdminSessions(stored.userId);
       return res.status(401).json({ success: false, message: 'Refresh token reuse detected' });
+    }
+
+    const refreshedUser = stored.user;
+    if (!refreshedUser.roleId) {
+      return res.status(401).json({ success: false, message: 'Invalid refresh token' });
     }
 
     return res.json({
       success: true,
       data: {
-        token: createAccessToken(stored.user),
+        token: createAccessToken({
+          ...refreshedUser,
+          roleId: refreshedUser.roleId,
+          sessionId: stored.sessionId || undefined,
+        }),
         refreshToken: nextRefreshToken,
+        ...(stored.sessionId ? { sid: stored.sessionId } : {}),
       },
     });
   } catch (error) {
@@ -367,17 +474,33 @@ router.get('/verify', async (req: AuthRequest, res: Response) => {
     const decoded = verifyAccessToken(token);
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
-      select: { id: true, name: true, email: true, role: true, adminScope: true, status: true, tokenVersion: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        roleId: true,
+        permissionsVersion: true,
+        adminScope: true,
+        status: true,
+        isActive: true,
+      },
     });
 
-    if (!user || user.status !== 'active' || user.tokenVersion !== decoded.authVersion) {
+    if (
+      !user ||
+      user.status !== 'active' ||
+      !user.isActive ||
+      user.roleId !== decoded.roleId ||
+      user.permissionsVersion !== decoded.permissionsVersion
+    ) {
       return res.status(401).json({
         success: false,
         message: 'User not found',
       });
     }
 
-    const { status: _status, tokenVersion: _tokenVersion, ...publicUser } = user;
+    const { status: _status, roleId: _roleId, permissionsVersion: _permissionsVersion, ...publicUser } = user;
 
     res.json({
       success: true,
@@ -407,17 +530,33 @@ router.get('/me', async (req: AuthRequest, res: Response) => {
     const decoded = verifyAccessToken(token);
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
-      select: { id: true, name: true, email: true, role: true, status: true, adminScope: true, tokenVersion: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        roleId: true,
+        permissionsVersion: true,
+        status: true,
+        isActive: true,
+        adminScope: true,
+      },
     });
 
-    if (!user || user.status !== 'active' || user.tokenVersion !== decoded.authVersion) {
+    if (
+      !user ||
+      user.status !== 'active' ||
+      !user.isActive ||
+      user.roleId !== decoded.roleId ||
+      user.permissionsVersion !== decoded.permissionsVersion
+    ) {
       return res.status(401).json({
         success: false,
         message: 'User not found',
       });
     }
 
-    const { tokenVersion: _tokenVersion, ...publicUser } = user;
+    const { roleId: _roleId, permissionsVersion: _permissionsVersion, ...publicUser } = user;
 
     res.json({
       success: true,
@@ -481,7 +620,10 @@ router.post('/google', authLimiter, async (req: Request, res: Response) => {
     }
 
     // Generate JWT token
-    const tokens = await createSessionTokens(user);
+    const tokens = await createSessionTokens(user, {
+      ipAddress: getIp(req),
+      userAgent: req.get('user-agent') || null,
+    });
 
     res.json({
       success: true,
@@ -490,6 +632,7 @@ router.post('/google', authLimiter, async (req: Request, res: Response) => {
         id: user.id,
         name: user.name,
         email: user.email,
+        username: user.username,
         role: user.role,
         ...tokens,
       },

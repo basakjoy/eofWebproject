@@ -27,6 +27,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supportApi } from '@/lib/supportApi';
 import { useAuthStore } from '@/store/authStore';
 import Link from 'next/link';
+import { hasAdminPermission } from '@/lib/authUtils';
 
 interface TicketUser {
   id: string;
@@ -75,6 +76,7 @@ const CANNED_REPLIES = [
 
 export default function AdminSupportPage() {
   const { user } = useAuthStore();
+  const canManageSupport = hasAdminPermission(user, 'manage_support');
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
   const [messages, setMessages] = useState<SupportMessage[]>([]);
@@ -187,6 +189,7 @@ export default function AdminSupportPage() {
   // Handle send message
   const handleSendMessage = async (e?: React.FormEvent, customText?: string) => {
     if (e) e.preventDefault();
+    if (!canManageSupport) return;
     const text = customText || replyInput;
     if (!text.trim() || !selectedTicket || isSending) return;
 
@@ -230,6 +233,7 @@ export default function AdminSupportPage() {
 
   // Handle status update
   const handleUpdateStatus = async (newStatus: SupportTicket['status']) => {
+    if (!canManageSupport) return;
     if (!selectedTicket) return;
     setIsUpdatingStatus(true);
     try {
@@ -472,7 +476,7 @@ export default function AdminSupportPage() {
                 </div>
 
                 {/* Status Action Buttons */}
-                <div className="flex items-center gap-2">
+                {canManageSupport && <div className="flex items-center gap-2">
                   {selectedTicket.status !== 'resolved' && selectedTicket.status !== 'closed' ? (
                     <button
                       onClick={() => handleUpdateStatus('resolved')}
@@ -492,7 +496,7 @@ export default function AdminSupportPage() {
                       <span>Re-open Ticket</span>
                     </button>
                   )}
-                </div>
+                </div>}
               </div>
 
               {/* Chat Message Stream */}
@@ -506,7 +510,7 @@ export default function AdminSupportPage() {
                   <div className="flex flex-col items-center justify-center h-full text-center text-slate-500">
                     <MessageSquare className="w-10 h-10 opacity-30 mb-2" />
                     <p className="text-sm font-medium text-slate-400">No messages yet in this ticket</p>
-                    <p className="text-xs text-slate-500 mt-1">Send a message below to start helping the client.</p>
+                    <p className="text-xs text-slate-500 mt-1">{canManageSupport ? 'Send a message below to start helping the client.' : 'This account has view-only access to support tickets.'}</p>
                   </div>
                 ) : (
                   messages.map((msg) => {
@@ -556,7 +560,7 @@ export default function AdminSupportPage() {
               </div>
 
               {/* Quick Canned Responses Bar */}
-              <div className="px-4 py-2 bg-[#090b14] border-t border-white/5 flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+              {canManageSupport && <div className="px-4 py-2 bg-[#090b14] border-t border-white/5 flex items-center gap-1.5 overflow-x-auto scrollbar-none">
                 <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold shrink-0 flex items-center gap-1">
                   <Sparkles className="w-3 h-3 text-indigo-400" /> Quick Replies:
                 </span>
@@ -570,10 +574,10 @@ export default function AdminSupportPage() {
                     {canned.label}
                   </button>
                 ))}
-              </div>
+              </div>}
 
               {/* Message Input Box */}
-              <div className="p-3.5 bg-[#0b0d17] border-t border-white/10">
+              {canManageSupport && <div className="p-3.5 bg-[#0b0d17] border-t border-white/10">
                 <form onSubmit={(e) => handleSendMessage(e)} className="flex items-center gap-2">
                   <input
                     type="text"
@@ -598,7 +602,7 @@ export default function AdminSupportPage() {
                     )}
                   </button>
                 </form>
-              </div>
+              </div>}
             </>
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-center p-8">

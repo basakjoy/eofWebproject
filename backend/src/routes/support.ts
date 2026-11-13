@@ -4,7 +4,8 @@ import { randomUUID } from 'crypto';
 import { z } from 'zod';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { createSharedRateLimitStore } from '../middleware/rateLimiter';
-import { verifyToken, AuthRequest as AuthMiddlewareRequest } from '../middleware/auth';
+import { verifyToken, AuthRequest as AuthMiddlewareRequest, isSuperAdminUser } from '../middleware/auth';
+import { Permission } from '../types/roles';
 
 const router = express.Router();
 
@@ -28,6 +29,22 @@ interface SuccessResponse<T> {
 // Roles allowed to act as support staff across the whole ticket system.
 // Match this to whatever your RBAC tiers are actually called.
 const SUPPORT_ROLES = new Set(['SUPER_ADMIN', 'ADMIN', 'SUPPORT_ADMIN', 'SUPPORT_AGENT']);
+
+const hasSupportViewAccess = (user: AuthRequest['user']) => {
+  if (!user) return false;
+  if (isSuperAdminUser(user)) return true;
+  if (!SUPPORT_ROLES.has(user.role.toUpperCase())) return false;
+  return !user.adminPermissionsConfigured ||
+    user.permissions.includes(Permission.VIEW_SUPPORT) ||
+    user.permissions.includes(Permission.MANAGE_SUPPORT);
+};
+
+const hasSupportManageAccess = (user: AuthRequest['user']) => {
+  if (!user) return false;
+  if (isSuperAdminUser(user)) return true;
+  if (!SUPPORT_ROLES.has(user.role.toUpperCase())) return false;
+  return !user.adminPermissionsConfigured || user.permissions.includes(Permission.MANAGE_SUPPORT);
+};
 
 // ---------- Validation schemas ----------
 
@@ -148,7 +165,7 @@ const validateParams = (schema: z.ZodSchema) => {
 };
 
 const requireSupportRole = (req: AuthRequest, res: Response, next: NextFunction) => {
-  if (!req.user || !SUPPORT_ROLES.has(req.user.role.toUpperCase())) {
+  if (!hasSupportViewAccess(req.user)) {
     return res.status(403).json({
       success: false,
       message: 'Support staff access required',
@@ -170,7 +187,6 @@ const requireTicketOwnerOrSupport = async (req: AuthRequest, res: Response, next
   try {
     const ticketId = req.params.id ?? req.params.ticketId;
     const userId = req.user?.userId;
-    const userRole = req.user?.role;
 
     if (!ticketId || !isPlausibleId(ticketId)) {
       return res.status(400).json({
@@ -203,9 +219,10 @@ const requireTicketOwnerOrSupport = async (req: AuthRequest, res: Response, next
     }
 
     const isOwner = ticket.userId === userId;
-    const isStaff = !!userRole && SUPPORT_ROLES.has(userRole.toUpperCase());
+    const canViewAsStaff = hasSupportViewAccess(req.user);
+    const isStaff = hasSupportManageAccess(req.user);
 
-    if (!isOwner && !isStaff) {
+    if (!isOwner && !canViewAsStaff) {
       return res.status(403).json({
         success: false,
         message: 'Forbidden',
@@ -485,12 +502,19 @@ router.put(
   requireTicketOwnerOrSupport,
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     const isStaff = (req as any).isSupportStaff;
+    const ticket = (req as any).ticket;
+    if (!isStaff && ticket.userId !== req.user!.userId) {
+      return res.status(403).json({ success: false, message: 'Support management access required' } as ErrorResponse);
+    }
     const schema = isStaff ? staffUpdateTicketSchema : ownerUpdateTicketSchema;
     return validateRequest(schema)(req, res, next);
   },
   async (req: AuthRequest, res: Response) => {
     try {
       const ticket = (req as any).ticket;
+      if (!(req as any).isSupportStaff && ticket.userId !== req.user!.userId) {
+        return res.status(403).json({ success: false, message: 'Support management access required' } as ErrorResponse);
+      }
       const isStaff = (req as any).isSupportStaff;
 
       if (!isStaff && ticket.status !== 'open') {
@@ -558,6 +582,9 @@ router.put(
   async (req: AuthRequest, res: Response) => {
     try {
       const ticket = (req as any).ticket;
+      if (!(req as any).isSupportStaff && ticket.userId !== req.user!.userId) {
+        return res.status(403).json({ success: false, message: 'Support management access required' } as ErrorResponse);
+      }
 
       if (ticket.status === 'closed') {
         return res.status(400).json({ success: false, message: 'Ticket is already closed' } as ErrorResponse);
@@ -611,6 +638,9 @@ router.post(
   async (req: AuthRequest, res: Response) => {
     try {
       const ticket = (req as any).ticket;
+      if (!(req as any).isSupportStaff && ticket.userId !== req.user!.userId) {
+        return res.status(403).json({ success: false, message: 'Support management access required' } as ErrorResponse);
+      }
 
       if (ticket.status === 'closed') {
         return res.status(400).json({

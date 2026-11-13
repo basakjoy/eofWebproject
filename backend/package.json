@@ -11,7 +11,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:push": "prisma db push",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "prisma:seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
@@ -28,6 +29,7 @@
     "nodemailer": "^10.1.0",
     "rate-limit-redis": "^6.0.1",
     "redis": "^6.3.0",
+    "socket.io": "^4.8.4",
     "ws": "^8.14.2",
     "zod": "^3.25.76"
   },

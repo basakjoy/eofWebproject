@@ -1,265 +1,186 @@
 import express, { NextFunction, Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
-import { createSharedRateLimitStore } from '../middleware/rateLimiter';
 import { z } from 'zod';
-import { verifyToken, AuthRequest } from '../middleware/auth';
+import { createSharedRateLimitStore } from '../middleware/rateLimiter';
+import { AuthRequest, verifyToken } from '../middleware/auth';
 import { requireSuperAdmin } from '../middleware/superadmin.middleware';
 import * as adminManagementService from '../services/adminManagementService';
-import { AdminScope } from '@prisma/client';
+import { Permission } from '../types/roles';
+import { verifyPasswordConfirmation } from '../modules/auth/reauth.service';
+import { logActivity } from '../middleware/adminActivityLogger';
+import { forceCloseAdminSessions } from '../websocket/adminPresence';
 
 const router = express.Router();
 
-
-const adminManagementLimiter = rateLimit({
-  store: createSharedRateLimitStore('rl:admin-management:'),
+const adminManagementWriteLimiter = rateLimit({
+  store: createSharedRateLimitStore('rl:admin-management-write:'),
   windowMs: 15 * 60 * 1000,
-  limit: 10,
+  limit: 30,
   standardHeaders: true,
   legacyHeaders: false,
-  message:
-    {
-      success: false,
-      message: 'Too many admin management requests. Please try again later.',
-    },
+  message: { success: false, message: 'Too many admin changes. Please try again later.' },
 });
 
-router.use(adminManagementLimiter);
+const createAdminSchema = z.object({
+  username: z.string().trim().min(3).max(32).regex(/^[a-zA-Z0-9._-]+$/),
+  password: z.string().min(12).max(72),
+  passwordConfirm: z.string().min(1).max(72),
+  role: z.enum(['admin', 'super_admin']).default('super_admin'),
+  permissions: z.array(z.nativeEnum(Permission)).max(30).default([]),
+}).strict();
 
-// Validation schemas
-const grantAdminSchema = z.object({
-  email: z.string().email('Invalid email address').toLowerCase().trim(),
-  scope: z.enum(['SIGNAL_ADMIN', 'CONTENT_ADMIN', 'SUPER_ADMIN']),
-});
+const updateAdminPermissionsSchema = z.object({
+  permissions: z.array(z.nativeEnum(Permission)).max(30),
+}).strict();
 
-const updateAdminScopeSchema = z.object({
-  scope: z.enum(['SIGNAL_ADMIN', 'CONTENT_ADMIN', 'SUPER_ADMIN']),
-});
+const updateAdminStatusSchema = z.object({
+  status: z.enum(['active', 'banned']),
+  passwordConfirm: z.string().min(1).max(72),
+}).strict();
 
-const revokeAdminSchema = z.object({
-  revertTo: z.string().min(1, 'Revert role is required'),
-});
-
-// userid route params should match your id. you can't update or delete your own admin access
-const userIdParamSchema = z.object({
-  userId: z.string().min(1, 'User ID is required'),
-
-});
-
-// Middleware to validate request body
-const validateBody = (schema: z.ZodSchema) => {
-  return (req: Request, res: Response, next: NextFunction ) => {
-  const result = schema.safeParse(req.body);
-  if (!result.success){
-   return res.status(400).json ({
-    success: false,
-    message: 'Invalid request parameters  ',
-    errors: result.error.issues.map ((e) => `${e.path.join('.')}: ${e.message}`),
-   });  
+router.get('/admins', verifyToken, requireSuperAdmin, async (_req: AuthRequest, res: Response) => {
+  const result = await adminManagementService.listAdmins();
+  if (!result.success) {
+    return res.status(500).json({ success: false, message: result.error });
   }
-  next();
-  };
-};
+  return res.json({ success: true, data: result.data });
+});
 
-// Validate route params against a schema
-const validateParams = (schema: z.ZodSchema) => {
-  return (req: Request, res: Response, next: NextFunction ) => {
-  const result = schema.safeParse(req.params);
-  if (!result.success){
-   return res.status(400).json ({  
-    success: false,
-    message: 'Invalid request parameters  ',
-    errors: result.error.issues.map ((e) => `${e.path.join('.')}: ${e.message}`),
-   });  
-  }
-  next();
-  };
-};
-
-// Block a super admin from revoking his own admin access
-// Prevent accidental self-lockout (at least two super admin must be active at all times) 
-// where a compromised session immediately revokes all admin access
-
-const blockSelfAction =(req: AuthRequest, res: Response, next: NextFunction) => {
-  const targetUserId = req.params.userId;
-  if (req.user?.userId && targetUserId && req.user.userId === targetUserId ) {
+router.post('/users', verifyToken, requireSuperAdmin, adminManagementWriteLimiter, logActivity('ADMIN_CREATE'), async (req: AuthRequest, res: Response, next: NextFunction) => {
+  const parsed = createAdminSchema.safeParse(req.body);
+  if (!parsed.success) {
     return res.status(400).json({
       success: false,
-      message: 'You cannot perform this action on yourself. Have another super admin to do it.',
+      message: 'Enter a valid username, account role, permissions, and a password of at least 12 characters.',
+      errors: parsed.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`),
     });
   }
-  next();
-};
-
-
-// Routes
-// GET /api/admin/management/admins - List all admins
-
-router.get('/admins', verifyToken, requireSuperAdmin, async (req: AuthRequest, res: Response) => {
+  if (!req.user?.userId) {
+    return res.status(401).json({ success: false, message: 'Unauthorized' });
+  }
+  let confirmed: boolean;
   try {
-    const result = await adminManagementService.listAdmins();
-
-    if (!result.success) {
-      return res.status(500).json({
-        success: false,
-        message: result.error,
-      });
-    }
-
-    return res.json({
-      success: true,
-      data: result.data,
+    confirmed = await verifyPasswordConfirmation({
+      actorId: req.user.userId,
+      passwordConfirm: parsed.data.passwordConfirm,
+      action: 'create-admin',
+      targetType: 'User',
+      ip: req.ip,
     });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
-    });
+  } catch (error) {
+    next(error);
+    return;
   }
+  if (!confirmed) {
+    return res.status(403).json({ success: false, message: 'Password confirmation failed' });
+  }
+
+  const result = await adminManagementService.createAdminUser(
+    parsed.data.username,
+    parsed.data.password,
+    parsed.data.role,
+    parsed.data.permissions,
+    req.user.userId
+  );
+  if (!result.success) {
+    return res.status(400).json({ success: false, message: result.error });
+  }
+  return res.status(201).json({ success: true, data: result.data });
 });
 
+router.patch('/admins/:userId/permissions', verifyToken, requireSuperAdmin, adminManagementWriteLimiter, logActivity('ADMIN_PERMISSIONS_CHANGE', (req) => req.params.userId), async (req: AuthRequest, res: Response) => {
+  const parsed = updateAdminPermissionsSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ success: false, message: 'Select valid admin permissions' });
+  }
+  if (!req.user?.userId) {
+    return res.status(401).json({ success: false, message: 'Unauthorized' });
+  }
 
-// POST /api/admin/management/admins - Grant admin access
- 
-router.post(
-  '/admins',
-  verifyToken,
-  requireSuperAdmin,
-  validateBody(grantAdminSchema),
-  async (req: AuthRequest, res: Response) => {
+  const result = await adminManagementService.updateAdminPermissions(
+    req.params.userId,
+    parsed.data.permissions,
+    req.user.userId
+  );
+  if (!result.success) {
+    return res.status(400).json({ success: false, message: result.error });
+  }
+  return res.json({ success: true, message: 'Admin permissions updated' });
+});
+
+router.patch('/admins/:userId/status', verifyToken, requireSuperAdmin, adminManagementWriteLimiter, logActivity('ADMIN_STATUS_CHANGE', (req) => req.params.userId), async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const parsed = updateAdminStatusSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ success: false, message: 'Invalid admin status' });
+  }
+  if (!req.user?.userId) {
+    return res.status(401).json({ success: false, message: 'Unauthorized' });
+  }
+  let confirmed: boolean;
+  try {
+    confirmed = await verifyPasswordConfirmation({
+      actorId: req.user.userId,
+      passwordConfirm: parsed.data.passwordConfirm,
+      action: parsed.data.status === 'banned' ? 'deactivate-user' : 'reactivate-user',
+      targetType: 'User',
+      targetId: req.params.userId,
+      ip: req.ip,
+    });
+  } catch (error) {
+    next(error);
+    return;
+  }
+  if (!confirmed) {
+    return res.status(403).json({ success: false, message: 'Password confirmation failed' });
+  }
+
+  const result = await adminManagementService.updateAdminStatus(
+    req.params.userId,
+    parsed.data.status,
+    req.user.userId
+  );
+  if (!result.success) {
+    return res.status(400).json({ success: false, message: result.error });
+  }
+  if (parsed.data.status === 'banned') {
     try {
-      const { email, scope } = req.body;
-
-      if (!req.user?.userId) {
-        return res.status(401).json({
-          success: false,
-          message: 'Unauthorized',
-        });
-      }
-
-      const result = await adminManagementService.grantAdminByEmail(
-        email,
-        scope as AdminScope,
-        req.user.userId
-      );
-
-      if (!result.success) {
-        return res.status(400).json({
-          success: false,
-          message: result.error,
-        });
-      }
-
-      return res.status(201).json({
-        success: true,
-        data: result.data,
-        message: `${email} promoted to ${scope}`,
-      });
-    } catch (error: any) {
-      res.status(500).json({
-        success: false,
-        message: 'Internal server error',
-        error: process.env.NODE_ENV === 'development' ? error.message : undefined,
-      });
+      await forceCloseAdminSessions(req.params.userId);
+    } catch (error) {
+      next(error);
+      return;
     }
   }
-);
+  return res.json({ success: true, message: 'Admin status updated' });
+});
 
-// PATCH /api/admin/management/admins/:userId - Update admin scope
- 
-router.patch(
-  '/admins/:userId',
-  verifyToken,
-  requireSuperAdmin,
-  validateParams(userIdParamSchema),
-  blockSelfAction,
-  validateBody(updateAdminScopeSchema),
-  async (req: AuthRequest, res: Response) => {
-    try {
-      const { userId } = req.params;
-      const { scope } = req.body;
-
-      if (!req.user?.userId) {
-        return res.status(401).json({
-          success: false,
-          message: 'Unauthorized',
-        });
-      }
-
-      const result = await adminManagementService.updateAdminScope(
-        userId,
-        scope as AdminScope,
-        req.user.userId
-      );
-
-      if (!result.success) {
-        return res.status(400).json({
-          success: false,
-          message: result.error,
-        });
-      }
-
-      return res.json({
-        success: true,
-        data: result.data,
-        message: `Admin scope updated to ${scope}`,
-      });
-    } catch (error: any) {
-      res.status(500).json({
-        success: false,
-        message: 'Internal server error',
-        error: process.env.NODE_ENV === 'development' ? error.message : undefined,
-      });
-    }
+router.get('/activity', verifyToken, requireSuperAdmin, async (req: Request, res: Response) => {
+  const querySchema = z.object({
+    limit: z.coerce.number().int().min(1).max(100).default(50),
+    offset: z.coerce.number().int().min(0).max(1_000_000).default(0),
+    adminId: z.string().min(1).optional(),
+    search: z.string().trim().min(1).max(150).optional(),
+  }).strict();
+  const parsed = querySchema.safeParse(req.query);
+  if (!parsed.success) {
+    return res.status(400).json({ success: false, message: 'Invalid activity filters' });
   }
-);
 
-//  DELETE /api/admin/management/admins/:userId - Revoke admin access
-
-router.delete(
-  '/admins/:userId',
-  verifyToken,
-  requireSuperAdmin,
-  validateParams(userIdParamSchema),
-  blockSelfAction,
-  validateBody(revokeAdminSchema),
-  async (req: AuthRequest, res: Response) => {
-    try {
-      const { userId } = req.params;
-      const { revertTo } = req.body;
-
-      if (!req.user?.userId) {
-        return res.status(401).json({
-          success: false,
-          message: 'Unauthorized',
-        });
-      }
-
-      const result = await adminManagementService.revokeAdmin(
-        userId,
-        revertTo,
-        req.user.userId
-      );
-
-      if (!result.success) {
-        return res.status(400).json({
-          success: false,
-          message: result.error,
-        });
-      }
-
-      return res.json({
-        success: true,
-        message: 'Admin access revoked',
-      });
-    } catch (error: any) {
-      res.status(500).json({
-        success: false,
-        message: 'Internal server error',
-        error: process.env.NODE_ENV === 'development' ? error.message : undefined,
-      });
-    }
+  try {
+    const result = await adminManagementService.listAdminActivity(
+      parsed.data.adminId,
+      parsed.data.search,
+      parsed.data.limit,
+      parsed.data.offset
+    );
+    return res.json({ success: true, ...result, limit: parsed.data.limit, offset: parsed.data.offset });
+  } catch (error) {
+    console.error('Failed to fetch super-admin admin activity', error);
+    return res.status(500).json({ success: false, message: 'Failed to fetch admin activity' });
   }
-);
+});
 
 export default router;

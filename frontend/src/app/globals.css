@@ -26,6 +26,35 @@
   --border-color: rgba(255, 255, 255, 0.08);
   --border-glow: rgba(255, 107, 0, 0.25);
 
+  /* Monument / Mono Typography System */
+  --font-poppins: var(--font-inter), 'Inter', 'Segoe UI', sans-serif;
+  --font-monument: var(--font-inter), 'Inter', 'Segoe UI', sans-serif;
+  --font-mono: var(--font-ibm-plex-mono), 'IBM Plex Mono', 'SFMono-Regular', monospace;
+  --text-caption: 10px;
+  --text-body: 14px;
+  --text-heading-sm: 24px;
+  --text-heading: 64px;
+  --text-display: 96px;
+
+  --spacing-4: 4px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-20: 20px;
+  --spacing-24: 24px;
+  --spacing-32: 32px;
+  --spacing-80: 80px;
+  --spacing-100: 100px;
+  --spacing-148: 148px;
+  --spacing-200: 200px;
+  --spacing-240: 240px;
+
+  --radius-tag: 8px;
+  --radius-card: 16px;
+  --radius-pill: 40.798px;
+  --radius-button: 8px;
+  --radius-large-card: 24px;
+
   /* Sidebar */
   --sidebar-background: #0A0A0E;
   --sidebar-foreground: #FFFFFF;
@@ -46,29 +75,78 @@ body,
 html {
   background-color: #050508;
   color: #FFFFFF;
-  font-family: var(--font-poppins), 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-monument);
 }
 
 body {
   background-color: #050508;
   color: #FFFFFF;
-  font-family: var(--font-poppins), 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-monument);
+  font-size: var(--text-body);
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  font-feature-settings: "ss01" on, "ss02" on;
   font-smooth: antialiased;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
+}
+
+.font-poppins,
+.font-sans,
+body,
+html,
+button,
+input,
+textarea,
+select {
+  font-family: var(--font-poppins), 'Inter', 'Segoe UI', sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.heading,
+.display {
+  font-family: var(--font-monument);
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+h1 { font-size: var(--text-heading); }
+h2 { font-size: var(--text-heading-sm); }
+h3, h4, h5, h6 { font-size: 1.5rem; }
+
+small,
+.caption,
+.label,
+.meta,
+.tag,
+.nav-item,
+.mono,
+.font-mono,
+code,
+pre,
+kbd,
+var {
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
 }
 
 /* Multilingual Font Families & Typography */
 html[lang="bn"] body,
 body.font-bengali,
 [lang="bn"] {
-  font-family: var(--font-noto-bengali), 'Hind Siliguri', 'Kalpurush', var(--font-poppins), sans-serif;
+  font-family: var(--font-noto-bengali), 'Hind Siliguri', 'Kalpurush', var(--font-monument), sans-serif;
 }
 
 html[lang="hi"] body,
 body.font-devanagari,
 [lang="hi"] {
-  font-family: var(--font-noto-devanagari), 'Noto Sans Devanagari', var(--font-poppins), sans-serif;
+  font-family: var(--font-noto-devanagari), 'Noto Sans Devanagari', var(--font-monument), sans-serif;
 }
 
 html[lang="ur"] body,

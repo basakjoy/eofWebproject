@@ -8,7 +8,10 @@ interface Signal {
   entryPrice: number;
   stopLoss: number;
   takeProfit?: number;
-  // takeProfits: number[];
+  takeProfit1?: number | null;
+  takeProfit2?: number | null;
+  takeProfit3?: number | null;
+  takeProfits?: number[];
   status: string;
   createdAt: string;
   accuracy?: number;

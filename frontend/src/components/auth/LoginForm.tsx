@@ -7,7 +7,7 @@ import Button from '@/components/common/Button';
 import Alert from '@/components/common/Alert';
 import { useAuthStore } from '@/store/authStore';
 import { authApi } from '@/lib/authApi';
-import { normalizeAuthUser } from '@/lib/authUtils';
+import { getDashboardPath, normalizeAuthUser } from '@/lib/authUtils';
 import { signIn } from 'next-auth/react';
 import { Eye, EyeOff, Lock, Mail, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
@@ -45,26 +45,13 @@ export default function LoginForm() {
     if (error) setError('');
   };
 
-  const handleRoleRedirect = (role?: string) => {
-    const normalizedRole = String(role || '').toLowerCase();
-    if (normalizedRole === 'admin' || normalizedRole === 'superadmin') {
-      router.push('/admin');
-    } else if (normalizedRole === 'investor') {
-      router.push('/dashboard/investments');
-    } else if (normalizedRole === 'premium') {
-      router.push('/dashboard/premium');
-    } else {
-      router.push('/dashboard/user');
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const email = formData.email.trim().toLowerCase();
+    const identifier = formData.email.trim().toLowerCase();
     const password = formData.password;
 
-    if (!email || !password) {
-      setError('Please enter both your email and password.');
+    if (!identifier || !password) {
+      setError('Please enter your username or email and password.');
       return;
     }
 
@@ -72,7 +59,7 @@ export default function LoginForm() {
     setError('');
 
     try {
-      const response = await authApi.login({ email, password });
+      const response = await authApi.login({ identifier, password });
       const { data } = response;
       if (!data?.token) {
         throw new Error('The server did not return an authentication token.');
@@ -84,7 +71,7 @@ export default function LoginForm() {
 
       // Save or remove remembered email preference
       if (rememberMe) {
-        localStorage.setItem('rememberEmail', email);
+        localStorage.setItem('rememberEmail', identifier);
       } else {
         localStorage.removeItem('rememberEmail');
       }
@@ -93,7 +80,7 @@ export default function LoginForm() {
       setSession(token, user);
 
       // Smoothly navigate to the appropriate dashboard
-      handleRoleRedirect(user.role);
+      router.push(getDashboardPath(user));
     } catch (err: any) {
       const msg =
         err.response?.data?.message ||
@@ -117,7 +104,7 @@ export default function LoginForm() {
         const token = authApi.getToken();
         if (user && token) {
           setSession(token, user);
-          handleRoleRedirect(user.role);
+          router.push(getDashboardPath(user));
         } else {
           router.push('/dashboard/user');
         }
@@ -137,21 +124,23 @@ export default function LoginForm() {
         </div>
       )}
 
+     
+
       <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Email Field */}
+        {/* Username or email */}
         <div className="space-y-1.5">
           <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-            {t('auth.emailAddress', 'Email Address')}
+            Username or email
           </label>
           <div className="relative flex items-center">
             <Mail className="absolute left-3.5 w-4 h-4 text-gray-400 pointer-events-none" />
             <input
-              type="email"
+              type="text"
               name="email"
-              placeholder="name@example.com"
+              placeholder="username or name@example.com"
               value={formData.email}
               onChange={handleChange}
-              autoComplete="email"
+              autoComplete="username"
               autoCapitalize="none"
               spellCheck={false}
               required

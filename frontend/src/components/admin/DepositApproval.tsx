@@ -6,6 +6,8 @@ import Badge from '@/components/common/Badge';
 import { Check, Eye, RefreshCw, X } from 'lucide-react';
 import { transactionsApi } from '@/lib/transactionsApi';
 import { useLanguage } from '@/context/LanguageContext';
+import { hasAdminPermission } from '@/lib/authUtils';
+import { useAuthStore } from '@/store/authStore';
 
 type Deposit = {
   id: string;
@@ -25,6 +27,8 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 };
 
 export default function DepositApproval() {
+  const user = useAuthStore((state) => state.user);
+  const canManageDeposits = hasAdminPermission(user, 'manage_deposits');
   const [deposits, setDeposits] = useState<Deposit[]>([]);
   const [page, setPage] = useState(0);
   const [total, setTotal] = useState(0);
@@ -111,7 +115,7 @@ export default function DepositApproval() {
                   />
                 </td>
                 <td className="flex gap-2 px-4 py-3">
-                  {deposit.status === 'pending' && (
+                  {canManageDeposits && deposit.status === 'pending' && (
                     <>
                       <button
                         onClick={() => void updateStatus(deposit.id, 'completed')}

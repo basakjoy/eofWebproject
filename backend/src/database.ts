@@ -126,6 +126,7 @@ export const seedInitialData = async () => {
             data: {
               id: randomUUID(),
               name: perm.name,
+              key: perm.name,
               description: perm.description,
               resource: perm.resource,
               action: perm.action,
@@ -205,4 +206,3 @@ export const seedInitialData = async () => {
 
 // Export prisma client for direct use in models and controllers
 export { prisma };
-

@@ -488,8 +488,7 @@ export default function UserDashboard() {
                   </tr>
                 ) : (
                   signals.map(signal => {
-                    const tpArr = (signal as any).takeProfits ?? [];
-                    const tp = tpArr[0] ?? (signal as any).takeProfit ?? null;
+                    const tp = signal.takeProfit1 ?? signal.takeProfit ?? null;
                     return (
                       <tr
                         key={signal.id}

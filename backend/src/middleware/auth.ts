@@ -1,23 +1,43 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../database';
 import { getPermissionsForRole, Permission } from '../types/roles';
-import { verifyAccessToken } from '../lib/tokens';
+import { isAdminAccount, verifyAccessToken } from '../lib/tokens';
 
 export interface AuthRequest extends Request {
+  sessionId?: string;
   user?: {
     userId: string;
-    email: string;
+    email: string | null;
     name: string;
     role: string;
     roleId: string;
     adminScope?: string;
+    adminPermissionsConfigured: boolean;
     permissions: Permission[];
   };
 }
 
+export const isSuperAdminUser = (
+  user: Pick<NonNullable<AuthRequest['user']>, 'role' | 'adminScope'> | null | undefined
+): boolean =>
+  Boolean(user && (
+    user.role === 'super_admin' ||
+    user.role === 'superadmin' ||
+    (user.role === 'admin' && user.adminScope?.toUpperCase() === 'SUPER_ADMIN')
+  ));
+
 export const getBearerToken = (req: Request): string | undefined => {
   const match = /^Bearer\s+([^\s]+)$/i.exec(req.headers.authorization || '');
   return match?.[1];
+};
+
+export const getIp = (req: Request): string | null => {
+  const forwardedFor = req.headers['x-forwarded-for'];
+  const forwarded = (Array.isArray(forwardedFor) ? forwardedFor[0] : forwardedFor)
+    ?.split(',')
+    .map((address) => address.trim())
+    .filter(Boolean);
+  return req.ip || forwarded?.[0] || req.socket.remoteAddress || null;
 };
 
 /**
@@ -39,6 +59,16 @@ export const verifyToken = async (
     }
 
     const decoded = verifyAccessToken(token);
+    if (decoded.sid) {
+      const session = await prisma.adminSession.findUnique({
+        where: { id: decoded.sid },
+        select: { adminId: true, logoutAt: true },
+      });
+      if (!session || session.adminId !== decoded.userId || session.logoutAt) {
+        return res.status(401).json({ success: false, message: 'Admin session is closed or invalid' });
+      }
+      req.sessionId = decoded.sid;
+    }
 
     // Get user from database
     const user = await prisma.user.findUnique({
@@ -52,11 +82,20 @@ export const verifyToken = async (
               }
             }
           }
-        }
+        },
+        adminPermissions: true,
       }
     });
 
-    if (!user || user.status !== 'active' || user.tokenVersion !== decoded.authVersion) {
+    if (
+      !user ||
+      user.status !== 'active' ||
+      !user.isActive ||
+      user.roleId !== decoded.roleId ||
+      user.permissionsVersion !== decoded.permissionsVersion ||
+      (isAdminAccount(user) && decoded.sid === undefined) ||
+      (decoded.sid !== undefined && !isAdminAccount(user))
+    ) {
       return res.status(401).json({
         success: false,
         message: 'Invalid or revoked token'
@@ -65,7 +104,9 @@ export const verifyToken = async (
 
     // Extract permissions
     let permissions: Permission[] = [];
-    if (user.userRole && user.userRole.rolePermissions) {
+    if (user.adminPermissionsConfigured) {
+      permissions = user.adminPermissions.map(({ permission }) => permission as Permission);
+    } else if (user.userRole && user.userRole.rolePermissions) {
       permissions = user.userRole.rolePermissions.map((rp: any) => rp.permission.name as Permission);
     } else {
       // Fallback if role is predefined or role relation is missing
@@ -79,6 +120,7 @@ export const verifyToken = async (
       role: user.role,
       roleId: user.roleId || '',
       adminScope: user.adminScope || undefined,
+      adminPermissionsConfigured: user.adminPermissionsConfigured,
       permissions
     };
 
@@ -110,12 +152,43 @@ export const requirePermission = (requiredPermission: Permission) => {
       });
     }
 
-    if (!req.user.permissions.includes(requiredPermission)) {
+    if (!isSuperAdminUser(req.user) && !req.user.permissions.includes(requiredPermission)) {
       return res.status(403).json({
         success: false,
         message: 'Insufficient permissions',
         requiredPermission,
         userPermissions: req.user.permissions
+      });
+    }
+
+    next();
+  };
+
+};
+
+export const requireAdminCapability = (
+  requiredPermission: Permission | Permission[],
+  allowedRoles: string[] = ['admin']
+) => {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: 'User not authenticated' });
+    }
+
+    if (isSuperAdminUser(req.user)) return next();
+
+    const isAdmin = allowedRoles.includes(req.user.role);
+    const requiredPermissions = Array.isArray(requiredPermission) ? requiredPermission : [requiredPermission];
+    const allowed = isAdmin && (
+      !req.user.adminPermissionsConfigured ||
+      requiredPermissions.some((permission) => req.user!.permissions.includes(permission))
+    );
+
+    if (!allowed) {
+      return res.status(403).json({
+        success: false,
+        message: 'Insufficient permissions',
+        requiredPermission: Array.isArray(requiredPermission) ? requiredPermissions : requiredPermissions[0],
       });
     }
 
@@ -135,7 +208,7 @@ export const requireAnyPermission = (requiredPermissions: Permission[]) => {
       });
     }
 
-    const hasPermission = requiredPermissions.some(perm =>
+    const hasPermission = isSuperAdminUser(req.user) || requiredPermissions.some((perm) =>
       req.user!.permissions.includes(perm)
     );
 
@@ -164,7 +237,7 @@ export const requireAllPermissions = (requiredPermissions: Permission[]) => {
       });
     }
 
-    const hasAllPermissions = requiredPermissions.every(perm =>
+    const hasAllPermissions = isSuperAdminUser(req.user) || requiredPermissions.every((perm) =>
       req.user!.permissions.includes(perm)
     );
 
@@ -197,7 +270,7 @@ export const requireRole = (allowedRoles: string[]) => {
     const hasRole = allowedRoles.includes(req.user.role);
     
     // Also check if user has SUPER_ADMIN scope (super admin can do everything)
-    const isSuperAdmin = req.user.adminScope === 'SUPER_ADMIN';
+    const isSuperAdmin = isSuperAdminUser(req.user);
 
     if (!hasRole && !isSuperAdmin) {
       return res.status(403).json({

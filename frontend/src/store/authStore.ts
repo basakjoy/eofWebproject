@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { User } from '@/types';
 import { clearAuthSession, normalizeAuthUser } from '@/lib/authUtils';
 import { signOut } from 'next-auth/react';
+import apiClient from '@/lib/api';
 
 interface AuthState {
   user: User | null;
@@ -60,6 +61,16 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ user: null, token: null, isAuthenticated: false, hasHydrated: true });
   },
   logout: async () => {
+    const token = typeof window !== 'undefined'
+      ? localStorage.getItem('token')
+      : null;
+    if (token) {
+      try {
+        await apiClient.post('/auth/logout');
+      } catch (error) {
+        console.error('Unable to close the server admin session during logout', error);
+      }
+    }
     set({ user: null, token: null, isAuthenticated: false });
     clearAuthSession();
     try {
@@ -72,4 +83,3 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 }));
-

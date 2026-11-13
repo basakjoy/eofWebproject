@@ -19,11 +19,19 @@ const handleError = (res: Response, error: any, fallbackMessage: string) => {
   res.status(500).json({ success: false, message: fallbackMessage });
 };
 
-// Only admins should ever bulk-view or manage other users' investments
-const isSelfOrAdmin = (req: AuthRequest, targetUserId: string) => {
-  const role = req.user?.role;
-  return req.user?.userId === targetUserId || role === 'SUPER_ADMIN' || role === 'SIGNAL_ADMIN';
+const hasInvestmentAdminAccess = (user: AuthRequest['user']): boolean => {
+  const role = user?.role.toLowerCase();
+  const scope = user?.adminScope?.toUpperCase();
+  return role === 'super_admin' ||
+    role === 'superadmin' ||
+    role === 'signal_admin' ||
+    scope === 'SUPER_ADMIN' ||
+    scope === 'SIGNAL_ADMIN';
 };
+
+// Only administrators should bulk-view or manage other users' investments.
+const isSelfOrAdmin = (req: AuthRequest, targetUserId: string) =>
+  req.user?.userId === targetUserId || hasInvestmentAdminAccess(req.user);
 
 const distributeProfitLimiter = rateLimit({
   store: createSharedRateLimitStore('rl:profit-distribution:'),
@@ -82,18 +90,16 @@ router.get('/', async (req: AuthRequest, res: Response) => {
     const limit = Math.min(parseInt(String(req.query.limit)) || 20, 100);
     const offset = Math.min(Math.max(parseInt(String(req.query.offset)) || 0, 0), 10_000);
 
-    const role = req.user?.role;
-    const isAdmin = role === 'SUPER_ADMIN' || role === 'SIGNAL_ADMIN';
+    const isAdmin = hasInvestmentAdminAccess(req.user);
 
-    const where: any = {};
-    if (isAdmin && req.query.userId) {
-      where.userId = String(req.query.userId);
+    const where: Prisma.InvestmentWhereInput = {};
+    if (isAdmin) {
+      if (req.query.userId) where.userId = String(req.query.userId);
     } else {
-      
-      where.userId = req.user.userId;
+      where.userId = req.user!.userId;
     }
-    if (status) where.status = String(status);
-    if (plan) where.plan = String(plan);
+    if (typeof status === 'string') where.status = status;
+    if (typeof plan === 'string') where.plan = plan;
 
     const [investments, total] = await Promise.all([
       prisma.investment.findMany({
@@ -101,6 +107,9 @@ router.get('/', async (req: AuthRequest, res: Response) => {
         take: limit,
         skip: offset,
         orderBy: { createdAt: 'desc' },
+        include: {
+          user: { select: { id: true, name: true } },
+        },
       }),
       prisma.investment.count({ where }),
     ]);
