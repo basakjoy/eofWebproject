@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { getLocalizedPath, useLanguage } from '@/context/LanguageContext';
+import { getDashboardPath } from '@/lib/authUtils';
 
 export default function BottomNavbar() {
   const [isVisible, setIsVisible] = useState(false);
@@ -122,7 +123,7 @@ export default function BottomNavbar() {
             <div className="flex items-center gap-1.5 pl-1 sm:pl-0">
               {isAuthenticated && user ? (
                 <Link
-                  href={user.role === 'admin' ? '/admin/dashboard' : '/dashboard/user'}
+                  href={getDashboardPath(user)}
                   className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white text-black hover:bg-gray-200 text-xs font-semibold transition-all shadow-sm group"
                   title="Go to Dashboard"
                 >

@@ -6,6 +6,7 @@ import { AdminHeader } from "@/components/admin/AdminHeader";
 import styles from "./admin.module.css";
 import "../midnight-theme.css";
 import { useRequireAdmin } from "@/hooks/useRequireAuth";
+import { useAdminHeartbeat, usePageTracker } from "@/hooks/useAdminSessionTracking";
 
 
 export default function AdminLayout({
@@ -14,6 +15,8 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const { isAuthorized } = useRequireAdmin();
+  usePageTracker();
+  useAdminHeartbeat();
   const [collapsed, setCollapsed] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 

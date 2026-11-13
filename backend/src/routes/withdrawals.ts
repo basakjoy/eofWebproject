@@ -3,7 +3,7 @@ import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import { createSharedRateLimitStore } from '../middleware/rateLimiter';
 import { z } from "zod";
 import { verifyToken, AuthRequest } from "../middleware/auth";
-import { validateWithdrawalRequest, requireWithdrawalAdmin } from "../middleware/withdrawals.middleware";
+import { validateWithdrawalRequest, requireWithdrawalAdmin, requireWithdrawalViewer } from "../middleware/withdrawals.middleware";
 import * as withdrawalsController from '../controllers/withdrawals.controller';
 
 const router = express.Router();
@@ -45,11 +45,11 @@ function validateParams(schema: z.ZodTypeAny) {
     };
 }
 
-router.get('/', verifyToken, requireWithdrawalAdmin, withdrawalsController.getAllWithdrawals);
+router.get('/', verifyToken, requireWithdrawalViewer, withdrawalsController.getAllWithdrawals);
 
 router.get('/methods/list', verifyToken, withdrawalsController.getWithdrawalMethods);
 router.get('/accounts/my-accounts', verifyToken, withdrawalsController.getUserWithdrawalAccounts);
-router.get('/report/:period', verifyToken, requireWithdrawalAdmin, validateParams(periodParamSchema), withdrawalsController.getWithdrawalReport);
+router.get('/report/:period', verifyToken, requireWithdrawalViewer, validateParams(periodParamSchema), withdrawalsController.getWithdrawalReport);
 router.post('/method', verifyToken, requireWithdrawalAdmin, withdrawalsController.addWithdrawalMethod);
 
 router.get('/:id', verifyToken, validateParams(idParamSchema), withdrawalsController.getWithdrawalById);

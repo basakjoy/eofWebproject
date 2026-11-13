@@ -13,8 +13,9 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        sans: ['var(--font-poppins)', 'Poppins', 'sans-serif'],
-        poppins: ['var(--font-poppins)', 'Poppins', 'sans-serif'],
+        sans: ['var(--font-poppins)', 'Inter', 'Segoe UI', 'sans-serif'],
+        poppins: ['var(--font-poppins)', 'Inter', 'Segoe UI', 'sans-serif'],
+        mono: ['var(--font-mono)', 'IBM Plex Mono', 'SFMono-Regular', 'monospace'],
       },
       colors: {
         primary: '#FF6B00',

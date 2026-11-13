@@ -1,36 +1,52 @@
 'use client';
 
-import { Crown, Zap, Shield, UserCheck, BarChart, Gem } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { Crown, Zap, Shield, UserCheck, BarChart, Gem, Check, ArrowRight, Sparkles } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
+import Link from 'next/link';
 
 export default function PremiumAccountSection() {
   const { t } = useLanguage();
+  const [selectedTier, setSelectedTier] = useState<'gold' | 'obsidian'>('gold');
 
-  const benefits = [
-    {
-      icon: Shield,
-      title: t('premiumAccount.benefit1Title', 'Priority Access'),
-      desc: t('premiumAccount.benefit1Desc', 'Concierge-level support 24/7.')
+  const tierData = {
+    gold: {
+      name: 'Gold Sovereign',
+      tagline: 'High-Volume Institutional Trader',
+      split: '85% Profit Retention',
+      gemColor: 'text-[#FF8C00]',
+      cardBorder: 'border-[#FF6B00]/30 hover:border-[#FF6B00]/60',
+      badgeGradient: 'from-[#FF6B00] to-[#FFb800]',
+      glowColor: 'bg-[#FF6B00]/20',
+      slots: '9 Slots Left This Month',
+      perks: [
+        'Zero-latency private VPS direct connection',
+        'Direct Telegram/WhatsApp VIP Desk',
+        '85% Bi-Weekly Profit Split',
+        'Concierge risk management review',
+      ],
     },
-    {
-      icon: BarChart,
-      title: t('premiumAccount.benefit2Title', 'Zero Spreads'),
-      desc: t('premiumAccount.benefit2Desc', 'Trade with institutional liquidity.')
+    obsidian: {
+      name: 'Black Obsidian VIP',
+      tagline: 'Family Office & Elite Syndicate',
+      split: '90% Profit Retention',
+      gemColor: 'text-cyan-400',
+      cardBorder: 'border-cyan-500/30 hover:border-cyan-500/60',
+      badgeGradient: 'from-cyan-500 via-blue-500 to-indigo-500',
+      glowColor: 'bg-cyan-500/20',
+      slots: 'Strictly 3 Slots Remaining',
+      perks: [
+        'Dedicated Institutional Portfolio Director',
+        'Full 90% Weekly Profit Retention',
+        'Institutional API & FIX Protocol gateway',
+        'Custom algorithmic strategy tailoring',
+      ],
     },
-    {
-      icon: UserCheck,
-      title: t('premiumAccount.benefit3Title', 'VIP Manager'),
-      desc: t('premiumAccount.benefit3Desc', 'Personal guide for your portfolio.')
-    },
-    {
-      icon: Gem,
-      title: t('premiumAccount.benefit4Title', 'Exclusive Alpha'),
-      desc: t('premiumAccount.benefit4Desc', 'Access to private signal channels.')
-    },
-  ];
+  };
 
-  // Real photo avatars for the "Elite Ecosystem" member cluster
+  const current = tierData[selectedTier];
+
   const eliteMemberAvatars = [
     'https://randomuser.me/api/portraits/men/22.jpg',
     'https://randomuser.me/api/portraits/women/28.jpg',
@@ -39,127 +55,189 @@ export default function PremiumAccountSection() {
   ];
 
   return (
-    <section className="py-24 bg-[#030305] relative border-y border-white/[0.05] overflow-hidden">
-      {/* Fiery Radial Glow, matching IntroSection / LiveSignalsSection */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-gradient-to-br from-[#FF6B00]/[0.06] via-[#FFb800]/[0.03] to-transparent blur-[150px] rounded-full pointer-events-none" />
-      <div className="absolute -top-32 right-[-15%] w-[700px] h-[700px] bg-[#FF3D00]/[0.06] rounded-full blur-[150px] mix-blend-screen pointer-events-none" />
+    <section className="py-24 sm:py-36 bg-[#030305] relative border-y border-white/[0.06] overflow-hidden">
+      {/* Dynamic ambient lights */}
+      <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] ${current.glowColor} blur-[160px] rounded-full transition-colors duration-700 pointer-events-none`} />
 
-      <div className="container mx-auto px-6 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <div className="max-w-site mx-auto px-4 sm:px-6 relative z-10">
+        
+        {/* Tier Switcher Pills */}
+        <div className="flex justify-center mb-12 sm:mb-16">
+          <div className="inline-flex p-1.5 rounded-full bg-white/[0.03] border border-white/10 backdrop-blur-xl shadow-2xl">
+            <button
+              onClick={() => setSelectedTier('gold')}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold transition-all ${
+                selectedTier === 'gold'
+                  ? 'bg-gradient-to-r from-[#FF6B00] to-[#FFb800] text-black shadow-[0_0_20px_rgba(255,107,0,0.4)]'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              <Gem size={14} />
+              <span>Gold Sovereign Tier</span>
+            </button>
+            <button
+              onClick={() => setSelectedTier('obsidian')}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold transition-all ${
+                selectedTier === 'obsidian'
+                  ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-black shadow-[0_0_20px_rgba(6,182,212,0.4)]'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              <Crown size={14} />
+              <span>Black Obsidian VIP</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 sm:gap-16 items-center">
           
-          {/* Left: Luxury Card Showcase */}
+          {/* Left: Interactive 3D Luxury Holographic Card (5 cols) */}
           <motion.div 
-            initial={{ opacity: 0, scale: 0.9, rotate: -2 }}
-            whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="flex justify-center order-2 lg:order-1"
+            transition={{ duration: 0.7 }}
+            className="lg:col-span-5 flex justify-center order-2 lg:order-1"
           >
-            <div className="relative group max-w-md w-full">
-               <div className="absolute inset-0 bg-gradient-to-br from-[#FF6B00]/20 via-[#FF8C00]/10 to-transparent blur-[100px] group-hover:scale-125 transition-transform duration-1000" />
+            <div className="relative group max-w-sm w-full">
+              {/* Continuous subtle floating animation */}
+              <motion.div
+                animate={{ y: [-6, 6, -6] }}
+                transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
+                className="relative"
+              >
+                {/* Holographic Card Container */}
+                <div className={`relative aspect-[3/4.2] rounded-[40px] bg-[#0A0A10]/90 backdrop-blur-2xl border ${current.cardBorder} p-8 sm:p-10 flex flex-col justify-between overflow-hidden shadow-[0_30px_90px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.15)] transition-all duration-500`}>
+                  
+                  {/* Glass Top Edge Light */}
+                  <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+                  
+                  {/* Subtle Grid Texture */}
+                  <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #ffffff 1px, transparent 0)', backgroundSize: '24px 24px' }} />
 
-               {/* Continuous floating animation wrapper, matching IntroSection's token card */}
-               <motion.div
-                 animate={{ y: [-8, 8, -8] }}
-                 transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
-                 className="relative"
-               >
-                 <div className="relative aspect-[3/4] rounded-[50px] bg-[#0A0A0F] border border-[#FF6B00]/20 p-10 flex flex-col justify-between overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.1)]">
-                   {/* Subtle top-light gradient for glass edge reflection */}
-                   <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                   {/* Card Texture */}
-                   <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #FF8C00 1px, transparent 0)', backgroundSize: '24px 24px' }} />
-
-                   <div className="relative z-10">
-                     <Gem className="text-[#FF8C00] mb-6" size={48} />
-                     <h3 className="text-4xl font-semibold text-white uppercase tracking-tighter">
-                       {t('premiumAccount.badge', 'Gold Membership')}
-                     </h3>
-                   </div>
-
-                   <div className="relative z-10 space-y-4">
-                      <div className="h-0.5 w-12 bg-gradient-to-r from-[#FF6B00] to-[#FFb800]" />
-                      <p className="text-[#FF8C00]/70 uppercase tracking-[0.4em] text-xs">
-                        {t('premiumAccount.eliteEcosystem', 'Elite Ecosystem')}
-                      </p>
-                      <div className="flex items-center gap-3">
-                        <div className="flex -space-x-3">
-                           {eliteMemberAvatars.map((src, i) => (
-                             <motion.div
-                               key={i}
-                               initial={{ opacity: 0, scale: 0.6, y: 10 }}
-                               whileInView={{ opacity: 1, scale: 1, y: 0 }}
-                               viewport={{ once: true }}
-                               transition={{ delay: i * 0.12, duration: 0.5, ease: "easeOut" }}
-                               animate={{ y: [0, -4, 0] }}
-                               whileHover={{ scale: 1.15, zIndex: 20 }}
-                               style={{ animationDelay: `${i * 0.3}s` }}
-                               className="relative w-10 h-10 rounded-full border-2 border-[#0A0A0F] overflow-hidden shadow-[0_0_10px_rgba(255,107,0,0.25)] cursor-pointer"
-                             >
-                               <img className="w-full h-full object-cover" src={src} alt="Elite member" />
-                             </motion.div>
-                           ))}
-                        </div>
-                        <span className="text-[10px] font-bold text-zinc-500 tracking-wide">
-                          {t('premiumAccount.membersCount', '+2,400 members')}
-                        </span>
+                  {/* Card Top: Gem & Title */}
+                  <div className="relative z-10 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className={`w-14 h-14 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-center ${current.gemColor} shadow-inner`}>
+                        <Gem size={32} />
                       </div>
-                   </div>
-                 </div>
+                      <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400 px-3 py-1 rounded-full bg-white/[0.04] border border-white/10">
+                        {current.split}
+                      </span>
+                    </div>
 
-                 {/* Absolute Floating Badge */}
-                 <motion.div 
-                   animate={{ y: [0, -10, 0] }}
-                   transition={{ duration: 3, repeat: Infinity }}
-                   className="absolute -top-6 -right-6 px-6 py-3 rounded-2xl bg-gradient-to-r from-[#FF6B00] to-[#FFb800] text-black font-extrabold uppercase text-xs tracking-widest shadow-[0_0_20px_rgba(255,107,0,0.4)]"
-                 >
-                   {t('premiumAccount.limitedSlots', 'Limited Slots')}
-                 </motion.div>
-               </motion.div>
+                    <div>
+                      <h3 className="text-3xl font-extrabold text-white tracking-tight">
+                        {current.name}
+                      </h3>
+                      <p className="text-xs text-zinc-400 mt-1">
+                        {current.tagline}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Card Bottom: Member count & Ecosystem */}
+                  <div className="relative z-10 space-y-4 pt-6 border-t border-white/[0.06]">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-mono font-bold text-zinc-400 uppercase tracking-widest">
+                        Elite Syndicate
+                      </p>
+                      <span className="text-xs font-mono text-emerald-400 font-bold flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        Active
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="flex -space-x-3">
+                        {eliteMemberAvatars.map((src, i) => (
+                          <div key={i} className="w-9 h-9 rounded-full border-2 border-[#0A0A10] overflow-hidden shadow-md">
+                            <img className="w-full h-full object-cover" src={src} alt="Elite member" />
+                          </div>
+                        ))}
+                      </div>
+                      <span className="text-[11px] font-semibold text-zinc-400">
+                        +2,400 Institutional Seats
+                      </span>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Floating Slots Remaining Badge */}
+                <motion.div 
+                  animate={{ y: [0, -6, 0] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                  className={`absolute -top-4 -right-4 px-4 py-2 rounded-2xl bg-gradient-to-r ${current.badgeGradient} text-black font-extrabold text-[11px] tracking-wider uppercase shadow-[0_0_20px_rgba(255,107,0,0.4)] flex items-center gap-1.5`}
+                >
+                  <Sparkles size={12} />
+                  <span>{current.slots}</span>
+                </motion.div>
+              </motion.div>
             </div>
           </motion.div>
 
-          {/* Right: Pitch */}
+          {/* Right: Pitch & Benefits List (7 cols) */}
           <motion.div 
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            className="space-y-10 order-1 lg:order-2 text-center lg:text-left"
+            transition={{ duration: 0.7 }}
+            className="lg:col-span-7 space-y-8 order-1 lg:order-2 text-center lg:text-left"
           >
-            <div>
-              <span className="text-xs font-black text-[#FF8C00] uppercase tracking-[0.4em] block mb-4">
-                {t('premiumAccount.tierBadge', 'Elite Tier')}
+            <div className="space-y-4">
+              <span className="text-xs font-mono font-bold text-[#FF8C00] uppercase tracking-[0.3em] block">
+                {t('premiumAccount.tierBadge', 'Dedicated Private Capital Desks')}
               </span>
-              <h2 className="text-4xl md:text-5xl lg:text-6xl text-white leading-tight uppercase tracking-tighter">
+              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white tracking-tight leading-tight">
                 {t('premiumAccount.title', 'Sovereign')} <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] via-[#FF8C00] to-[#FFb800]">
                   {t('premiumAccount.titleHighlight', 'Financial Edge.')}
                 </span>
               </h2>
-              <p className="text-lg text-zinc-400 mt-6 max-w-lg mx-auto lg:mx-0 ">
-                {t('premiumAccount.description', 'Unlock the ultimate trading environment with personalized infrastructure, zero latency, and dedicated institutional insights.')}
+              <p className="text-base sm:text-lg text-zinc-300 max-w-xl mx-auto lg:mx-0 leading-relaxed font-light">
+                {t('premiumAccount.description', 'Unlock the ultimate high-frequency trading infrastructure with personalized risk limits, zero latency feeds, and dedicated account syndicates.')}
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-              {benefits.map((b, i) => {
-                const Icon = b.icon;
-                return (
-                  <div key={i} className="space-y-2">
-                    <div className="flex items-center gap-2 justify-center lg:justify-start text-[#FF8C00]">
-                       <Icon size={18} />
-                       <h4 className="text-sm font-semibold uppercase tracking-widest text-white">{b.title}</h4>
+            {/* Dynamic Perks Checklist */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              <AnimatePresence mode="wait">
+                {current.perks.map((perk, i) => (
+                  <motion.div
+                    key={`${selectedTier}-${i}`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3, delay: i * 0.08 }}
+                    className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/[0.02] border border-white/[0.05] text-left"
+                  >
+                    <div className="w-6 h-6 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+                      <Check size={14} />
                     </div>
-                    <p className="text-xs text-zinc-300">{b.desc}</p>
-                  </div>
-                );
-              })}
+                    <span className="text-xs sm:text-sm font-semibold text-zinc-200">
+                      {perk}
+                    </span>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
 
-            <div className="pt-6">
-               <button className="group relative px-6 sm:px-10 py-4 sm:py-6 bg-white text-black font-extrabold uppercase tracking-widest text-[10px] sm:text-sm rounded-full transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.15)] overflow-hidden">
-                 <span className="relative z-10">{t('premiumAccount.applyCta', 'Application for Tier 1 Access')}</span>
-                 <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-               </button>
+            <div className="pt-4 flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
+              <Link
+                href="/register"
+                className="group relative inline-flex items-center justify-center gap-3 px-8 sm:px-10 py-4 bg-white hover:bg-zinc-100 text-black font-extrabold text-sm rounded-full transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] shadow-[0_0_25px_rgba(255,255,255,0.2)]"
+              >
+                <span>Apply for {current.name}</span>
+                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              </Link>
+              
+              <Link
+                href="/trading-signals"
+                className="px-6 py-4 text-xs font-bold text-zinc-400 hover:text-white transition-colors"
+              >
+                Compare Tiers Breakdown →
+              </Link>
             </div>
           </motion.div>
 

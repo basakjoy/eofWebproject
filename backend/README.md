@@ -158,6 +158,60 @@ For production:
 4. Configure proper HTTPS
 5. Set up environment variables securely
 
+## Office RBAC
+
+The office RBAC layer uses the existing PostgreSQL/Prisma database. After deploying
+the migration, generate the Prisma client and seed the system roles and editable
+default permission matrix:
+
+```bash
+npm run prisma:generate
+npm run prisma:seed
+```
+
+Edit the typed matrix in `src/modules/rbac/permissions.config.ts`, then run the
+seed again to reconcile the role-permission mappings. System role names are
+stable; the seed does not rename or delete them.
+
+Apply pending migrations with `npx prisma migrate deploy` before generating the
+client and seeding. Office user-management endpoints are under
+`/api/office/users`; scoped team members are returned from `GET /api/office/team`.
+Effective UI permissions are returned from `GET /api/me/permissions`; the Next.js `<Can>`
+component is only a presentation helper, and all authorization is enforced by
+the backend. User-management requests require a bearer access token, and creating
+an Admin, changing a role, or activating/deactivating a user requires
+`passwordConfirm`.
+
+Access tokens contain the RBAC identity claims (`userId`, `roleId`, and
+`permissionsVersion`, in addition to standard JWT metadata). Admin tokens also
+contain a session ID (`sid`); refresh-token rotation preserves it.
+
+## Admin access logs
+
+Apply the `20261106120000_admin_access_logs` Prisma migration before deploying
+the updated API, then regenerate Prisma Client. The Super Admin-only Access
+Logs page is available at `/super-admin/access-logs`. Existing administrators
+must sign in again after deployment to receive a session-bound token.
+
+Configure `TRUST_PROXY_HOPS` to the number of trusted reverse proxies in front
+of the Render service (normally `1` when Render is the only proxy). The API
+uses the configured CORS origins for its Socket.IO presence channel. The
+frontend must have `NEXT_PUBLIC_API_URL` set to the API base URL (with or
+without `/api`); no additional credentials are needed.
+
+Admin sessions are timed out after two minutes without a heartbeat and the
+socket disconnect grace period is 60 seconds. Page-visit details are retained
+for 90 days; sessions and activities for one year. Sensitive-action logs only
+record a fixed action name, target identifier, IP, and timestamp—not request
+bodies or credentials. Suspicious admin sign-ins create in-app security
+notifications for active Super Admin accounts.
+
+```bash
+npx prisma migrate deploy
+npm run prisma:generate
+npm run build
+```
+
 ### Render sleep behavior
 
 Render Free web services sleep after a period without traffic. The API cannot

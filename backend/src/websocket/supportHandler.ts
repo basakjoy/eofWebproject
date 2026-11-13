@@ -155,10 +155,24 @@ export function setupSupportWebSocket(server: any) {
         // Fetch user from db
         const dbUser = await prisma.user.findUnique({
           where: { id: userId },
-          select: { id: true, name: true, role: true, status: true, tokenVersion: true },
+          select: {
+            id: true,
+            name: true,
+            role: true,
+            roleId: true,
+            permissionsVersion: true,
+            status: true,
+            isActive: true,
+          },
         });
 
-        if (!dbUser || dbUser.status !== 'active' || dbUser.tokenVersion !== decoded.authVersion) {
+        if (
+          !dbUser ||
+          dbUser.status !== 'active' ||
+          !dbUser.isActive ||
+          dbUser.roleId !== decoded.roleId ||
+          dbUser.permissionsVersion !== decoded.permissionsVersion
+        ) {
           console.warn('[WebSocket] User not found or inactive:', userId);
           socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
           socket.destroy();

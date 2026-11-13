@@ -22,9 +22,14 @@ import notificationsRoutes from './routes/notifications';
 import supportRoutes from './routes/support';
 import usersRoutes from './routes/users';
 import blogRoutes from './routes/blog';
+import adminAccessLogRoutes from './routes/admin-access-logs';
+import officeUsersRoutes from './modules/users/users.routes';
 import { setupSupportWebSocket } from './websocket/supportHandler';
+import { setupAdminPresenceSocket } from './websocket/adminPresence';
+import { startAdminAccessLogJobs } from './services/adminAccessLogJobs';
 import { prisma } from './database';
 import { resolveJwtSecret } from './lib/tokens';
+import { AuthRequest } from './middleware/auth';
 
 const app: Express = express();
 const PORT = process.env.PORT || 5000;
@@ -44,9 +49,27 @@ app.use(hpp());
 // Request logging middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
   const requestId = randomUUID();
+  const startedAt = Date.now();
   (req as Request & { requestId?: string }).requestId = requestId;
   res.setHeader('X-Request-Id', requestId);
   console.info(JSON.stringify({ level: 'info', event: 'http_request', requestId, method: req.method, path: req.path }));
+  const isTrackingRequest = ['/api/admin/heartbeat', '/api/admin/page-visit'].includes(req.path);
+  if (req.path.startsWith('/api/') && req.method !== 'OPTIONS' && !isTrackingRequest) {
+    res.on('finish', () => {
+      const authenticatedRequest = req as AuthRequest;
+      const actor = authenticatedRequest.user;
+      void prisma.log.create({
+        data: {
+          userId: actor?.userId,
+          action: `API_REQUEST ${req.method} ${req.path.slice(0, 300)} status=${res.statusCode} duration=${Date.now() - startedAt}ms`,
+          ipAddress: req.ip,
+          status: res.statusCode < 400 ? 'success' : 'failed',
+        },
+      }).catch((error: unknown) => {
+        console.error('Failed to record API activity', error);
+      });
+    });
+  }
   next();
 });
 
@@ -133,7 +156,9 @@ const startServer = async () => {
     app.use('/api/notifications', notificationsRoutes);
     app.use('/api/support', supportRoutes);
     app.use('/api/users', usersRoutes);
+    app.use('/api', officeUsersRoutes);
     app.use('/api/blog', blogRoutes);
+    app.use('/api', adminAccessLogRoutes);
 
     // 404 handler
     app.use((req: Request, res: Response) => {
@@ -166,9 +191,13 @@ const startServer = async () => {
     server.headersTimeout = 15_000;
     server.keepAliveTimeout = 5_000;
     const supportWss = setupSupportWebSocket(server);
+    const adminPresence = setupAdminPresenceSocket(server);
+    const stopAdminAccessLogJobs = startAdminAccessLogJobs();
 
     const shutdown = (signal: string) => {
       console.info(JSON.stringify({ level: 'info', event: 'shutdown_started', signal }));
+      stopAdminAccessLogJobs();
+      adminPresence.disconnectSockets(true);
       server.close(() => {
         supportWss.clients.forEach((client) => client.terminate());
         supportWss.close(() => {

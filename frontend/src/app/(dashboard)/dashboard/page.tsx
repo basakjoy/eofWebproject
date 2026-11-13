@@ -183,7 +183,7 @@ export default function UserDashboard() {
       await withdrawalsApi.requestWithdrawal({
         amount: Number(withdrawForm.amount),
         method: withdrawForm.method,
-        notes: withdrawForm.reason,
+        reason: withdrawForm.reason,
       });
       showToast(t('investments.withdrawSuccess', 'Withdrawal request submitted successfully!'), 'success');
       setShowWithdrawModal(false);

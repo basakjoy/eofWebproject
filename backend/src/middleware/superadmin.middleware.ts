@@ -1,5 +1,6 @@
 import { Response, NextFunction } from 'express';
-import { AuthRequest } from '../middleware/auth';
+import { AuthRequest, isSuperAdminUser } from '../middleware/auth';
+import { Permission } from '../types/roles';
 
 /**
  * Middleware to check if user is a SUPER_ADMIN
@@ -12,17 +13,10 @@ export const requireSuperAdmin = (req: AuthRequest, res: Response, next: NextFun
     });
   }
 
-  if (req.user.role !== 'admin') {
+  if (!isSuperAdminUser(req.user)) {
     return res.status(403).json({
       success: false,
-      message: 'Admin role required',
-    });
-  }
-
-  if ((req.user.adminScope || '').toUpperCase() !== 'SUPER_ADMIN') {
-    return res.status(403).json({
-      success: false,
-      message: 'Super admin scope required',
+      message: 'Super admin access required',
     });
   }
 
@@ -44,7 +38,7 @@ export const requireAdminScope = (requiredScopes: string | string[]) => {
       });
     }
 
-    if (req.user.role !== 'admin') {
+    if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
       return res.status(403).json({
         success: false,
         message: 'Admin role required',
@@ -52,11 +46,35 @@ export const requireAdminScope = (requiredScopes: string | string[]) => {
     }
 
     const userScope = String(req.user.adminScope || '').toUpperCase();
-    if (userScope === 'SUPER_ADMIN') {
+    if (isSuperAdminUser(req.user)) {
       return next();
     }
 
-    if (!normalizedScopes.includes(userScope)) {
+    const permissionByScope: Record<string, Permission[]> = {
+      SIGNAL_ADMIN: [
+        Permission.CREATE_SIGNAL,
+        Permission.VIEW_SIGNALS,
+        Permission.EDIT_SIGNALS,
+        Permission.DELETE_SIGNALS,
+      ],
+      CONTENT_ADMIN: [
+        Permission.MANAGE_ARTICLES,
+        Permission.VIEW_ARTICLES,
+        Permission.CREATE_INSIGHTS,
+        Permission.VIEW_INSIGHTS,
+        Permission.EDIT_INSIGHTS,
+        Permission.DELETE_INSIGHTS,
+      ],
+      BROKER_ADMIN: [Permission.MANAGE_BROKERS, Permission.VIEW_BROKERS],
+      DEPOSIT_ADMIN: [Permission.MANAGE_DEPOSITS, Permission.VIEW_DEPOSITS],
+      SUPPORT_ADMIN: [Permission.MANAGE_SUPPORT, Permission.VIEW_SUPPORT],
+    };
+    const hasScopePermission = req.user.adminPermissionsConfigured && normalizedScopes
+      .flatMap((scope) => permissionByScope[scope] || [])
+      .some((permission) => req.user!.permissions.includes(permission));
+
+    const hasLegacyScope = !req.user.adminPermissionsConfigured && normalizedScopes.includes(userScope);
+    if (!hasLegacyScope && !hasScopePermission) {
       return res.status(403).json({
         success: false,
         message: 'Insufficient admin scope',

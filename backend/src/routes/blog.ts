@@ -3,8 +3,9 @@ import multer from 'multer';
 import path from 'path';
 import { prisma } from '../database';
 import { randomUUID } from 'crypto';
-import { AuthRequest, verifyToken } from '../middleware/auth';
+import { AuthRequest, isSuperAdminUser, requireAnyPermission, requirePermission, verifyToken } from '../middleware/auth';
 import { requireAdminScope } from '../middleware/superadmin.middleware';
+import { Permission } from '../types/roles';
 
 const router = express.Router();
 
@@ -37,9 +38,31 @@ const upload = multer({
 const protectDraftListing = (req: Request, res: Response, next: express.NextFunction) => {
   if (req.query.published !== 'all') return next();
   verifyToken(req as AuthRequest, res, () =>
-    requireAdminScope(['CONTENT_ADMIN', 'SUPER_ADMIN'])(req as AuthRequest, res, next)
+    requireAdminScope(['CONTENT_ADMIN', 'SUPER_ADMIN'])(req as AuthRequest, res, () =>
+      requireAnyPermission([
+        Permission.VIEW_ARTICLES,
+        Permission.VIEW_INSIGHTS,
+        Permission.MANAGE_ARTICLES,
+        Permission.CREATE_INSIGHTS,
+        Permission.EDIT_INSIGHTS,
+        Permission.DELETE_INSIGHTS,
+      ])(req as AuthRequest, res, next)
+    )
   );
 };
+
+const canViewDrafts = (user: AuthRequest['user']) => Boolean(user && (
+  isSuperAdminUser(user) ||
+  (!user.adminPermissionsConfigured && ['CONTENT_ADMIN', 'SUPER_ADMIN'].includes(String(user.adminScope || '').toUpperCase())) ||
+  user.permissions.some((permission) => [
+    Permission.VIEW_ARTICLES,
+    Permission.VIEW_INSIGHTS,
+    Permission.MANAGE_ARTICLES,
+    Permission.CREATE_INSIGHTS,
+    Permission.EDIT_INSIGHTS,
+    Permission.DELETE_INSIGHTS,
+  ].includes(permission))
+));
 
 const optionalAuth = (req: Request, res: Response, next: express.NextFunction) => {
   if (!req.headers.authorization) return next();
@@ -146,7 +169,7 @@ router.get('/categories', async (_req: Request, res: Response) => {
 });
 
 // ─── POST /api/blog/upload — Admin: upload cover image ───────
-router.post('/upload', verifyToken, requireAdminScope(['CONTENT_ADMIN', 'SUPER_ADMIN']), upload.single('image'), async (req: Request, res: Response) => {
+router.post('/upload', verifyToken, requireAdminScope(['CONTENT_ADMIN', 'SUPER_ADMIN']), requirePermission(Permission.CREATE_INSIGHTS), upload.single('image'), async (req: Request, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'No image file provided' });
@@ -173,9 +196,7 @@ router.get('/:slug', optionalAuth, async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ success: false, message: 'Article not found' });
     }
 
-    const scope = String(req.user?.adminScope || '').toUpperCase();
-    const canViewDraft = req.user?.role === 'admin' && (scope === 'CONTENT_ADMIN' || scope === 'SUPER_ADMIN');
-    if (!article.published && !canViewDraft) {
+    if (!article.published && !canViewDrafts(req.user)) {
       return res.status(404).json({ success: false, message: 'Article not found' });
     }
 
@@ -198,7 +219,7 @@ router.get('/:slug', optionalAuth, async (req: AuthRequest, res: Response) => {
 });
 
 // ─── POST /api/blog — Admin: create article ─────────────────
-router.post('/', verifyToken, requireAdminScope(['CONTENT_ADMIN', 'SUPER_ADMIN']), async (req: Request, res: Response) => {
+router.post('/', verifyToken, requireAdminScope(['CONTENT_ADMIN', 'SUPER_ADMIN']), requirePermission(Permission.CREATE_INSIGHTS), async (req: Request, res: Response) => {
   try {
     const { title, category, content, keywords, imageUrl, published = false, authorId } = req.body;
 
@@ -243,7 +264,7 @@ router.post('/', verifyToken, requireAdminScope(['CONTENT_ADMIN', 'SUPER_ADMIN']
 });
 
 // ─── PUT /api/blog/:id — Admin: update article ──────────────
-router.put('/:id', verifyToken, requireAdminScope(['CONTENT_ADMIN', 'SUPER_ADMIN']), async (req: Request, res: Response) => {
+router.put('/:id', verifyToken, requireAdminScope(['CONTENT_ADMIN', 'SUPER_ADMIN']), requirePermission(Permission.EDIT_INSIGHTS), async (req: Request, res: Response) => {
   try {
     const { title, category, content, keywords, imageUrl, published } = req.body;
 
@@ -283,7 +304,7 @@ router.put('/:id', verifyToken, requireAdminScope(['CONTENT_ADMIN', 'SUPER_ADMIN
 });
 
 // ─── DELETE /api/blog/:id — Admin: delete article ───────────
-router.delete('/:id', verifyToken, requireAdminScope(['CONTENT_ADMIN', 'SUPER_ADMIN']), async (req: Request, res: Response) => {
+router.delete('/:id', verifyToken, requireAdminScope(['CONTENT_ADMIN', 'SUPER_ADMIN']), requirePermission(Permission.DELETE_INSIGHTS), async (req: Request, res: Response) => {
   try {
     const existing = await prisma.faqArticle.findUnique({ where: { id: req.params.id } });
     if (!existing) {

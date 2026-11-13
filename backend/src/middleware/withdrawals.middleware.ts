@@ -1,5 +1,6 @@
 import { Response, NextFunction } from 'express';
-import { AuthRequest } from '../middleware/auth';
+import { AuthRequest, requireAdminCapability } from '../middleware/auth';
+import { Permission } from '../types/roles';
 
 /**
  * Middleware to validate withdrawal request
@@ -28,14 +29,6 @@ export const validateWithdrawalRequest = (req: any, res: Response, next: NextFun
     });
   }
 
-  const validMethods = ['bank', 'crypto', 'wallet', 'card'];
-  if (!validMethods.includes(method)) {
-    return res.status(400).json({
-      success: false,
-      message: `Invalid method. Must be one of: ${validMethods.join(', ')}`,
-    });
-  }
-
   next();
 };
 
@@ -50,13 +43,19 @@ export const requireWithdrawalAdmin = (req: AuthRequest, res: Response, next: Ne
     });
   }
 
-  const allowedRoles = ['admin', 'moderator'];
-  if (!allowedRoles.includes(req.user.role)) {
-    return res.status(403).json({
+  return requireAdminCapability(Permission.MANAGE_DEPOSITS, ['admin', 'moderator'])(req, res, next);
+};
+
+export const requireWithdrawalViewer = (req: AuthRequest, res: Response, next: NextFunction) => {
+  if (!req.user) {
+    return res.status(401).json({
       success: false,
-      message: 'Permission denied. Admin role required',
+      message: 'Unauthorized',
     });
   }
 
-  next();
+  return requireAdminCapability(
+    [Permission.VIEW_DEPOSITS, Permission.MANAGE_DEPOSITS],
+    ['admin', 'moderator']
+  )(req, res, next);
 };

@@ -12,6 +12,10 @@ import {
   AuthRequest,
 } from '../middleware/auth';
 import { Permission, UserRole } from '../types/roles';
+import { verifyPasswordConfirmation } from '../modules/auth/reauth.service';
+import { writeAuditLog } from '../modules/audit/audit.service';
+import { isSystemRbacRole } from '../modules/rbac/rbac.service';
+import { forceCloseSessionsOnSuccess, logActivity } from '../middleware/adminActivityLogger';
 
 const router = express.Router();
 
@@ -55,6 +59,7 @@ const updateUserSchema = z
     role: z.nativeEnum(UserRole).optional(),
     status: z.enum(['active', 'inactive', 'banned']).optional(),
     password: z.string().min(6).optional(),
+    passwordConfirm: z.string().min(1).max(72).optional(),
     phone: z.string().regex(/^\+[1-9]\d{6,14}$/, 'Phone must include a valid country code').optional(),
   })
   .strict();
@@ -64,6 +69,7 @@ const createUserSchema = z
     name: z.string().min(1).max(100),
     email: z.string().email(),
     password: z.string().min(6),
+    passwordConfirm: z.string().min(1).max(72).optional(),
     role: z.nativeEnum(UserRole).default(UserRole.USER),
     status: z.enum(['active', 'inactive']).default('active'),
   })
@@ -81,7 +87,7 @@ const paginationSchema = z.object({
 router.get(
   '/',
   verifyToken,
-  requirePermission(Permission.MANAGE_USERS),
+  requireAnyPermission([Permission.VIEW_USERS, Permission.MANAGE_USERS]),
   async (req: AuthRequest, res: Response) => {
     const parsed = paginationSchema.safeParse(req.query);
 
@@ -168,13 +174,15 @@ router.get('/:id', verifyToken, async (req: AuthRequest, res: Response) => {
   }
 
   const isOwnProfile = req.user!.userId === idCheck.data.id;
-  const canManageUsers = req.user!.permissions.includes(Permission.MANAGE_USERS);
+  const canViewUsers = req.user!.permissions.some((permission) =>
+    [Permission.VIEW_USERS, Permission.MANAGE_USERS].includes(permission)
+  );
 
-  if (!isOwnProfile && !canManageUsers) {
+  if (!isOwnProfile && !canViewUsers) {
     return res.status(403).json({
       success: false,
       message: 'Insufficient permissions',
-      requiredPermission: Permission.MANAGE_USERS,
+      requiredPermission: [Permission.VIEW_USERS, Permission.MANAGE_USERS],
     });
   }
 
@@ -201,7 +209,8 @@ router.post(
   verifyToken,
   requirePermission(Permission.MANAGE_USERS),
   mutationLimiter,
-  async (req: AuthRequest, res: Response) => {
+  logActivity('USER_CREATE'),
+  async (req: AuthRequest, res: Response, next) => {
     const parsed = createUserSchema.safeParse(req.body);
 
     if (!parsed.success) {
@@ -212,7 +221,7 @@ router.post(
       });
     }
 
-    const { name, email, password, role, status } = parsed.data;
+    const { name, email, password, passwordConfirm, role, status } = parsed.data;
 
     if (ADMIN_ROLES.includes(role) && !req.user!.permissions.includes(Permission.CREATE_ADMIN)) {
       return res.status(403).json({
@@ -220,6 +229,23 @@ router.post(
         message: 'You do not have permission to create admin accounts',
         requiredPermission: Permission.CREATE_ADMIN,
       });
+    }
+
+    if (ADMIN_ROLES.includes(role)) {
+      try {
+        const confirmed = await verifyPasswordConfirmation({
+          actorId: req.user!.userId,
+          passwordConfirm,
+          action: 'create-admin',
+          targetType: 'User',
+          ip: req.ip,
+        });
+        if (!confirmed) {
+          return res.status(403).json({ success: false, message: 'Password confirmation failed' });
+        }
+      } catch (error) {
+        return next(error);
+      }
     }
 
     try {
@@ -255,7 +281,7 @@ router.post(
 );
 
 // PUT /users/:id — Update user
-router.put('/:id', verifyToken, mutationLimiter, async (req: AuthRequest, res: Response) => {
+router.put('/:id', verifyToken, mutationLimiter, logActivity('USER_UPDATE_OR_ROLE_CHANGE', (req) => req.params.id), forceCloseSessionsOnSuccess((req) => req.params.id, (req) => ['inactive', 'banned'].includes(req.body?.status)), async (req: AuthRequest, res: Response) => {
   const idCheck = idParamSchema.safeParse(req.params);
   if (!idCheck.success) {
     return res.status(400).json({ success: false, message: 'Invalid user id' });
@@ -316,10 +342,35 @@ router.put('/:id', verifyToken, mutationLimiter, async (req: AuthRequest, res: R
   }
 
   try {
-    const user = await prisma.user.findUnique({ where: { id: targetId } });
+    const user = await prisma.user.findUnique({
+      where: { id: targetId },
+      include: { userRole: { select: { isSystem: true } } },
+    });
 
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (wantsRoleOrStatusChange && isSystemRbacRole(user.userRole)) {
+      await writeAuditLog({
+        actorId: req.user?.userId,
+        action: 'AUTHORIZATION_DENIED',
+        targetType: 'User',
+        targetId,
+        after: { attemptedAction: 'legacy-role-or-status-change' },
+        ip: req.ip,
+      });
+      return res.status(403).json({ success: false, message: 'Use the scoped office user-management endpoint' });
+    }
+    if (wantsRoleOrStatusChange && !await verifyPasswordConfirmation({
+      actorId: req.user!.userId,
+      passwordConfirm: updates.passwordConfirm,
+      action: updates.role !== undefined ? 'change-user-role' : 'deactivate-user',
+      targetType: 'User',
+      targetId,
+      ip: req.ip,
+    })) {
+      return res.status(403).json({ success: false, message: 'Password confirmation failed' });
     }
 
     // Editing a target that is CURRENTLY an admin requires EDIT_ADMIN
@@ -352,9 +403,13 @@ router.put('/:id', verifyToken, mutationLimiter, async (req: AuthRequest, res: R
         phone: updates.phone ?? user.phone,
         role: updates.role ?? user.role,
         status: updates.status ?? user.status,
+        ...(updates.status !== undefined ? { isActive: updates.status === 'active' } : {}),
         password: hashedPassword,
         ...((updates.password || updates.role !== undefined || updates.status !== undefined)
-          ? { tokenVersion: { increment: 1 } }
+          ? {
+            tokenVersion: { increment: 1 },
+            permissionsVersion: { increment: 1 },
+          }
           : {}),
       },
     });
@@ -372,6 +427,8 @@ router.delete(
   verifyToken,
   requirePermission(Permission.MANAGE_USERS),
   deleteLimiter,
+  logActivity('USER_DELETE', (req) => req.params.id),
+  forceCloseSessionsOnSuccess((req) => req.params.id),
   async (req: AuthRequest, res: Response) => {
     const idCheck = idParamSchema.safeParse(req.params);
     if (!idCheck.success) {
@@ -387,10 +444,25 @@ router.delete(
     }
 
     try {
-      const user = await prisma.user.findUnique({ where: { id: targetId } });
+      const user = await prisma.user.findUnique({
+        where: { id: targetId },
+        include: { userRole: { select: { isSystem: true } } },
+      });
 
       if (!user) {
         return res.status(404).json({ success: false, message: 'User not found' });
+      }
+
+      if (isSystemRbacRole(user.userRole)) {
+        await writeAuditLog({
+          actorId: req.user?.userId,
+          action: 'AUTHORIZATION_DENIED',
+          targetType: 'User',
+          targetId,
+          after: { attemptedAction: 'legacy-user-delete' },
+          ip: req.ip,
+        });
+        return res.status(403).json({ success: false, message: 'System-role users cannot be deleted' });
       }
 
       if (ADMIN_ROLES.includes(user.role as any) && !req.user!.permissions.includes(Permission.DELETE_ADMIN)) {

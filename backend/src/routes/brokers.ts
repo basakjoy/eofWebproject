@@ -1,5 +1,6 @@
 import express from 'express';
-import { verifyToken, requireRole } from '../middleware/auth';
+import { verifyToken, requireAdminCapability } from '../middleware/auth';
+import { Permission } from '../types/roles';
 import { validateBroker, validateBrokerReview, validateConnectAccount } from '../middleware/brokers.middleware';
 import * as brokersController from '../controllers/brokers.controller';
 import { apiLimiter, reviewLimiter } from '../middleware/rateLimiter';
@@ -23,9 +24,9 @@ router.use(verifyToken);
 /**
  * Broker Management (Admin only) - requires 'admin' or 'super_admin' role, or SUPER_ADMIN scope
  */
-router.post('/', requireRole(['super_admin', 'admin']), validateBroker, brokersController.createBroker);
-router.put('/:id', requireRole(['super_admin', 'admin']), validateBroker, brokersController.updateBroker);
-router.delete('/:id', requireRole(['super_admin', 'admin']), brokersController.deleteBroker);
+router.post('/', requireAdminCapability(Permission.MANAGE_BROKERS), validateBroker, brokersController.createBroker);
+router.put('/:id', requireAdminCapability(Permission.MANAGE_BROKERS), validateBroker, brokersController.updateBroker);
+router.delete('/:id', requireAdminCapability(Permission.MANAGE_BROKERS), brokersController.deleteBroker);
 
 /**
  * Reviews

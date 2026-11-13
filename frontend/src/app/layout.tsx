@@ -1,16 +1,23 @@
 
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
-import { Poppins, Noto_Sans_Bengali, Noto_Sans_Devanagari, Noto_Nastaliq_Urdu } from 'next/font/google';
+import { Inter, IBM_Plex_Mono, Noto_Sans_Bengali, Noto_Sans_Devanagari, Noto_Nastaliq_Urdu } from 'next/font/google';
 import './globals.css';
 import ThemeProvider from '@/components/providers/ThemeProvider';
 import Providers from '@/app/providers';
 import { GoogleAnalytics } from '@next/third-parties/google';
 
-const poppins = Poppins({
+const inter = Inter({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700', '800', '900'],
-  variable: '--font-poppins',
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-inter',
+  display: 'swap',
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-ibm-plex-mono',
   display: 'swap',
 });
 
@@ -50,11 +57,11 @@ export default async function RootLayout({
   const locale = ['en', 'bn', 'hi', 'ur'].includes(rawLocale) ? rawLocale : 'en';
   const dir = locale === 'ur' ? 'rtl' : 'ltr';
 
-  const fontVariables = `${poppins.variable} ${notoBengali.variable} ${notoDevanagari.variable} ${notoUrdu.variable}`;
+  const fontVariables = `${inter.variable} ${ibmPlexMono.variable} ${notoBengali.variable} ${notoDevanagari.variable} ${notoUrdu.variable}`;
 
   return (
-    <html lang={locale} dir={dir} suppressHydrationWarning className={fontVariables}>
-      <body className={`${poppins.className} antialiased selection:bg-[#FF6B00] selection:text-white`}>
+    <html lang={locale} dir={dir} data-scroll-behavior="smooth" suppressHydrationWarning className={fontVariables}>
+      <body className={`${inter.className} antialiased selection:bg-[#FF6B00] selection:text-white`}>
         <Providers>
           <ThemeProvider>
             {children}

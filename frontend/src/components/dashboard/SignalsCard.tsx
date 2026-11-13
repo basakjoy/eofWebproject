@@ -79,7 +79,7 @@ export function SignalsCard() {
           {signals.map(signal => {
             const direction = (signal.direction ?? signal.type ?? 'BUY').toUpperCase();
             const isBuy = direction === 'BUY';
-            const tp = signal.takeProfits?.[0] ?? signal.takeProfit1 ?? signal.takeProfit;
+            const tp = signal.takeProfit1 ?? signal.takeProfit ?? signal.takeProfits?.[0];
             const stopLoss = signal.stoploss ?? signal.stopLoss ?? 0;
             return (
               <div

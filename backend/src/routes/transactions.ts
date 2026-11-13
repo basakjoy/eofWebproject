@@ -2,16 +2,14 @@ import express, { Request, Response } from 'express';
 import { prisma } from '../database';
 import { randomUUID } from 'crypto';
 import { z } from 'zod';
-import { verifyToken } from '../middleware/auth';
-import { requireRole } from '../middleware/auth';
+import { isSuperAdminUser, requireAdminCapability, verifyToken, AuthRequest as AuthMiddlewareRequest } from '../middleware/auth';
+import { Permission } from '../types/roles';
 import rateLimit from 'express-rate-limit';
 import { createSharedRateLimitStore } from '../middleware/rateLimiter';
 
 const router = express.Router();
 
-interface AuthRequest extends Request {
-  user?: any;
-}
+interface AuthRequest extends AuthMiddlewareRequest {}
 
 const handleError = (res: Response, error: any, fallbackMessage: string) => {
   console.error(fallbackMessage, error);
@@ -19,8 +17,11 @@ const handleError = (res: Response, error: any, fallbackMessage: string) => {
 };
 
 const isSelfOrAdmin = (req: AuthRequest, targetUserId: string) => {
-  const role = req.user?.role;
-  return req.user?.userId === targetUserId || role === 'SUPER_ADMIN' || role === 'SIGNAL_ADMIN';
+  if (req.user?.userId === targetUserId || isSuperAdminUser(req.user)) return true;
+  if (!req.user || !['admin', 'super_admin', 'superadmin', 'signal_admin'].includes(req.user.role)) return false;
+  return !req.user.adminPermissionsConfigured ||
+    req.user.permissions.includes(Permission.VIEW_DEPOSITS) ||
+    req.user.permissions.includes(Permission.MANAGE_DEPOSITS);
 };
 
 const createTransactionLimiter = rateLimit({
@@ -65,7 +66,13 @@ router.get('/user/:userId', async (req: AuthRequest, res: Response) => {
 });
 
 // ─── Get all transactions — admin only ─────────────────────────────────
-router.get('/', requireRole(['admin', 'superadmin', 'SUPER_ADMIN', 'SIGNAL_ADMIN']), async (req: AuthRequest, res: Response) => {
+router.get(
+  '/',
+  requireAdminCapability(
+    [Permission.VIEW_DEPOSITS, Permission.MANAGE_DEPOSITS],
+    ['admin', 'super_admin', 'superadmin', 'SIGNAL_ADMIN']
+  ),
+  async (req: AuthRequest, res: Response) => {
   try {
     const { userId, type, status } = req.query;
     const limit = Math.min(parseInt(String(req.query.limit)) || 50, 100);
@@ -105,7 +112,8 @@ const createTransactionSchema = z.object({
 }).strict();
 
 router.post('/', createTransactionLimiter, async (req: AuthRequest, res: Response) => {
-  const userId = req.user.userId;
+  const userId = req.user?.userId;
+  if (!userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
   const idempotencyKey = req.get('Idempotency-Key');
   if (idempotencyKey && !/^[\x21-\x7E]{8,128}$/.test(idempotencyKey)) {
     return res.status(400).json({ success: false, message: 'Invalid Idempotency-Key' });
@@ -187,7 +195,12 @@ const updateTransactionSchema = z.object({
   notes: z.string().max(1000).optional(),
 }).strict();
 
-router.put('/:id', requireRole(['admin', 'superadmin', 'SUPER_ADMIN', 'SIGNAL_ADMIN']), async (req: AuthRequest, res: Response) => {
+router.put(
+  '/:id',
+  requireAdminCapability(Permission.MANAGE_DEPOSITS, ['admin', 'super_admin', 'superadmin', 'SIGNAL_ADMIN']),
+  async (req: AuthRequest, res: Response) => {
+  const actorUserId = req.user?.userId;
+  if (!actorUserId) return res.status(401).json({ success: false, message: 'Unauthorized' });
   try {
     const parsed = updateTransactionSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -209,7 +222,7 @@ router.put('/:id', requireRole(['admin', 'superadmin', 'SUPER_ADMIN', 'SIGNAL_AD
 
     await prisma.transaction.update({ where: { id: req.params.id }, data });
 
-    const adminUser = await prisma.adminUser.findUnique({ where: { userId: req.user.userId } });
+    const adminUser = await prisma.adminUser.findUnique({ where: { userId: actorUserId } });
     if (adminUser) {
       await prisma.adminAction.create({
         data: {
@@ -227,7 +240,7 @@ router.put('/:id', requireRole(['admin', 'superadmin', 'SUPER_ADMIN', 'SIGNAL_AD
     }
 
     // Audit log for financial state changes
-    console.log(`[AUDIT] Transaction ${req.params.id} updated by admin ${req.user.userId}: status -> ${status}`);
+    console.log(`[AUDIT] Transaction ${req.params.id} updated by admin ${actorUserId}: status -> ${status}`);
 
     res.json({ success: true, message: 'Transaction updated successfully' });
   } catch (error: any) {

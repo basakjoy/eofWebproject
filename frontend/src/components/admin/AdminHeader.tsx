@@ -136,7 +136,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
               >
                 <div className="px-3 py-2 border-b border-white/5 mb-1.5">
                   <p className="text-xs font-bold text-white">{user?.name || "parvejm"}</p>
-                  <p className="text-[10px] text-slate-400 truncate mt-0.5">{user?.email || "admin@empireforex.com"}</p>
+                  <p className="text-[10px] text-slate-400 truncate mt-0.5">{user?.username || user?.email || "Administrator"}</p>
                 </div>
                 
                 <Link

@@ -5,6 +5,7 @@ import { SessionProvider } from "next-auth/react";
 import { useAuthStore } from "@/store/authStore";
 import FloatingSupport from "@/components/common/FloatingSupport";
 import { LanguageProvider } from "@/context/LanguageContext";
+import { PermissionsProvider } from "@/hooks/usePermissions";
 
 function AuthInitializer({ children }: { children: React.ReactNode }) {
   const { hydrateSession } = useAuthStore();
@@ -25,7 +26,7 @@ export default function Providers({
     <SessionProvider refetchOnWindowFocus={false} refetchInterval={0}>
       <LanguageProvider>
         <AuthInitializer>
-          {children}
+          <PermissionsProvider>{children}</PermissionsProvider>
           <FloatingSupport />
         </AuthInitializer>
       </LanguageProvider>

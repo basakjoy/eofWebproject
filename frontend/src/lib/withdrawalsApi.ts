@@ -1,5 +1,32 @@
 import apiClient from './api';
 
+export interface WithdrawalMethodOption {
+  id: string;
+  name: string;
+  code: string;
+  minAmount: number | string | null;
+  maxAmount: number | string | null;
+  processingTime: string | null;
+}
+
+export interface UserWithdrawalAccount {
+  id: string;
+  methodId: string;
+  accountName: string;
+  isDefault: boolean;
+  verified: boolean;
+  method: {
+    name: string;
+    code: string;
+  };
+}
+
+interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  message?: string;
+}
+
 export const withdrawalsApi = {
   // Get all withdrawals
   getAllWithdrawals: async (options?: {
@@ -31,10 +58,10 @@ export const withdrawalsApi = {
   // Request withdrawal
   requestWithdrawal: async (data: {
     amount: number;
-    method?: string;
+    method: string;
     accountId?: string;
-    notes?: string;
-  }) => {
+    reason?: string;
+  }): Promise<ApiResponse<{ id: string; status: string }>> => {
     try {
       const response = await apiClient.post('/withdrawals', data);
       return response.data;
@@ -80,7 +107,7 @@ export const withdrawalsApi = {
   },
 
   // Get withdrawal methods
-  getWithdrawalMethods: async () => {
+  getWithdrawalMethods: async (): Promise<ApiResponse<WithdrawalMethodOption[]>> => {
     try {
       const response = await apiClient.get('/withdrawals/methods/list');
       return response.data;
@@ -108,7 +135,7 @@ export const withdrawalsApi = {
   },
 
   // Get user withdrawal accounts
-  getUserWithdrawalAccounts: async () => {
+  getUserWithdrawalAccounts: async (): Promise<ApiResponse<UserWithdrawalAccount[]>> => {
     try {
       const response = await apiClient.get('/withdrawals/accounts/my-accounts');
       return response.data;

@@ -15,12 +15,15 @@ import {
   Target,
 } from "lucide-react";
 import { signalsApi, type SignalRecord } from "@/lib/signalsApi";
+import { hasAdminPermission } from "@/lib/authUtils";
+import { useAuthStore } from "@/store/authStore";
 
 // --- Utility Functions ---
 const cn = (...classes: Array<string | false | null | undefined>) => classes.filter(Boolean).join(" ");
 
 type SignalStatus = "active" | "closed" | "pending";
 type ToastType = "success" | "error";
+type TakeProfitTarget = 1 | 2 | 3;
 
 interface ToastState {
   message: string;
@@ -40,6 +43,20 @@ interface SignalFormData {
   status: SignalStatus;
 }
 
+const getTakeProfitTargets = (signal: SignalRecord): Array<{ target: TakeProfitTarget; value: number }> => {
+  const targets = [
+    { target: 1 as const, value: signal.takeProfit1 ?? signal.takeProfit ?? null },
+    { target: 2 as const, value: signal.takeProfit2 ?? null },
+    { target: 3 as const, value: signal.takeProfit3 ?? null },
+  ].filter((item): item is { target: TakeProfitTarget; value: number } => item.value !== null);
+
+  if (targets.length > 0) return targets;
+  return (signal.takeProfits ?? []).slice(0, 3).map((value, index) => ({
+    target: (index + 1) as TakeProfitTarget,
+    value,
+  }));
+};
+
 // --- Custom Toast Component for Demo ---
 const Toast = ({ message, type, onClose }: { message: string; type: ToastType; onClose: () => void }) => (
   <div className={`fixed bottom-4 right-4 flex items-center gap-2 rounded-xl px-4 py-3 shadow-lg shadow-black/40 border transition-all animate-in slide-in-from-bottom-5 ${type === 'error' ? 'bg-rose-600 border-rose-500 text-white' : 'bg-slate-800 border-white/10 text-white'}`}>
@@ -53,6 +70,11 @@ const Toast = ({ message, type, onClose }: { message: string; type: ToastType; o
 
 // --- Main Application Component ---
 export default function App() {
+  const user = useAuthStore((state) => state.user);
+  const canCreateSignals = hasAdminPermission(user, "create_signal");
+  const canEditSignals = hasAdminPermission(user, "edit_signals");
+  const canDeleteSignals = hasAdminPermission(user, "delete_signals");
+  const canManageSignals = canCreateSignals || canEditSignals;
   const [signals, setSignals] = useState<SignalRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -157,9 +179,9 @@ export default function App() {
       pair: signal.pair || "EUR/USD",
       type: String(signal.direction || signal.type || "BUY").toUpperCase(),
       entryPrice: signal.entryPrice?.toString() || "",
-      takeProfit1: signal.takeProfits?.[0]?.toString() || signal.takeProfit1?.toString() || signal.takeProfit?.toString() || "",
-      takeProfit2: signal.takeProfits?.[1]?.toString() || signal.takeProfit2?.toString() || "",
-      takeProfit3: signal.takeProfits?.[2]?.toString() || signal.takeProfit3?.toString() || "",
+      takeProfit1: signal.takeProfit1?.toString() || signal.takeProfit?.toString() || "",
+      takeProfit2: signal.takeProfit2?.toString() || "",
+      takeProfit3: signal.takeProfit3?.toString() || "",
       stopLoss: signal.stopLoss?.toString() || "",
       reliability: signal.reliability ? String(Math.round(Number(signal.reliability) * 100)) : "85",
       timeframe: signal.timeframe || "4H",
@@ -281,7 +303,7 @@ export default function App() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
           {/* Left Column: Form Panel (Sticky) */}
-          <div className="lg:col-span-5 xl:col-span-4">
+          <div className={cn("lg:col-span-5 xl:col-span-4", !canManageSignals && "hidden")}>
             <div className="bg-slate-900 rounded-3xl border border-white/10 shadow-sm shadow-black/30 p-6 sm:p-8 lg:sticky lg:top-24">
               
               <div className="mb-8">
@@ -489,7 +511,7 @@ export default function App() {
                 <div className="pt-2 flex flex-col gap-3">
                   <button
                     type="submit"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || (editingId ? !canEditSignals : !canCreateSignals)}
                     className="w-full flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-4 text-sm font-bold text-white shadow-lg shadow-indigo-900/40 transition-all hover:bg-indigo-500 active:scale-[0.98] disabled:opacity-70"
                   >
                     {isSubmitting ? (
@@ -515,7 +537,7 @@ export default function App() {
           </div>
 
           {/* Right Column: Signal Feed */}
-          <div className="lg:col-span-7 xl:col-span-8 flex flex-col gap-6">
+          <div className={cn("flex flex-col gap-6", canManageSignals ? "lg:col-span-7 xl:col-span-8" : "lg:col-span-12 xl:col-span-12")}>
             
             {/* Feed Toolbar */}
             <div className="bg-slate-900 rounded-2xl border border-white/10 p-4 shadow-sm shadow-black/30 flex flex-col sm:flex-row gap-4 justify-between items-center z-10">
@@ -581,6 +603,7 @@ export default function App() {
                   const isBuy = String(signal.type).toUpperCase() === "BUY";
                   const status = String(signal.status).toLowerCase();
                   const isEditing = editingId === signal.id;
+                  const takeProfitTargets = getTakeProfitTargets(signal);
                   
                   return (
                     <div 
@@ -636,23 +659,29 @@ export default function App() {
                         </div>
 
                         {/* Actions (Desktop right-aligned, mobile bottom-aligned) */}
-                        <div className="flex items-center gap-2 self-end sm:self-start sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button 
-                            onClick={() => handleEdit(signal)}
-                            className="p-2 rounded-xl text-slate-500 hover:text-indigo-300 hover:bg-indigo-500/10 transition-colors"
-                            title="Edit Setup"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button 
-                            onClick={() => handleDelete(signal.id)}
-                            disabled={isDeleting === signal.id}
-                            className="p-2 rounded-xl text-slate-500 hover:text-rose-300 hover:bg-rose-500/10 transition-colors disabled:opacity-50"
-                            title="Delete Setup"
-                          >
-                            {isDeleting === signal.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                          </button>
-                        </div>
+                        {(canEditSignals || canDeleteSignals) && (
+                          <div className="flex items-center gap-2 self-end sm:self-start sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                            {canEditSignals && (
+                              <button
+                                onClick={() => handleEdit(signal)}
+                                className="p-2 rounded-xl text-slate-500 hover:text-indigo-300 hover:bg-indigo-500/10 transition-colors"
+                                title="Edit Setup"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                            )}
+                            {canDeleteSignals && (
+                              <button
+                                onClick={() => handleDelete(signal.id)}
+                                disabled={isDeleting === signal.id}
+                                className="p-2 rounded-xl text-slate-500 hover:text-rose-300 hover:bg-rose-500/10 transition-colors disabled:opacity-50"
+                                title="Delete Setup"
+                              >
+                                {isDeleting === signal.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       {/* Pricing Grid */}
@@ -668,13 +697,13 @@ export default function App() {
                         <div className="bg-emerald-500/[0.06] rounded-xl p-3 border border-emerald-500/15 md:col-span-2">
                           <p className="text-[10px] font-bold text-emerald-400/80 uppercase tracking-wider mb-1 flex items-center justify-between">
                             Targets
-                            {(signal.takeProfits?.length ?? 0) > 1 && <span className="bg-emerald-500/20 text-emerald-300 px-1.5 rounded-sm">{signal.takeProfits?.length ?? 0} Levels</span>}
+                            {takeProfitTargets.length > 1 && <span className="bg-emerald-500/20 text-emerald-300 px-1.5 rounded-sm">{takeProfitTargets.length} Levels</span>}
                           </p>
                           <div className="flex flex-wrap gap-2 mt-1">
-                            {(signal.takeProfits?.length ?? 0) > 0 ? (
-                              signal.takeProfits?.map((tp, idx) => (
-                                <span key={idx} className="font-semibold text-emerald-300 text-sm bg-white/[0.04] border border-emerald-500/15 px-2 py-0.5 rounded">
-                                  <span className="text-[10px] opacity-60 mr-1">T{idx+1}</span>{tp}
+                            {takeProfitTargets.length > 0 ? (
+                              takeProfitTargets.map(({ target, value }) => (
+                                <span key={target} className="font-semibold text-emerald-300 text-sm bg-white/[0.04] border border-emerald-500/15 px-2 py-0.5 rounded">
+                                  <span className="text-[10px] opacity-60 mr-1">T{target}</span>{value}
                                 </span>
                               ))
                             ) : signal.takeProfit ? (
@@ -685,9 +714,8 @@ export default function App() {
                               <span className="text-sm font-medium text-slate-500">—</span>
                             )}
                           </div>
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            {(signal.takeProfits ?? []).slice(0, 3).map((_, index) => {
-                              const target = (index + 1) as 1 | 2 | 3;
+                          {canEditSignals && <div className="mt-3 flex flex-wrap gap-2">
+                            {takeProfitTargets.map(({ target }) => {
                               const hit = signal[`takeProfit${target}Hit` as const];
                               return (
                                 <button
@@ -707,7 +735,7 @@ export default function App() {
                                 </button>
                               );
                             })}
-                          </div>
+                          </div>}
                         </div>
                       </div>
                       

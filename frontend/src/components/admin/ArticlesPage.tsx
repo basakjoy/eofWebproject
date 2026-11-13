@@ -10,6 +10,7 @@ import {
 import blogApi, { BlogArticle, CreateArticleInput, UpdateArticleInput } from "@/lib/blogApi";
 import { useAuthStore } from "@/store/authStore";
 import { toast } from "sonner";
+import { hasAdminPermission } from "@/lib/authUtils";
 
 /* ─── Category Config ─────────────────────────────────────── */
 const CATEGORIES = ["Education", "Analysis", "Blog", "News", "Strategy", "Crypto"];
@@ -42,11 +43,15 @@ function ArticleRow({
   onEdit,
   onDelete,
   onTogglePublish,
+  canEdit,
+  canDelete,
 }: {
   article: BlogArticle;
   onEdit: (a: BlogArticle) => void;
   onDelete: (id: string) => void;
   onTogglePublish: (a: BlogArticle) => void;
+  canEdit: boolean;
+  canDelete: boolean;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const catColor = CATEGORY_COLORS[article.category] ?? "bg-white/5 text-slate-300 border border-white/10";
@@ -64,8 +69,8 @@ function ArticleRow({
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-1">
               <h3
-                onClick={() => onEdit(article)}
-                className="font-bold text-white hover:text-blue-400 cursor-pointer transition-colors truncate"
+                onClick={canEdit ? () => onEdit(article) : undefined}
+                className={`font-bold text-white truncate ${canEdit ? "cursor-pointer transition-colors hover:text-blue-400" : ""}`}
               >
                 {article.title}
               </h3>
@@ -89,20 +94,29 @@ function ArticleRow({
         {/* Actions */}
         <div className="flex items-center gap-2 shrink-0">
           {/* Published badge */}
-          <button
-            onClick={() => onTogglePublish(article)}
-            className={`flex items-center gap-1.5 text-[10px] font-black px-3 py-1.5 rounded-lg border transition-all ${
-              article.published
-                ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/20 hover:bg-emerald-500/15"
-                : "bg-white/5 text-slate-400 border-white/10 hover:bg-white/10"
-            }`}
-          >
-            {article.published ? <Globe className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
-            {article.published ? "Published" : "Draft"}
-          </button>
+          {canEdit ? (
+            <button
+              onClick={() => onTogglePublish(article)}
+              className={`flex items-center gap-1.5 text-[10px] font-black px-3 py-1.5 rounded-lg border transition-all ${
+                article.published
+                  ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/20 hover:bg-emerald-500/15"
+                  : "bg-white/5 text-slate-400 border-white/10 hover:bg-white/10"
+              }`}
+            >
+              {article.published ? <Globe className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+              {article.published ? "Published" : "Draft"}
+            </button>
+          ) : (
+            <span className={`flex items-center gap-1.5 text-[10px] font-black px-3 py-1.5 rounded-lg border ${
+              article.published ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/20" : "bg-white/5 text-slate-400 border-white/10"
+            }`}>
+              {article.published ? <Globe className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+              {article.published ? "Published" : "Draft"}
+            </span>
+          )}
 
           {/* Three-dot menu */}
-          <div className="relative">
+          {(canEdit || canDelete) && <div className="relative">
             <button
               onClick={() => setMenuOpen(!menuOpen)}
               className="p-2 hover:bg-white/10 rounded-xl transition-colors"
@@ -111,21 +125,21 @@ function ArticleRow({
             </button>
             {menuOpen && (
               <div className="absolute right-0 mt-1 w-40 bg-slate-800 border border-white/10 rounded-xl shadow-xl shadow-black/40 z-20">
-                <button
+                {canEdit && <button
                   onClick={() => { onEdit(article); setMenuOpen(false); }}
                   className="w-full flex items-center gap-2 px-4 py-2.5 text-slate-300 hover:bg-white/5 text-sm rounded-t-xl"
                 >
                   <Edit3 className="w-4 h-4" /> Edit
-                </button>
-                <button
+                </button>}
+                {canDelete && <button
                   onClick={() => { onDelete(article.id); setMenuOpen(false); }}
                   className="w-full flex items-center gap-2 px-4 py-2.5 text-rose-400 hover:bg-rose-500/10 text-sm rounded-b-xl border-t border-white/10"
                 >
                   <Trash2 className="w-4 h-4" /> Delete
-                </button>
+                </button>}
               </div>
             )}
-          </div>
+          </div>}
         </div>
       </div>
     </div>
@@ -320,6 +334,9 @@ function ArticleModal({
 /* ─── Main Page ──────────────────────────────────────────── */
 export default function ArticlesPage() {
   const { user } = useAuthStore();
+  const canCreateArticles = hasAdminPermission(user, "create_insights");
+  const canEditArticles = hasAdminPermission(user, "edit_insights");
+  const canDeleteArticles = hasAdminPermission(user, "delete_insights");
   const [articles, setArticles] = useState<BlogArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
@@ -448,12 +465,12 @@ export default function ArticlesPage() {
             <h2 className="text-2xl font-black text-white tracking-tight">Articles & Blog</h2>
             <p className="text-slate-400 text-sm mt-0.5">Manage your blog posts and articles</p>
           </div>
-          <button
+          {canCreateArticles && <button
             onClick={openNew}
             className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-indigo-900/40"
           >
             <Plus className="w-4 h-4" /> New Article
-          </button>
+          </button>}
         </div>
 
         {/* Stats */}
@@ -525,6 +542,8 @@ export default function ArticlesPage() {
                   onEdit={openEdit}
                   onDelete={handleDelete}
                   onTogglePublish={handleTogglePublish}
+                  canEdit={canEditArticles}
+                  canDelete={canDeleteArticles}
                 />
               </div>
             ))}
@@ -533,7 +552,7 @@ export default function ArticlesPage() {
       </div>
 
       {/* Editor Modal */}
-      {modalOpen && (
+      {modalOpen && (editingId ? canEditArticles : canCreateArticles) && (
         <ArticleModal
           form={form}
           setForm={setForm}

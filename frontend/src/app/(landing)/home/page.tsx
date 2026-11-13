@@ -1,6 +1,7 @@
-﻿'use client';
+'use client';
 
-import { useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
+import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
 import { useAuthStore } from '@/store/authStore';
 import IntroSection from '@/components/landing/IntroSection';
 import KeyMetrics from '@/components/landing/KeyMetrics';
@@ -38,6 +39,43 @@ import { signalsApi, SignalRecord } from '@/lib/signalsApi';
 import SignalDetailModal from '@/components/signals/SignalDetailModal';
 import RiskCalculatorModal from '@/components/signals/RiskCalculatorModal';
 import { useLanguage } from '@/context/LanguageContext';
+import { getDashboardPath, isAdminRole } from '@/lib/authUtils';
+
+function SectionReveal({
+  children,
+  overlap = false,
+}: {
+  children: React.ReactNode;
+  overlap?: boolean;
+}) {
+  const shouldReduceMotion = useReducedMotion();
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start end', 'end start'],
+  });
+  const y = useTransform(scrollYProgress, [0, 1], [48, -48]);
+  const opacity = useTransform(
+    scrollYProgress,
+    [0, 0.15, 0.85, 1],
+    [0.72, 1, 1, 0.72],
+  );
+  const scale = useTransform(scrollYProgress, [0, 0.5, 1], [0.985, 1, 0.985]);
+
+  return (
+    <motion.div
+      ref={sectionRef}
+      style={{
+        y: shouldReduceMotion ? 0 : y,
+        opacity: shouldReduceMotion ? 1 : opacity,
+        scale: shouldReduceMotion ? 1 : scale,
+      }}
+      className={overlap ? 'relative z-20 -mt-10 sm:-mt-14' : 'relative'}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 export default function HomePage() {
   const { isAuthenticated, user } = useAuthStore();
@@ -98,7 +136,7 @@ export default function HomePage() {
                 {t('hero.welcomeBack', 'Welcome back')}, <span className="text-transparent bg-clip-text bg-gradient-to-r from-fiery-orange to-fiery-amber">{user.name}</span>
               </h1>
               <p className="text-sm text-zinc-400 font-light mt-1">
-                {user.role === 'admin' 
+                {isAdminRole(user.role)
                   ? t('hero.adminCenter', 'Administrator control panel & market alerts deployment center.')
                   : t('hero.traderCenter', 'Institutional signals desk, portfolio telemetry & automated risk metrics.')}
               </p>
@@ -214,7 +252,7 @@ export default function HomePage() {
             
             {/* Dashboard Card */}
             <Link
-              href={user.role === 'admin' ? '/admin/dashboard' : '/dashboard/user'}
+              href={getDashboardPath(user)}
               className="group relative p-8 rounded-3xl bg-[#0C0C10]/60 backdrop-blur-xl border border-white/10 hover:border-fiery-orange/50 transition-all hover:shadow-[0_8px_32px_rgba(255,107,0,0.15)] overflow-hidden"
             >
               <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
@@ -225,10 +263,10 @@ export default function HomePage() {
                 <ArrowRight className="w-5 h-5 text-zinc-400 group-hover:text-fiery-orange transition-colors" />
               </div>
               <h3 className="text-xl font-bold text-white mb-2">
-                {user.role === 'admin' ? t('dashboard.adminDashboard', 'Admin Dashboard') : t('dashboard.tradingDashboard', 'Trading Dashboard')}
+                {isAdminRole(user.role) ? t('dashboard.adminDashboard', 'Admin Dashboard') : t('dashboard.tradingDashboard', 'Trading Dashboard')}
               </h3>
               <p className="text-sm text-zinc-400 font-light leading-relaxed">
-                {user.role === 'admin' 
+                {isAdminRole(user.role)
                   ? t('dashboard.adminDesc', 'Manage institutional signals, active subscribers, and review analytics.')
                   : t('dashboard.traderDesc', 'Track your capital growth, review active positions, and portfolio status.')}
               </p>
@@ -283,13 +321,13 @@ export default function HomePage() {
               <div className="space-y-4">
                 <div>
                   <p className="text-[10px] text-zinc-500 uppercase font-bold">Email Address</p>
-                  <p className="text-white font-mono text-sm mt-0.5">{user.email}</p>
+                  <p className="text-white font-mono text-sm mt-0.5">{user.username || user.email || ''}</p>
                 </div>
                 <div>
                   <p className="text-[10px] text-zinc-500 uppercase font-bold">Account Privilege</p>
                   <p className="text-white capitalize font-bold mt-1">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                      user.role === 'admin' 
+                      isAdminRole(user.role)
                         ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' 
                         : 'bg-[#FF6B00]/20 text-[#FF6B00] border border-fiery-orange/30'
                     }`}>
@@ -352,15 +390,15 @@ export default function HomePage() {
 
   // Non-authenticated landing layout
   return (
-    <div className="w-full min-h-screen bg-[#030305] font-poppins">
+    <div className="w-full min-h-screen bg-[#030305] font-poppins selection:bg-[#FF6B00] selection:text-white">
       <IntroSection />
-      <KeyMetrics />
-      <BrokerTrustSection />
-      <PaymentMethodsSection />
-      <LiveSignalsSection />
-      <PremiumAccountSection />
-      <FinalCTASection />
+      <SectionReveal overlap><KeyMetrics /></SectionReveal>
+      <SectionReveal><BrokerTrustSection /></SectionReveal>
+      <SectionReveal><PaymentMethodsSection /></SectionReveal>
+      <SectionReveal><LiveSignalsSection /></SectionReveal>
+      <SectionReveal overlap><PremiumAccountSection /></SectionReveal>
+      <SectionReveal><TestimonialsSection /></SectionReveal>
+      <SectionReveal><FinalCTASection /></SectionReveal>
     </div>
   );
 }
-

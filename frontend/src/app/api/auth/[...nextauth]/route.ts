@@ -13,7 +13,7 @@ const handler = NextAuth({
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "email" },
+        email: { label: "Username or email", type: "text" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
@@ -35,9 +35,10 @@ const handler = NextAuth({
 
           return {
             id: user.id || user.userId,
-            email: user.email,
+            email: user.email || undefined,
             name: user.name,
             role: user.role,
+            adminScope: user.adminScope,
             token,
             refreshToken,
           };
@@ -51,6 +52,7 @@ const handler = NextAuth({
     async jwt({ token, user, account }) {
       if (user) {
         token.role = (user as any).role;
+        token.adminScope = (user as any).adminScope;
         token.id = user.id;
         token.accessToken = (user as any).token;
         token.refreshToken = (user as any).refreshToken;
@@ -71,6 +73,7 @@ const handler = NextAuth({
           const { token: backendToken, refreshToken, ...userData } = data;
 
           token.role = userData.role;
+          token.adminScope = userData.adminScope;
           token.id = userData.id || userData.userId;
           token.accessToken = backendToken;
           token.refreshToken = refreshToken;
@@ -101,6 +104,7 @@ const handler = NextAuth({
       if (session.user) {
         (session.user as any).id = token.id;
         (session.user as any).role = token.role;
+        (session.user as any).adminScope = token.adminScope;
         (session.user as any).accessToken = token.accessToken;
       }
       if (token.error) (session as any).error = token.error;

@@ -2,10 +2,18 @@ import express, { Request, Response, NextFunction } from 'express';
 import { prisma } from '../database';
 import { randomUUID } from 'crypto';
 import { z } from 'zod';
-import { verifyToken, AuthRequest as AuthMiddlewareRequest } from '../middleware/auth';
+import {
+  requireAnyPermission,
+  requirePermission,
+  verifyToken,
+  AuthRequest as AuthMiddlewareRequest,
+} from '../middleware/auth';
 import { requireAdminScope } from '../middleware/superadmin.middleware';
+import { Permission } from '../types/roles';
 
 const router = express.Router();
+const signalDirectionSchema = z.string().trim().transform((value) => value.toUpperCase()).pipe(z.enum(['BUY', 'SELL']));
+const signalStatusSchema = z.string().trim().transform((value) => value.toLowerCase()).pipe(z.enum(['active', 'closed', 'pending']));
 
 interface AuthRequest extends AuthMiddlewareRequest {}
 
@@ -27,8 +35,8 @@ interface SuccessResponse<T> {
 // ---------- Validation schemas ----------
 const baseSignalSchema = z.object({
   pair: z.string().trim().min(3).max(20).optional(),
-  type: z.enum(['BUY', 'SELL']).optional(),
-  direction: z.enum(['BUY', 'SELL']).optional(),
+  type: signalDirectionSchema.optional(),
+  direction: signalDirectionSchema.optional(),
   entryPrice: z.coerce.number().positive('Entry price must be positive').optional(),
   stopLoss: z.coerce.number().positive('Stop loss must be positive').optional(),
   stoploss: z.coerce.number().positive('Stop loss must be positive').optional(),
@@ -43,14 +51,14 @@ const baseSignalSchema = z.object({
   accuracy: z.coerce.number().min(0).max(100).optional(),
   reliability: z.coerce.number().min(0).max(1).optional(),
   timeframe: z.string().max(10).optional(),
-  status: z.enum(['active', 'closed', 'pending']).optional(),
+  status: signalStatusSchema.optional(),
 }).passthrough();
 
 const createSignalSchema = baseSignalSchema.extend({
   pair: z.string().trim().min(3).max(20),
   entryPrice: z.coerce.number().positive('Entry price must be positive'),
   timeframe: z.string().max(10).optional().default('4H'),
-  status: z.enum(['active', 'closed', 'pending']).optional().default('active'),
+  status: signalStatusSchema.optional().default('active'),
 }).superRefine((data, ctx) => {
   if (!data.type && !data.direction) {
     ctx.addIssue({
@@ -72,9 +80,9 @@ const createSignalSchema = baseSignalSchema.extend({
 const updateSignalSchema = baseSignalSchema;
 
 const querySchema = z.object({
-  status: z.string().optional(),
-  pair: z.string().optional(),
-  type: z.enum(['BUY', 'SELL']).optional(),
+  status: signalStatusSchema.optional(),
+  pair: z.string().trim().max(20).optional(),
+  type: signalDirectionSchema.optional(),
   limit: z.coerce.number().min(1).max(100).default(50),
   offset: z.coerce.number().min(0).default(0),
 });
@@ -101,29 +109,9 @@ const validateRequest = (schema: z.ZodSchema) => {
   };
 };
 
-// Validate query parameters against schema
-const validateQuery = (schema: z.ZodSchema) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    try {
-      req.query = schema.parse(req.query) as any;
-      next();
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const messages = error.errors.map((e) => `${e.path.join('.')}: ${e.message}`);
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid query parameters',
-          details: messages.join(', '),
-        } as ErrorResponse);
-      }
-      next(error);
-    }
-  };
-};
-
 // Require admin/superadmin role (verifyToken must run first)
 const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
-  if (!req.user || !['admin', 'superadmin'].includes(req.user.role)) {
+  if (!req.user || !['admin', 'super_admin', 'superadmin'].includes(req.user.role)) {
     return res.status(403).json({
       success: false,
       message: 'Admin access required',
@@ -166,14 +154,19 @@ const getSignalStopLoss = (body: any): number | undefined => {
   return coerceNumber(body?.stopLoss ?? body?.stoploss);
 };
 
-const getSignalTakeProfits = (body: any): Array<number> => {
-  const values = Array.isArray(body?.takeProfits)
-    ? body.takeProfits
-    : [body?.takeProfit1, body?.takeProfit2, body?.takeProfit3, body?.takeProfit];
+const getSignalTakeProfits = (body: Record<string, unknown>): Array<number | undefined> => {
+  const hasIndividualTargets = ['takeProfit', 'takeProfit1', 'takeProfit2', 'takeProfit3']
+    .some((key) => Object.prototype.hasOwnProperty.call(body, key));
 
-  return (values as Array<unknown>)
-    .map((value: unknown) => coerceNumber(value))
-    .filter((value: number | undefined): value is number => value !== undefined);
+  if (Array.isArray(body.takeProfits) && !hasIndividualTargets) {
+    return body.takeProfits.slice(0, 3).map(coerceNumber);
+  }
+
+  return [
+    body.takeProfit1 ?? body.takeProfit,
+    body.takeProfit2,
+    body.takeProfit3,
+  ].map(coerceNumber);
 };
 
 const getPriceValidationMessage = (
@@ -250,17 +243,36 @@ const logRouteError = (label: string, error: any) => {
 // GET /signals/stats against the '/:id' handler with id="stats" first.
 
 // GET /signals/stats — signal statistics
-router.get('/stats', verifyToken, requireAdminScope(['SIGNAL_ADMIN', 'SUPER_ADMIN']), async (req: AuthRequest, res: Response) => {
+router.get(
+  '/stats',
+  verifyToken,
+  requireAdminScope(['SIGNAL_ADMIN', 'SUPER_ADMIN']),
+  requireAnyPermission([
+    Permission.VIEW_SIGNALS,
+    Permission.CREATE_SIGNAL,
+    Permission.EDIT_SIGNALS,
+    Permission.DELETE_SIGNALS,
+  ]),
+  async (req: AuthRequest, res: Response) => {
   try {
-    const [activeCount, closedCount, pendingCount, buyCount, sellCount] = await Promise.all([
+    const [activeCount, closedCount, pendingCount, buyCount, sellCount, totalSignals, winningClosedCount] = await Promise.all([
       prisma.signal.count({ where: { status: 'active' } }),
       prisma.signal.count({ where: { status: 'closed' } }),
       prisma.signal.count({ where: { status: 'pending' } }),
       prisma.signal.count({ where: { type: 'BUY' } }),
       prisma.signal.count({ where: { type: 'SELL' } }),
+      prisma.signal.count(),
+      prisma.signal.count({
+        where: {
+          status: 'closed',
+          OR: [
+            { takeProfit1Hit: true },
+            { takeProfit2Hit: true },
+            { takeProfit3Hit: true },
+          ],
+        },
+      }),
     ]);
-
-    const totalSignals = activeCount + closedCount + pendingCount;
 
     const stats = {
       activeSignals: activeCount,
@@ -270,8 +282,8 @@ router.get('/stats', verifyToken, requireAdminScope(['SIGNAL_ADMIN', 'SUPER_ADMI
       sellSignals: sellCount,
       totalSignals,
       winRate:
-        activeCount + closedCount > 0
-          ? ((activeCount / (activeCount + closedCount)) * 100).toFixed(2)
+        closedCount > 0
+          ? ((winningClosedCount / closedCount) * 100).toFixed(2)
           : '0.00',
     };
 
@@ -291,11 +303,21 @@ router.get('/stats', verifyToken, requireAdminScope(['SIGNAL_ADMIN', 'SUPER_ADMI
 
 // GET /signals — list with filters + pagination
 // Public read endpoint for the landing page and trading signal preview flows.
-router.get('/', validateQuery(querySchema), async (req: Request, res: Response) => {
-  try {
-    const { status, pair, type, limit, offset } = req.query as any;
+router.get('/', async (req: Request, res: Response) => {
+  const parsedQuery = querySchema.safeParse(req.query);
+  if (!parsedQuery.success) {
+    const messages = parsedQuery.error.errors.map((error) => `${error.path.join('.')}: ${error.message}`);
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid query parameters',
+      details: messages.join(', '),
+    } as ErrorResponse);
+  }
 
-    const where: any = {};
+  try {
+    const { status, pair, type, limit, offset } = parsedQuery.data;
+
+    const where: { status?: string; pair?: { contains: string; mode: 'insensitive' }; type?: string } = {};
     if (status) where.status = status;
     if (pair) where.pair = { contains: pair, mode: 'insensitive' };
     if (type) where.type = type;
@@ -415,6 +437,7 @@ router.post(
   '/',
   verifyToken,
   requireAdminScope(['SIGNAL_ADMIN', 'SUPER_ADMIN']),
+  requirePermission(Permission.CREATE_SIGNAL),
   requireAdmin,
   validateRequest(createSignalSchema),
   async (req: AuthRequest, res: Response) => {
@@ -425,8 +448,11 @@ router.post(
       const normalizedStatus = typeof body.status === 'string' ? body.status.toLowerCase() : 'active';
       const entryPrice = coerceNumber(body.entryPrice);
       const stopLossValue = getSignalStopLoss(body);
-      const takeProfitValue = coerceNumber(body.takeProfit ?? body.takeProfit1);
       const takeProfitsValue = getSignalTakeProfits(body);
+      const [tp1, tp2, tp3] = takeProfitsValue;
+      const configuredTakeProfits = takeProfitsValue.filter(
+        (value): value is number => value !== undefined,
+      );
       const reliability = coerceNumber(body.reliability);
       const accuracy = coerceNumber(body.accuracy);
       const timeframe = typeof body.timeframe === 'string' ? body.timeframe : '4H';
@@ -456,23 +482,13 @@ router.post(
         normalizedType,
         entryPrice,
         stopLossValue,
-        takeProfitsValue,
+        configuredTakeProfits,
       );
       if (priceValidationMessage) {
         return res.status(400).json({
           success: false,
           message: priceValidationMessage,
         } as ErrorResponse);
-      }
-
-      let tp1 = takeProfitValue ?? null;
-      let tp2 = null;
-      let tp3 = null;
-
-      if (takeProfitsValue.length > 0) {
-        tp1 = takeProfitsValue[0] ?? tp1;
-        tp2 = takeProfitsValue[1] ?? null;
-        tp3 = takeProfitsValue[2] ?? null;
       }
 
       const signalId = randomUUID();
@@ -485,10 +501,13 @@ router.post(
           direction: normalizedType,
           entryPrice: String(entryPrice),
           stopLoss: String(stopLossValue),
-          takeProfit: tp1 ? String(tp1) : null,
-          takeProfit1: tp1 ? String(tp1) : null,
-          takeProfit2: tp2 ? String(tp2) : null,
-          takeProfit3: tp3 ? String(tp3) : null,
+          takeProfit: tp1 !== undefined ? String(tp1) : null,
+          takeProfit1: tp1 !== undefined ? String(tp1) : null,
+          takeProfit2: tp2 !== undefined ? String(tp2) : null,
+          takeProfit3: tp3 !== undefined ? String(tp3) : null,
+          takeProfit1Hit: body.takeProfit1Hit === true,
+          takeProfit2Hit: body.takeProfit2Hit === true,
+          takeProfit3Hit: body.takeProfit3Hit === true,
           accuracy: String(accuracy ?? (reliability !== undefined ? reliability * 100 : 85)),
           reliability: String(reliability ?? 0.85),
           timeframe,
@@ -547,6 +566,7 @@ router.put(
   '/:id',
   verifyToken,
   requireAdminScope(['SIGNAL_ADMIN', 'SUPER_ADMIN']),
+  requirePermission(Permission.EDIT_SIGNALS),
   requireAdmin,
   validateRequest(updateSignalSchema),
   async (req: AuthRequest, res: Response) => {
@@ -587,7 +607,6 @@ router.put(
       const normalizedStatus = status ? String(status).toLowerCase() : undefined;
       const entryPriceValue = coerceNumber(entryPrice);
       const stopLossValue = getSignalStopLoss(body);
-      const takeProfitValue = coerceNumber(takeProfit ?? takeProfit1);
       const takeProfitsValue = getSignalTakeProfits(body);
 
       const signal = await prisma.signal.findUnique({ where: { id } });
@@ -602,13 +621,15 @@ router.put(
       const effectiveDirection = normalizedType ?? getSignalDirection(signal);
       const effectiveEntryPrice = entryPriceValue ?? coerceNumber(signal.entryPrice);
       const effectiveStopLoss = stopLossValue ?? coerceNumber(signal.stopLoss);
-      const effectiveTakeProfits = Array.isArray(takeProfits)
+      const currentTakeProfits = [
+        signal.takeProfit1 ?? signal.takeProfit,
+        signal.takeProfit2,
+        signal.takeProfit3,
+      ].map(coerceNumber);
+      const effectiveTakeProfits = (Array.isArray(takeProfits)
         ? takeProfitsValue
-        : takeProfitsValue.length > 0
-          ? takeProfitsValue
-          : [coerceNumber(signal.takeProfit1 ?? signal.takeProfit)].filter(
-              (value): value is number => value !== undefined,
-            );
+        : currentTakeProfits.map((value, index) => takeProfitsValue[index] ?? value)
+      ).filter((value): value is number => value !== undefined);
       const priceValidationMessage = getPriceValidationMessage(
         effectiveDirection,
         effectiveEntryPrice,
@@ -648,11 +669,12 @@ router.put(
         updateData.takeProfit1 = takeProfitsValue[0] !== undefined ? String(takeProfitsValue[0]) : null;
         updateData.takeProfit2 = takeProfitsValue[1] !== undefined ? String(takeProfitsValue[1]) : null;
         updateData.takeProfit3 = takeProfitsValue[2] !== undefined ? String(takeProfitsValue[2]) : null;
-      } else if (takeProfitValue !== undefined) {
-        updateData.takeProfit = String(takeProfitValue);
-        updateData.takeProfit1 = String(takeProfitValue);
       } else {
-        if (takeProfit1 !== undefined) updateData.takeProfit1 = String(takeProfit1);
+        const firstTakeProfit = coerceNumber(takeProfit1 ?? takeProfit);
+        if (firstTakeProfit !== undefined) {
+          updateData.takeProfit = String(firstTakeProfit);
+          updateData.takeProfit1 = String(firstTakeProfit);
+        }
         if (takeProfit2 !== undefined) updateData.takeProfit2 = String(takeProfit2);
         if (takeProfit3 !== undefined) updateData.takeProfit3 = String(takeProfit3);
       }
@@ -707,7 +729,7 @@ router.put(
 );
 
 // PUT /signals/:id/close — mark closed
-router.put('/:id/close', verifyToken, requireAdminScope(['SIGNAL_ADMIN', 'SUPER_ADMIN']), requireAdmin, async (req: AuthRequest, res: Response) => {
+router.put('/:id/close', verifyToken, requireAdminScope(['SIGNAL_ADMIN', 'SUPER_ADMIN']), requirePermission(Permission.EDIT_SIGNALS), requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -747,7 +769,7 @@ router.put('/:id/close', verifyToken, requireAdminScope(['SIGNAL_ADMIN', 'SUPER_
 });
 
 // DELETE /signals/:id
-router.delete('/:id', verifyToken, requireAdminScope(['SIGNAL_ADMIN', 'SUPER_ADMIN']), requireAdmin, async (req: AuthRequest, res: Response) => {
+router.delete('/:id', verifyToken, requireAdminScope(['SIGNAL_ADMIN', 'SUPER_ADMIN']), requirePermission(Permission.DELETE_SIGNALS), requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 

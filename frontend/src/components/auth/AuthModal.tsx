@@ -8,7 +8,7 @@ import Button from '@/components/common/Button';
 import Alert from '@/components/common/Alert';
 import { useAuthStore } from '@/store/authStore';
 import apiClient from '@/lib/api';
-import { normalizeAuthUser } from '@/lib/authUtils';
+import { getDashboardPath, normalizeAuthUser } from '@/lib/authUtils';
 import { authApi } from '@/lib/authApi';
 import { useLanguage, getLocalizedPath } from '@/context/LanguageContext';
 
@@ -125,7 +125,10 @@ export default function AuthModal({ initialTab = 'signup', onClose }: AuthModalP
     setError('');
 
     try {
-      const response = await apiClient.post('/auth/login', loginData);
+      const response = await apiClient.post('/auth/login', {
+        identifier: loginData.email,
+        password: loginData.password,
+      });
       const { data } = response.data;
       const { token, ...userData } = data;
       const user = normalizeAuthUser(userData);
@@ -140,15 +143,7 @@ export default function AuthModal({ initialTab = 'signup', onClose }: AuthModalP
       
       setSession(token, user);
 
-      if (user.role === 'admin') {
-        router.push('/admin');
-      } else if (user.role === 'investor') {
-        router.push('/dashboard/investments');
-      } else if (user.role === 'premium') {
-        router.push('/dashboard/premium');
-      } else {
-        router.push('/dashboard/user');
-      }
+      router.push(getDashboardPath(user));
       onClose?.();
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');
@@ -363,10 +358,10 @@ export default function AuthModal({ initialTab = 'signup', onClose }: AuthModalP
 
               <form onSubmit={handleLoginSubmit} className="space-y-4">
                 <Input
-                  label={t('auth.emailAddress', 'Email')}
-                  type="email"
+                  label="Username or email"
+                  type="text"
                   name="email"
-                  placeholder="name@example.com"
+                  placeholder="username or name@example.com"
                   value={loginData.email}
                   onChange={handleLoginChange}
                   required

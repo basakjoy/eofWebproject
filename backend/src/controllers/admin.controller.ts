@@ -5,6 +5,9 @@ import bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 import { AuthRequest } from '../middleware/auth';
 import { Permission } from '../types/roles';
+import { verifyPasswordConfirmation } from '../modules/auth/reauth.service';
+import { writeAuditLog } from '../modules/audit/audit.service';
+import { isSystemRbacRole } from '../modules/rbac/rbac.service';
 
 const elevatedRoles = new Set(['admin', 'super_admin', 'marketing_admin', 'signal_admin', 'content_admin']);
 
@@ -100,6 +103,18 @@ export const createAdminUser = async (req: Request, res: Response) => {
     if (!canGrantRole(req, normalizedRole)) {
       return res.status(403).json({ success: false, message: 'You do not have permission to grant this role' });
     }
+    if (elevatedRoles.has(normalizedRole)) {
+      const actorId = (req as AuthRequest).user?.userId;
+      if (!actorId || !await verifyPasswordConfirmation({
+        actorId,
+        passwordConfirm: req.body.passwordConfirm,
+        action: 'create-admin',
+        targetType: 'User',
+        ip: req.ip,
+      })) {
+        return res.status(403).json({ success: false, message: 'Password confirmation failed' });
+      }
+    }
 
     const normalizedEmail = String(email).trim().toLowerCase();
     const existingUser = await prisma.user.findUnique({ where: { email: normalizedEmail } });
@@ -133,7 +148,10 @@ export const updateAdminUser = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { name, role, status } = req.body;
 
-    const existingUser = await prisma.user.findUnique({ where: { id } });
+    const existingUser = await prisma.user.findUnique({
+      where: { id },
+      include: { userRole: { select: { isSystem: true } } },
+    });
     if (!existingUser) {
       return res.status(404).json({
         success: false,
@@ -149,6 +167,29 @@ export const updateAdminUser = async (req: Request, res: Response) => {
       return res.status(403).json({ success: false, message: 'Only a super admin can edit a super admin account' });
     }
 
+    const sensitiveChange = role !== undefined || status !== undefined;
+    if (sensitiveChange && isSystemRbacRole(existingUser.userRole)) {
+      await writeAuditLog({
+        actorId: actor?.userId,
+        action: 'AUTHORIZATION_DENIED',
+        targetType: 'User',
+        targetId: id,
+        after: { attemptedAction: 'legacy-role-or-status-change' },
+        ip: req.ip,
+      });
+      return res.status(403).json({ success: false, message: 'Use the scoped office user-management endpoint' });
+    }
+    if (sensitiveChange && actor?.userId && !await verifyPasswordConfirmation({
+      actorId: actor.userId,
+      passwordConfirm: req.body.passwordConfirm,
+      action: role !== undefined ? 'change-user-role' : 'deactivate-user',
+      targetType: 'User',
+      targetId: id,
+      ip: req.ip,
+    })) {
+      return res.status(403).json({ success: false, message: 'Password confirmation failed' });
+    }
+
     if (role !== undefined && !canGrantRole(req, String(role).toLowerCase())) {
       return res.status(403).json({ success: false, message: 'You do not have permission to grant this role' });
     }
@@ -161,7 +202,11 @@ export const updateAdminUser = async (req: Request, res: Response) => {
           ...(name !== undefined ? { name } : {}),
           ...(role !== undefined ? { role: String(role).toLowerCase() } : {}),
           ...(status !== undefined ? { status: String(status).toLowerCase() } : {}),
-          ...((role !== undefined || status !== undefined) ? { tokenVersion: { increment: 1 } } : {}),
+          ...(status !== undefined ? { isActive: String(status).toLowerCase() === 'active' } : {}),
+          ...((role !== undefined || status !== undefined) ? {
+            tokenVersion: { increment: 1 },
+            permissionsVersion: { increment: 1 },
+          } : {}),
         },
         select: { id: true, name: true, email: true, role: true, status: true, createdAt: true, updatedAt: true },
       });
@@ -187,7 +232,10 @@ export const deleteAdminUser = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const user = await prisma.user.findUnique({ where: { id } });
+    const user = await prisma.user.findUnique({
+      where: { id },
+      include: { userRole: { select: { isSystem: true } } },
+    });
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -201,6 +249,9 @@ export const deleteAdminUser = async (req: Request, res: Response) => {
     }
     if (user.adminScope === 'SUPER_ADMIN' && actor?.adminScope !== 'SUPER_ADMIN') {
       return res.status(403).json({ success: false, message: 'Only a super admin can delete a super admin account' });
+    }
+    if (isSystemRbacRole(user.userRole) || user.adminScope === 'SUPER_ADMIN') {
+      return res.status(403).json({ success: false, message: 'Use the scoped office user-management endpoint' });
     }
 
     await prisma.$transaction([
